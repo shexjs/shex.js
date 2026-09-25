@@ -1,9 +1,10 @@
 {
   "name": "@shexjs/term",
-  "version": "1.0.0-alpha.28",
+  "version": "1.0.0-alpha.29",
   "files": [
     "lib",
-    "src"
+    "src",
+    "shexv.d.ts"
   ],
   "description": "Shape Expressions triple expression evaluator - simple regexp returning 1 error.",
   "author": {
@@ -27,8 +28,8 @@
   "dependencies": {
     "@rdfjs/types": "^2.0.1",
     "@types/shexj": "^2.1.7",
-    "rdf-data-factory": "^1.1.2",
-    "relativize-url": "^0.1.0"
+    "rdf-data-factory": "^2.0.2",
+    "relativize-url": "^1.0.0"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot"

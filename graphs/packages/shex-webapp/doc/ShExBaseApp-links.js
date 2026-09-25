@@ -180,6 +180,54 @@ mixin(ShExBaseApp, {
         const s = parms.join("&");
         return location.origin + location.pathname + "?" + s;
     },
+    /** Menu → "shorten": swap the (often very long) permalink for a TinyURL
+     * short link.  TinyURL's keyless api-create.php is CORS-enabled and hands
+     * back the short URL as plain text, so no server of our own is needed; we
+     * show it beside Permalink and copy it to the clipboard.  TinyURL answers
+     * 200 with an error string rather than an HTTP error when it refuses a URL
+     * (an over-long one, say), so we vet the body, not just the status, and on
+     * any failure keep the long link -- for a link too big to shorten, "Create
+     * Gist" is the path that scales. */
+    async shortenPermalink(evt) {
+        if (evt)
+            evt.preventDefault();
+        const $btn = $("#shortenPermalink"), $out = $("#shortPermalink"), $row = $("#shortPermalinkRow");
+        const label = $btn.text() || "shorten";
+        // the menu builds the permalink as it opens; build one now in case the
+        // click somehow beat that
+        const long = $("#permalinkAnchor").attr("href") || await this.getPermalink();
+        $btn.prop("disabled", true).text("shortening…");
+        $row.hide();
+        $out.removeAttr("href").text("");
+        try {
+            const resp = await fetch("https://tinyurl.com/api-create.php?url=" +
+                encodeURIComponent(long));
+            const body = (await resp.text()).trim();
+            // TinyURL answers 200 with an error string (not an HTTP error) when it
+            // refuses a URL -- an over-long one, say -- so vet the body, not the status
+            if (!resp.ok || !/^https?:\/\//.test(body))
+                throw new Error(body || ("HTTP " + resp.status));
+            // show it beside Permalink, log it (a place to copy it from), and put it
+            // on the clipboard
+            $out.attr("href", body).text(body);
+            $row.show();
+            console.log("TinyURL short link: " + body);
+            let copied = false;
+            try {
+                await navigator.clipboard.writeText(body);
+                copied = true;
+            }
+            catch (e) { /* clipboard needs a secure context + permission; link still shows */ }
+            $btn.text(copied ? "copied ✓" : "shortened");
+        }
+        catch (e) {
+            $btn.text("shorten failed").attr("title", "TinyURL: " + e.message);
+            console.warn("TinyURL shorten failed:", e);
+        }
+        window.setTimeout(() => $btn.prop("disabled", false).text(label)
+            .attr("title", "Shorten this link with TinyURL"), 2500);
+        return null;
+    },
     /** Menu → "Create Gist": publish the inputs this app registered with a
      * manifest descriptor in its QueryParams (shex-simple: schema, data,
      * queryMap; shexmap adds staticVars, outputSchema, outputShapeMap) as a

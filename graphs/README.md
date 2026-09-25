@@ -52,7 +52,7 @@ The result is a JSON structure which tells you exactly how the data matched the 
 
 ```json
 {
-  "type": "test",
+  "type": "ShapeTest",
   "node": "http://shex.io/examples/Issue1",
   "shape": "http://shex.io/examples/IssueShape",
   "solution": {
@@ -90,7 +90,7 @@ const node = "http://shex.io/examples/Issue1#Issue1"; // node in that data
 
 const N3 = require("n3");
 const ShExLoader = require("@shexjs/loader")({        // initialize with:
-  fetch: require('node-fetch'),                       //   fetch implementation
+  fetch: globalThis.fetch,                            //   fetch implementation (Node >=18)
   rdfjs: N3,                                          //   RdfJs Turtle parser
 });
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
@@ -121,26 +121,26 @@ ShEx can be represented in the compact syntax
 ```
 PREFIX ex: <http://ex.example/#>
 <IssueShape> {                       # An <IssueShape> has:
-    ex:state (ex:unassigned            # state which is
-              ex:assigned),            #   unassigned or assigned.
+    ex:state [ex:unassigned            # state which is
+              ex:assigned],            #   unassigned or assigned.
     ex:reportedBy @<UserShape>        # reported by a <UserShape>.
 }
 ```
 or in JSON:
 ```json
-{ "type": "schema", "start": "http://shex.io/examples/IssueShape",
-  "shapes": {
-    "http://shex.io/examples/IssueShape": { "type": "shape",
-      "expression": { "type": "eachOf",
-        "expressions": [
-          { "type": "tripleConstraint", "predicate": "http://ex.example/#state",
-            "valueExpr": { "type": "valueClass", "values": [
-                "http://ex.example/#unassigned", "http://ex.example/#assigned"
-          ] } },
-          { "type": "tripleConstraint", "predicate": "http://ex.example/#reportedBy",
-            "valueExpr": { "type": "valueClass", "reference": "http://shex.io/examples/UserShape" }
-          }
-] } } } }
+{ "type": "Schema", "start": "http://shex.io/examples/IssueShape",
+  "shapes": [
+    { "id": "http://shex.io/examples/IssueShape", "type": "ShapeDecl",
+      "shapeExpr": { "type": "Shape",
+        "expression": { "type": "EachOf",
+          "expressions": [
+            { "type": "TripleConstraint", "predicate": "http://ex.example/#state",
+              "valueExpr": { "type": "NodeConstraint", "values": [
+                  "http://ex.example/#unassigned", "http://ex.example/#assigned"
+              ] } },
+            { "type": "TripleConstraint", "predicate": "http://ex.example/#reportedBy",
+              "valueExpr": "http://shex.io/examples/UserShape" }
+] } } } ] }
 ```
 
 You can convert between them with shex-to-json:
@@ -157,7 +157,7 @@ As with validation, the ShExLoader wraps the fetching and parsing:
 const shexc = "http://shex.io/examples/Issue.shex";
 
 const ShEx = require("shex");
-const ShExLoader = ShEx.Loader({fetch: require("node-fetch"), rdfjs: require("n3")});
+const ShExLoader = ShEx.Loader({fetch: globalThis.fetch, rdfjs: require("n3")});
 ShExLoader.load({shexc: [shexc]}, null).then(function (loaded) {
     console.log(JSON.stringify(loaded.schema, null, "  "));
 });
@@ -194,7 +194,7 @@ The syntax is:
 ```sh
 shexmap-materialize `-t <target schema>`|-h [-j `<JSON Vars File>`] [-r `<RDF root IRI>`]
 ```
-It reads the output of `shex-validate --extension` from STDIN and maps it to the specified target schema (`--extension` takes a path to the extension module).
+It reads the output of `shex-validate --extension` from STDIN and maps it to the specified target schema (`--extension` takes a package name or file glob for the extension module).
 
 If supplied, a JSON vars file will be referenced to fill in constant values not specified from the source.
 This is useful in assigning default fields to the target when there is no equivalent value in the source schema
@@ -218,7 +218,7 @@ npx shexmap-materialize -h
 ```
 ```sh
 npx shex-validate -x source_schema.shex -d data.ttl -s ProblemShape -n prob1 \
-    --extension node_modules/@shexjs/extension-map \
+    --extension @shexjs/extension-map \
   | npx shexmap-materialize -t target_schema.shex -j vars.json
 ```
 ```sh
@@ -261,6 +261,17 @@ This repo uses [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces)
 - [`@shexjs/extension-wasi-test`](packages/extension-wasi-test#readme) -- the Test extension reimplemented in hand-written WebAssembly, printing via WASI fd_write
 - [`@shexjs/extension-map`](packages/extension-map#readme) -- an extension for transforming data from one schema to another ([more](http://shex.io/extensions/Map/))
 - [`@shexjs/extension-eval`](packages/extension-eval#readme) -- simple extension which evaluates Javascript semantic action code ([more](http://shex.io/extensions/Eval/))
+- [`@shexjs/extension-reduce`](packages/extension-reduce#readme) -- the Reduce extension (the inverse of Map)
+- [`@shexjs/extension-reduce-js`](packages/extension-reduce-js#readme) -- the Reduce extension's JavaScript semantic-action handler
+- [`@shexjs/extension-wasi`](packages/extension-wasi#readme) -- run WAT/Wasm semantic actions via WASI
+- [`@shexjs/eval-validator-api`](packages/eval-validator-api#readme) -- the regex-engine interface the validator drives (with capture/replay debug hooks)
+- [`@shexjs/eval-simple-1err`](packages/eval-simple-1err#readme) is the "fast" engine (stops at the first error); [`@shexjs/eval-threaded-nerr`](packages/eval-threaded-nerr#readme) the "thorough" default (reports every error)
+- [`@shexjs/neighborhood-api`](packages/neighborhood-api#readme) -- the NeighborhoodDb interface the data sources implement
+- [`@shexjs/neighborhood-rdfjs`](packages/neighborhood-rdfjs#readme) -- a NeighborhoodDb over an in-memory RDF/JS store
+- [`@shexjs/neighborhood-sparql`](packages/neighborhood-sparql#readme) -- a NeighborhoodDb over a SPARQL endpoint
+- [`@shexjs/neighborhood-wikibase`](packages/neighborhood-wikibase#readme) -- a NeighborhoodDb over a Wikibase's entity JSON
+- [`@shexjs/semact-overlay`](packages/semact-overlay#readme) -- a visitor overlay that indexes semantic actions
+- [`@shexjs/editor-services`](packages/shex-editor-services#readme) -- editor language services (lint, hover, complete)
 
 ## building
 
@@ -313,7 +324,7 @@ npm test                # quick suite, as run by the pre-commit hook
 npm run test-all        # everything, including the cli, browser and server tests
 TESTS='ThreadedMaterializer|Map' npm test  # filter by test name pattern
 npm run lint
-npm run coverage        # test-all under nyc; writes coverage/lcov.info
+npm run coverage        # test-all under c8; writes coverage/lcov.info
 ```
 
 `npm run test-all` sets `TEST_cli`/`TEST_browser`/`TEST_server`; the same suite runs in [CI](.github/workflows/ci.yml) on every supported Node version.
@@ -323,17 +334,32 @@ On `main`, the `shex-test` dependency must track `shexTest#main` (enforced by `n
 ## publishing
 
 The packages share one version line (formerly lerna's "fixed" mode; lerna is no longer used).
-To release:
+Publishing runs **in CI, not locally**: pushing a `v*` tag triggers
+[`.github/workflows/release.yml`](.github/workflows/release.yml), which runs
+`node tools/publish-ordered.js` under npm [OIDC trusted publishing](https://docs.npmjs.com/trusted-publishers).
+The tag is only the trigger — each package publishes the version in its own `package.json`.
 
 ``` shell
-npm run bump-versions -- 1.0.0-alpha.NN   # set every package version and cross-dependency range
-                                          # (add --dry-run to preview)
-npm install                               # sync package-lock.json
-npm run test-all                          # the meta-package tests check version-range consistency
-git commit -am 'chore(release): publish'
-git tag v1.0.0-alpha.NN
-git push --follow-tags
-node tools/publish-ordered.js            # publish every packages/* package, in dependency order
+# 1. Bump every workspace package (independents @shexjs/term / shape-map kept) + sync the lock
+node tools/bumpVersions.js --dry-run 1.0.0-alpha.NN   # preview first (optional)
+node tools/bumpVersions.js 1.0.0-alpha.NN             # (== npm run bump-versions 1.0.0-alpha.NN)
+npm install --package-lock-only                       # sync package-lock.json to the new versions
+
+# 2. Commit (the pre-commit hook runs the suite + check-branch-deps)
+git add -u
+git commit -m "chore(release): 1.0.0-alpha.NN"
+
+# 3. Annotated tag, then push — the v* tag is what triggers publishing
+git tag -a v1.0.0-alpha.NN -m "1.0.0-alpha.NN"
+git push origin main --follow-tags
 ```
 
-`tools/publish-ordered.js` publishes each workspace package after the ones it depends on (`--list` shows the order, `--dry-run` rehearses it); per-package `publishConfig` already grants public access.
+`tools/publish-ordered.js` publishes each workspace package after the ones it
+depends on and **skips any version the registry already has** (`--list` shows the
+order, `--dry-run` rehearses it); per-package `publishConfig` grants public access.
+
+Keep the lock in sync with a current npm. The release job's `npm ci` is strict: a
+lock left stale after a dependency's *major* bump fails it with "package.json and
+package-lock.json … not in sync" (older Node lanes' npm tolerates it, so CI can go
+half-red). If that bites, regenerate under the newest npm — `npx -y npm@latest
+install --package-lock-only` — and cut a fresh tag.

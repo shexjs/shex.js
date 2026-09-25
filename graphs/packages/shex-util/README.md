@@ -12,7 +12,7 @@ npm install @shexjs/util
 ```
 
 ## Invocation
-Using `Partition(<schema>, [<URL>s])` as an example, an illustrative way to invoke it from the command line uses `@shexjs/parser` and `@shexjs/writer`:
+Using `partition(<schema>, [<URL>s])` as an example, an illustrative way to invoke it from the command line uses `@shexjs/parser` and `@shexjs/writer`:
 ``` sh
 node -e 'const base = "http://a.example/"
   const schema = require("@shexjs/parser")
@@ -61,11 +61,11 @@ Note that `<S2>` in the input schema has no references to `<S1>`:
 ## ShExJtoAS(schema)
 Parse a ShExJ schema and add `._prefixes` and `._index` for efficient processing within shexj.js
 
-## ShExAStoJ(schema)
+## AStoShExJ(schema)
 Remove `._prefixes` and `._index` from internal schema structure and add `schema["@context"] || "http://www.w3.org/ns/shex.jsonld"`
 
-## ShExRVisitor:(knownShapeExprs), ShExRtoShExJ(schema-like-object)
-Internal functions for parsing ShExR
+## ShExRtoShExJ(schema-like-object)
+Internal function for parsing ShExR (the `ShExRVisitor` it uses is not exported)
 
 ## canonicalize(schema, trimIRI)
 Normalize ShExJ by moving all tripleExpression references to their first expression.
@@ -90,12 +90,8 @@ Return which predicates appear in which shapes, what their common type is, and w
 ## getDependencies(schema, ret)
 Find which shapes depend on other shapes by inheritance or inclusion.
 
-## Partition(<schema>, [<URL>s])
+## partition(<schema>, [<URL>s])
 Create subset of a schema with only desired shapes and their dependencies.
-
-## merge(left, right, overwrite, inPlace)
-Merge right schema onto left schema if `inPlace` is true; otherwise return a new merged schema.
-`overwrite`: boolean specifies whether to replace an old shape declaration with a new one of the same name.
 
 ## absolutizeResults(res, base)
 In validation results with some relative URLs in it, re-evaluate all [`shape`, `reference`, `node`, `subject`, `predicate`, `object`] property values against `base`.
@@ -122,12 +118,6 @@ Asynchronously execute a SPARQL query against an endpoint.
 
 ## parseSparqlJsonResults (jsonObject)
 Parse JSON results to internal RDF term representations.
-
-## parseSparqlXmlResults_dom(doc)
-Parse XML results in a DOM to internal RDF term representations.
-
-## parseSparqlXmlResults_jquery(jqObj)
-Parse XML results to internal RDF term representations using JQuery.
 
 ---
 

@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.cache/tsc/tsconfig.worker.tsbuildinfo", // tsc -b (npm run build/watch)
+    "forceConsistentCasingInFileNames": true,
+    "module": "none",
+    "outDir": "./doc",
+    "rootDir": "./src/worker",
+    "target": "ES2022",
+    "useDefineForClassFields": false,
+    "sourceMap": false,
+    "removeComments": false,
+    "skipLibCheck": true,
+    "strict": true,
+    "alwaysStrict": false,
+    "types": [],
+    "lib": ["ES2022", "WebWorker"]
+  },
+  "include": ["src/worker/**/*.ts"]
+}

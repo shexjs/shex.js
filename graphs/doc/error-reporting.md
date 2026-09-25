@@ -114,8 +114,9 @@ both callers, so the two can't drift again.
 
 ### F2. ShExC in sentences, not JSON (S) — done
 
-Give `@shexjs/writer` a public fragment entry point (`writeShapeExpr(expr,
-{prefixes})`, wrapping what `_writeShapeExpr` already does) and use it from
+Give `@shexjs/writer` a public fragment entry point (`writeShapeExpr(expr)`,
+wrapping what `_writeShapeExpr` already does; prefixes come from the writer's
+constructor, `new ShExCWriter({prefixes})`) and use it from
 the single renderer, so a message reads `…doesn't satisfy xsd:integer
 mininclusive 3`. Prefixes come from the schema's own, so the sentence uses
 the reader's spelling.

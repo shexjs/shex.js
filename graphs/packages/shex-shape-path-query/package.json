@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/shape-path-query",
-  "version": "1.0.0-alpha.30",
+  "version": "1.0.0-alpha.33",
   "files": [
     "bin",
     "lib",
@@ -26,17 +26,17 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@shexjs/extension-map": "^1.0.0-alpha.30",
-    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.30",
+    "@shexjs/extension-map": "^1.0.0-alpha.33",
+    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.33",
     "@shexjs/term": "^1.0.0-alpha.28",
-    "@shexjs/util": "^1.0.0-alpha.30",
-    "@shexjs/validator": "^1.0.0-alpha.30",
-    "n3": "^1.20.4",
+    "@shexjs/util": "^1.0.0-alpha.33",
+    "@shexjs/validator": "^1.0.0-alpha.33",
+    "n3": "^2.7.12",
     "shape-map": "^1.0.0",
     "shape-path-core": "^0.0.8"
   },
   "devDependencies": {
-    "sinon": "^18.0.0"
+    "sinon": "^22.1.0"
   },
   "scripts": {
     "test": "mocha -C -R dot",

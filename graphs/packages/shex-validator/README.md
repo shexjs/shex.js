@@ -201,7 +201,7 @@ function myValidator (point, shapeLabel, ctx) {
 Validating a schema with external shapes and no `validateExtern` raises:
 
 ```
-TypeError: this.options.validateExtern is not a function
+Error: validating "http://a.example/n2" as EXTERNAL shapeExpr http://a.example/S2 requires a 'validateExtern' option
 ```
 
 # Testing

@@ -5,7 +5,7 @@ const {expect} = require("chai");
 const Fs = require("fs");
 const Path = require("path");
 const ShExUtil = require("..");
-const findPath = require("./findPath.js");
+const findPath = require("../../shex-cli/test/findPath.js");
 
 const SHEXR = Path.join(__dirname, "..", "ShExR.shex");
 

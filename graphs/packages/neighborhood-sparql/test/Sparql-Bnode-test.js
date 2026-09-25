@@ -189,7 +189,7 @@ function parseData (turtle) {
   return opaqueBnodes(new N3.Parser({baseIRI: BASE, factory: N3.DataFactory}).parse(PREFIXES + turtle));
 }
 
-const ENABLED = "TEST_sparql" in process.env;
+const ENABLED = require("../../shex-cli/test/testGate.js")("TEST_sparql");
 
 describe("@shexjs/neighborhood-sparql identifying blank nodes", function () {
   // One pending test rather than a thousand when the gate is off.

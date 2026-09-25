@@ -18,7 +18,7 @@
 
 import type * as ShExJ from "shexj";
 
-const ShExWriter = require("@shexjs/writer");
+const ShExCWriter = require("@shexjs/writer");
 
 /** where in a sentence a term stands, so a host can spell it accordingly */
 export type TermRole = "subject" | "predicate" | "object" | "node" | "property" | "shape";
@@ -157,7 +157,7 @@ export function shexcFragment (expr: any, prefixes?: { [prefix: string]: string 
   if (typeof expr === "string")            // a shape reference
     return "@" + iriText(expr, prefixes, base);
   try {
-    const writer = new ShExWriter({simplifyParentheses: false, prefixes: prefixes || {}});
+    const writer = new ShExCWriter({simplifyParentheses: false, prefixes: prefixes || {}});
     const said = writer.writeShapeExpr(expr);
     return typeof said === "string" ? said.trim() : "";
   } catch (e) {

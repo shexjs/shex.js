@@ -249,4 +249,36 @@ describe("validator edges", function () {
     expect(JSON.stringify(res), "and nothing tells the reader how to break it")
       .to.not.include('"repairs"');
   });
+
+  /* The recursion loophole (#14).  <A> genuinely fails -- <a> has no :preda --
+   * and <C> requires @<A>, so <D>'s `:test2 @<C>` must fail.  But <C> is first
+   * reached through `:test @<A>*` while <A> is still on the stack: there <C>'s
+   * `:subject @<A>` is *assumed* to hold (a Recursion), so <C> passed.  That
+   * contingent pass used to be memoized and reused for `:test2 @<C>` after <A>
+   * had failed, and <d> wrongly conformed on the fast engine.  A contingent
+   * result must not outlive its assumption; both engines must fail <d>. */
+  [["eval-simple-1err", require("@shexjs/eval-simple-1err").RegexpModule],
+   ["eval-threaded-nerr", require("@shexjs/eval-threaded-nerr").RegexpModule],
+  ].forEach(([engine, regexModule]) => {
+    it(`does not reuse a recursion-contingent result (#14, ${engine})`, function () {
+      const schema = [
+        `PREFIX : <${BASE}>`,
+        `PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>`,
+        `:D { :predd xsd:string ; ( :test @:A* | :test @:E* ) ; :test2 @:C }`,
+        `:E { :prede xsd:string }`,
+        `:A { :subject @:C ; :preda xsd:string }`,
+        `:C { :subject @:A ; :predc xsd:string }`,
+      ].join("\n");
+      const data = [
+        `PREFIX : <${BASE}>`,
+        `:d :predd "final" ; :test :a ; :test2 :c .`,
+        `:a :subject :c ; :prede "final" .`,
+        `:c :subject :a ; :predc "final" .`,
+      ].join("\n");
+      const result = validatorFor(schema, data, {regexModule})
+        .validateShapeMap([{node: BASE + "d", shape: BASE + "D"}])[0];
+      expect(result.status, JSON.stringify(result.appinfo || result))
+        .to.equal("nonconformant");
+    });
+  });
 });

@@ -43,7 +43,7 @@ import {ShExIndexVisitor} from "@shexjs/visitor";
 const {StoreDuplicates, yyllocToString, Merger: ShExMerger} = require("@shexjs/util/lib/Merger");
 import * as RdfJsModule from '@shexjs/neighborhood-rdfjs';
 const { ctor: RdfJsDb } = RdfJsModule;
-import { paramsToCommandLineArgs, queryMapResolverFor, extensionName, moduleId } from '@shexjs/neighborhood-api';
+import { paramsToCommandLineArgs, queryMapResolverFor, extensionName, moduleId, ordered } from '@shexjs/neighborhood-api';
 import type { NeighborhoodModule, NeighborhoodDb, DbParamSpec, DbQueryTracker, CliOptionDefinition } from '@shexjs/neighborhood-api';
 import type { Term as RdfJsTerm } from "@rdfjs/types";
 /** a neighborhood module this CLI can construct from its command line
@@ -60,14 +60,14 @@ const QueryDbModules: QueryDbModule[] = [
 ];
 import * as ShExTerm from "@shexjs/term";
 import * as ShExParser from "@shexjs/parser";
-import ShExWriter = require("@shexjs/writer"); // for verbose output
+import ShExCWriter = require("@shexjs/writer"); // for verbose output
 import {ShExValidator, resultMapToShapeExprTest} from "@shexjs/validator";
 import ShapeMap = require("shape-map");
 const N3 = require("n3");
 import ShExNodeCjsModule = require("@shexjs/node");
 const ShExNode = ShExNodeCjsModule({
   rdfjs: N3,
-  fetch: require('node-fetch'),
+  fetch: globalThis.fetch,
   jsonld: require('jsonld'),
 });
 const ExitCode: ExitCodes = require('../lib/ExitCode')
@@ -112,6 +112,7 @@ interface Cmds {
   slurp?: boolean | string;
   provenance?: boolean;
   "slurp-all"?: boolean;
+  "sort-quads"?: boolean;
   help?: boolean;
   node?: string;
   "node-type"?: string;
@@ -222,6 +223,7 @@ const CommandLineOptions: CliOption[] = [
   { name: "slurp",                 type: Boolean , description: "record minimal neighborhoods needed by validation" },
   { name: "provenance",            type: Boolean , description: "parse Turtle data with source tracking and attach each matched triple's source ranges to the results" },
   { name: "slurp-all",             type: Boolean , description: "record complete neighborhoods visited by validation. implies --slurp; may be the same as --slurp, depending on the databse" },
+  { name: "sort-quads",            type: Boolean , description: "order each neighborhood's arcs canonically in the results (off by default; the order is cosmetic and never affects conformance)" },
   { name: "help",      alias: "h", type: Boolean , description: "print usage information and quit" },
   { name: "node",      alias: "n", type: String, typeLabel: "RDFTerm",   multiple: false, defaultValue: undefined, description: "node to validate" },
   { name: "node-type", alias: "t", type: String, typeLabel: "IRI",       multiple: false, defaultValue: undefined, description: "validate nodes of this type" },
@@ -335,8 +337,8 @@ async function main () {
     abort("--explain takes both, repairs or errors, not " + cmds.explain, ExitCode.bad_argument);
 
   if (cmds.coverage) {
-    if (!(cmds.coverage in ShExValidator.InterfaceOptions.coverage))
-      throw Error("unknown coverage option \"" + cmds.coverage + "\" - expected one of " + Object.keys(ShExValidator.InterfaceOptions.coverage).join(", ") + "\".");
+    if (!(cmds.coverage in ShExValidator.InterfaceOptions.coverage)) // a usage error, like --explain's
+      abort("unknown coverage option \"" + cmds.coverage + "\" - expected one of " + Object.keys(ShExValidator.InterfaceOptions.coverage).join(", ") + "\".", ExitCode.bad_argument);
     ValidatorOptions.coverage = cmds.coverage;
   }
 
@@ -404,7 +406,7 @@ function abort (msg: string, exitCode: number): never {
       ]
     },
     {
-      content: "Project home: " + require('chalk').underline("https://github.com/shexSpec/shex.js")
+      content: "Project home: " + (process.stdout.isTTY ? "\u001b[4mhttps://github.com/shexSpec/shex.js\u001b[24m" : "https://github.com/shexSpec/shex.js")
     }
   ]));
   process.exit(exitCode);
@@ -442,7 +444,7 @@ async function findNodesAndValidate (loaded: any, parms: any, options: any, sche
   };
   function allNodesWithType (type: string) {
     const triples = loaded.data.getQuads(null, RDF_TYPE, type);
-    return triples.length > 0 ? triples.map((t: any) => t.subject) : [ShExUtil.NotSupplied];
+    return triples.length > 0 ? triples.map((t: any) => ShExTerm.rdfJsTerm2Ld(t.subject)) : [ShExUtil.NotSupplied];
   };
   function getQuads (s: any, p: any, o: any) {
     const get = s === ShapeMap.Focus ? "subject" : "object";
@@ -486,10 +488,13 @@ async function findNodesAndValidate (loaded: any, parms: any, options: any, sche
       shapeLabel = ShExValidator.Start;
       ret.shape = shapeLabel;
     } else {
-      const found = typeof shapeP === "string"
+      // a string is resolved against the schema; none at all is guessed
+      // (parsePassedNode falls back to someShape); anything else is already
+      // a token like .start
+      const found = typeof shapeP === "string" || shapeP === undefined
             ? ShExUtil.parsePassedNode(shapeP, loaded.schemaMeta[0],
 				       someShape, knownShape, unknownShape)
-            : shapeP; // already a token like .start
+            : shapeP;
       if (found === ShExUtil.NotSupplied || found === ShExUtil.UnknownIRI)
         throw Error("shape " + shapeP + " not defined" + optsStr(shapeP, loaded.schema.shapes));
       // shape = { type: "ShapeRef", reference: found };
@@ -524,11 +529,10 @@ async function findNodesAndValidate (loaded: any, parms: any, options: any, sche
       }
       // Make sure we have a start node.
       if (shape === undefined && !("start" in loaded.schema)) {
-        const schemaKeys = Object.keys(loaded.schema.shapes);
-        schemaKeys.join(", ");
+        const schemaKeys = (loaded.schema.shapes || []).map((decl: any) => decl.id);
         msgs.push("No shape specified on command line or in ShEx schema" +
                   (schemaKeys.length < 50 ?
-                   "; try -n with one of: " + schemaKeys.join(", ") :
+                   "; try -s with one of: " + schemaKeys.join(", ") :
                    "")
                  );
       }
@@ -553,7 +557,7 @@ async function findNodesAndValidate (loaded: any, parms: any, options: any, sche
     let tz = shapeMap.map((p: any) => { return p.node + " AS " + p.shape; });
     tz = tz.length > 1 ? JSON.stringify(tz) : tz[0];
     let w: string | undefined;
-    new ShExWriter({simplifyParentheses: false }).
+    new ShExCWriter({simplifyParentheses: false }).
       writeSchema(loaded.schema, function (error: any, text: string) {
         if (error) throw error;
         else w = text;
@@ -700,6 +704,8 @@ async function loadSchemaAndData (valParms: any, validatorOptions: any, schemaOp
       || RdfJsDb(schemaAndData.data, queryTracker);
     if (typeof schemaAndData.data.setSchema === "function")
       schemaAndData.data.setSchema(schemaAndData.schema); // e.g. sparql narrows queries by shape
+    if (valParms["sort-quads"]) // opt in to a stable arc order; native order otherwise
+      schemaAndData.data = ordered(schemaAndData.data);
 
     if (valParms.diagnose) {
       const redefined = Object.keys(storeDuplicatesInstance.duplicates);
@@ -990,6 +996,10 @@ async function runValidator (db: any, shapeMap: any, schema: any, options: any, 
   // prepare validator
   const validator = new ShExValidator(schema, db, options);
   const extensions = ShExNode.loadExtensions(cmds.extension);
+  // An extension that initializes asynchronously (extension-wasi loads wabt)
+  // exports ready(); it must settle before the first action is dispatched.
+  await Promise.all(Object.values(extensions).map((ext: any) =>
+    typeof ext.ready === "function" ? ext.ready() : undefined));
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].register(validator, {ShExTerm});
   });
@@ -1019,7 +1029,9 @@ async function runValidator (db: any, shapeMap: any, schema: any, options: any, 
        w.addTriples(db); w.end(function (error, result) { console.log(result); });
        });'
     */
-    return eval("function (validator) {\n" + cmds.exec + "}")(validator);
+    // parenthesized: a bare `function (validator) {…}` is a statement, and a
+    // function statement needs a name, so --exec always failed with a SyntaxError
+    return eval("(function (validator) {\n" + cmds.exec + "\n})")(validator);
   } else {
     if (!cmds.quiet)
       if ("errors" in res && Object.keys(validator.semActHandler.results).length) {
@@ -1530,12 +1542,6 @@ async function mergeParm (parms: ServerParms, parm: string, text: string, url: U
     // node and shape will be evaluated as relative URLs in findNodesAndValidate.
     parms[parm] = text;
   }
-}
-
-function objKeyVal (pairs: any[]) {
-  const ret: { [key: string]: any } = {};
-  pairs.forEach(pair => ret[pair[0]] = pair[1]);
-  return ret;
 }
 
 function makeError (msg: string, status: number) {

@@ -205,96 +205,6 @@ export const RegexpModule: ValidatorRegexModule = {
   }
 }
 
-/**
- * debugging tool; lots of ts-ignores
- */
-class NfaToString {
-  public known: {
-    OneOf: ShExJ.tripleExpr[],
-    EachOf: ShExJ.tripleExpr[]
-  } = {OneOf: [], EachOf: []};
-
-  dumpTripleConstraint (tc: ShExJ.TripleConstraint) {
-    return "<" + tc.predicate + ">";
-  }
-
-  card (obj: RegExpState) {
-    let x = "";
-    if ("min" in obj)
-        // @ts-ignore
-      x += obj.min;
-    if ("max" in obj)
-        // @ts-ignore
-      x += "," + obj.max;
-    return x ? "{" + x + "}" : "";
-  }
-
-  junct (j: string | ShExJ.tripleExpr) { // string.type is undefined so this works in js
-    // @ts-ignore
-    let id = known[j.type].indexOf(j);
-    if (id === -1) { // @ts-ignore
-      id = known[j.type].push(j) - 1;
-    }
-    // @ts-ignore
-    return j.type + id; // + card(j);
-  }
-
-  public dumpStackElt (elt: StackEntry) {
-    return this.junct(elt.c) + "." + elt.e + ("i" in elt ? "[" + elt.i + "]" : "");
-  }
-
-  public dumpStack (stack: StackEntry[]) {
-    return stack.map(elt => {
-      return this.dumpStackElt(elt);
-    }).join("/");
-  }
-
-  public dumpNFA (states: RegExpState[], startNo: number) {
-    return states.map((s, i) => {
-      return (i === startNo
-                  ? s instanceof MatchState
-                      ? "."
-                      : "S"
-                  : s instanceof MatchState
-                      ? "E"
-                      : " "
-          )
-          + i + " " + (
-              s instanceof SplitState
-                  ? ("Split-" + this.junct(s.expr))
-                  : s instanceof ReptState
-                      ? ("Rept-" + this.junct(s.expr))
-                      : s instanceof MatchState
-                          ? "Match"
-                          : this.dumpTripleConstraint((s as TripleConstraintState).c as ShExJ.TripleConstraint)
-          )
-          + this.card(s) + "→" + s.outs!.join(" | ") + (
-              "stack" in s
-                  ? this.dumpStack((s as TripleConstraintState).stack)
-                  : ""
-          );
-    }).join("\n");
-  }
-
-  public dumpMatched (matched: TriplesMatch[]) {
-    return matched.map(m => {
-      return this.dumpTripleConstraint(m.c) + "[" + m.triples.join(",") + "]" + this.dumpStack(m.stack);
-    }).join(",");
-  }
-
-  public dumpThread (thread: RegExpThread) {
-    return "S" + thread.state + ":" + Object.keys(thread.repeats).map(k => {
-      return k + "×" + thread.repeats[k];
-    }).join(",") + " " + this.dumpMatched(thread.matched);
-  }
-
-  public dumpThreadList(list: RegExpThread[]) {
-    return "[[" + list.map(thread => {
-      return this.dumpThread(thread);
-    }).join("\n  ") + "]]";
-  }
-}
-
 interface Repeats {
   [key: string]: number;
 }
@@ -327,6 +237,10 @@ class RegExpThread {
       public stack = [],
       public matched: TriplesMatch[] = [],
       public errors = [],
+      /** for each repeat this thread is inside, the triple count when its
+       * current iteration began -- so an iteration that returns to the Rept
+       * with the count unchanged can be recognised as an empty match (#16). */
+      public reptStarts: Repeats = {},
   ) { }
 }
 
@@ -460,7 +374,6 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
       return this.matchedToResult([], constraintToTripleMapping, semActHandler);
 
     let chosen = null;
-    // console.log(new NfaToString().dumpNFA(this.states, this.start));
     this.addstate(clist, this.start, new RegExpThread());
     // The start's closure may already reach the end -- a group taken zero
     // times -- and that is the match where there is nothing to match.
@@ -580,7 +493,19 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
             }, 0) === allTriples.size;
         return ret !== null ? ret : (elt.state === thisEvalSimple1ErrRegexEngine.end && matchedAll) ? elt : null;
       }, null)
-      if (longerChosen) {
+      // A later accepting thread replaces the chosen one only when it spreads
+      // the triples over more iterations: `( :a .{1,2} ; :b . ? )*` over two
+      // :a's is one per iteration, not both in the first, which is what
+      // eval-threaded-nerr reports.  Every accepting thread has consumed every
+      // triple (matchedAll), so a later one that consumes them in the same
+      // matches differs only by appended empty matches -- an iteration of
+      // `( :a .* | :b .* )*` taken over nothing -- and keeping it padded the
+      // solution with them.  Empty iterations are always trailing (the Rept
+      // state refuses re-entry after one), so the non-empty matches decide.
+      const consumingKey = (t: RegExpThread): string => JSON.stringify(
+        t.matched.filter(m => m.triples.length > 0)
+                 .map(m => [m.stack.map(s => [s.i, s.e]), m.triples.length]));
+      if (longerChosen && (chosen === null || consumingKey(longerChosen) !== consumingKey(chosen))) {
         chosen = longerChosen;
         yield {type: "accept", generation, thread: this.threadView(longerChosen)};
       }
@@ -730,10 +655,24 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
         if (!(stateNo in thread.repeats))
           thread.repeats[stateNo] = 0;
         const repetitions = thread.repeats[stateNo];
+        // Triples consumed so far.  An iteration of a nullable body can come
+        // back to this Rept without having grown that count -- it matched
+        // empty -- and re-entering the body would match empty again forever
+        // (issue #16): the outer `*`/`+` over such a body spun off a thread
+        // with an ever-larger repeat counter each generation and never
+        // drained the worklist.  So the back-edge is barred once an iteration
+        // consumes nothing; the empty match can still pad any minimum, so the
+        // exit is offered even below min.
+        const consumedNow = thread.matched.reduce((n, m) => n + m.triples.length, 0);
+        const iterStart = thread.reptStarts[stateNo];
+        const emptyIteration = iterStart !== undefined && iterStart === consumedNow;
         // add(r < s.min ? outs[0] : r >= s.min && < s.max ? outs[0], outs[1] : outs[1])
-        if (repetitions < s.max!)
-          Array.prototype.push.apply(ret, this.addstate(list, s.outs[0], this.incrmRepeat(thread, stateNo), seen)); // outs[0] to repeat
-        if (repetitions >= s.min && repetitions <= s.max)
+        if (repetitions < s.max! && !emptyIteration) {
+          const entered = this.incrmRepeat(thread, stateNo);   // outs[0] to repeat
+          entered.reptStarts[stateNo] = consumedNow;           // this iteration starts here
+          Array.prototype.push.apply(ret, this.addstate(list, s.outs[0], entered, seen));
+        }
+        if ((repetitions >= s.min || emptyIteration) && repetitions <= s.max)
           Array.prototype.push.apply(ret, this.addstate(list, s.outs[1], this.resetRepeat(thread, stateNo), seen)); // outs[1] when done
         return ret;
       } else {
@@ -746,7 +685,8 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
             ownPool(thread.avail), // a thread spends its own triples: see ownPool
             thread.stack,
             thread.matched,
-            thread.errors
+            thread.errors,
+            thread.reptStarts
         )) - 1];
       }
     }
@@ -757,13 +697,21 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
           r[k] = thread.repeats[k];
         return r;
       }, {});
+      // leaving the repeat forgets where its iteration began, so a later
+      // re-entry (an enclosing repeat) starts its empty-match test afresh.
+      const trimmedStarts = Object.keys(thread.reptStarts).reduce<Repeats>((r, k) => {
+        if (parseInt(k) !== repeatedState)
+          r[k] = thread.reptStarts[k];
+        return r;
+      }, {});
       return new RegExpThread(
           thread.state/*???*/,
           trimmedRepeats,
           ownPool(thread.avail),
           thread.stack,
           thread.matched,
-          []
+          [],
+          trimmedStarts
       );
     }
 
@@ -778,7 +726,8 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
         ownPool(thread.avail),
         thread.stack,
         thread.matched,
-        []
+        [],
+        Object.assign({}, thread.reptStarts) // own copy: the caller stamps this iteration's start
       );
     }
 
@@ -853,15 +802,18 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
             last[mis].i = null;
             // !!! on the way out to call after valueExpr test
             const groupSemActs = semActsOn(semActHandler, m.stack[mis].c);
-            if (groupSemActs !== undefined && groupSemActs.length > 0) {
+            if (errors.length === 0 && groupSemActs !== undefined && groupSemActs.length > 0) {
               const ctx = {
                 triples: constraintToTripleMapping.get(m.c)!
                   .map(m => m.triple),
                 tripleExpr: m.c
               };
-              const errors = semActHandler.dispatchAll(groupSemActs, ctx, ptr);
-              if (errors.length)
-                throw errors;
+              // A group action that fails fails the match the way a constraint
+              // action does (below): collected here and answered as a SemActFailure.
+              // It used to be thrown -- a bare array, which nothing caught, so a
+              // `( ... ) %Test{ fail(s) %}` escaped the validator as an exception
+              // instead of a nonconformant result.
+              Array.prototype.push.apply(errors, semActHandler.dispatchAll(groupSemActs, ctx, ptr));
             }
             // if (ret && "semActs" in expr) { ret.semActs = expr.semActs; }
           } else {

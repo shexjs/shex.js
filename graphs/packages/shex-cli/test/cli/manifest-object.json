@@ -1,0 +1,7 @@
+{
+  "name": "object-form" ,
+  "shex": "1dotOr2dot.shex" ,
+  "shape": "http://a.example/S1" ,
+  "data": "p1.ttl" ,
+  "queryMapURL": "map-x-S1.txt"
+}

@@ -49,7 +49,6 @@ packages/extension-reduce/doc/webpacks/
 packages/extension-wasi/doc/webpacks/
 
 .coveralls.yml
-.nyc_output/
 
 
 # perf corpora: fetched with perf/fhir/fetch.sh, never committed

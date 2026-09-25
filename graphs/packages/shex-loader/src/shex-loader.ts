@@ -6,7 +6,7 @@
  * loadExtensions function(globs[])
  *   prototype of loadExtensions. does nothing
  * GET function(url, mediaType)
- *   return promise of {contents, url}
+ *   return promise of {text, url}
  */
 
 const ShExUtil = require("@shexjs/util");
@@ -187,14 +187,16 @@ function ShExLoaderCjsModule (config: ConfigI = {}): LoaderI {
       ? myHttpRequest(url, mediaType)  // whatever fetch handles
       : (() => { throw new WebError(`Unrecognized URL protocol ${url}`) })()
 
-    async function myHttpRequest (url: string, _mediaType?: string): Promise<LoadedResourceI> {
+    async function myHttpRequest (url: string, mediaType?: string): Promise<LoadedResourceI> {
       if (typeof config.fetch !== "function")
         throw new WebError(`Unable to fetch ${url} with fetch=${config.fetch}`)
       let resp
       try {
         resp = await config.fetch(url, {
           headers: {
-            'Accept': 'text/shex,text/turtle,*/*'
+            // a caller's mediaType leads the Accept header so a server doing
+            // content negotiation can honor it; the fallbacks keep old behavior
+            'Accept': mediaType ? `${mediaType}, text/shex, text/turtle, */*` : 'text/shex,text/turtle,*/*'
           }
         })
       } catch (e: any) {
@@ -434,7 +436,8 @@ function ShExLoaderCjsModule (config: ConfigI = {}): LoaderI {
         {}
       );
       const schemaRoot = graph.getQuads(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
-      const val = graphParser.validate(schemaRoot, schemaOptions.graphParser.validator.Start);
+      // (validateNodeShapePair is the validator's API; .validate() went away with the old validator)
+      const val = graphParser.validateNodeShapePair(schemaRoot, schemaOptions.graphParser.validator.Start);
       if ("errors" in val)
         throw new ResourceError(`${url} did not validate as a ShEx schema: ${JSON.stringify(val.errors, null, 2)}`, url)
       const schema = ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val))));

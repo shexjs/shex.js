@@ -89,7 +89,6 @@ export const InterfaceOptions = {
 
 const minOf = (tc: TripleConstraint) => tc.min === undefined ? 1 : tc.min || 1;
 
-const VERBOSE = false; // "VERBOSE" in process.env;
 const EvalThreadedNErr = require("@shexjs/eval-threaded-nerr").RegexpModule;
 
 /** which graph(s) of the dataset a validation is looking at
@@ -100,7 +99,7 @@ export type GraphView = { termType: string, value: string } | null;
 interface ValidatorOptions {
   /** the view the shape map's own pairs validate in (default: the union) */
   startGraph?: GraphView;
-  regexModule?: ValidatorRegexEngine;
+  regexModule?: ValidatorRegexModule; // a module (e.g. eval-threaded-nerr's RegexpModule); the validator calls .compile() on it
   coverage?: {
     exhaustive: string;
     firstError: string;
@@ -250,6 +249,47 @@ class EmptyTracker implements QueryTracker {
   known(_res: shapeExprTest) {}
   enter(_term: RdfJsTerm, _shapeLabel: string) { ++this.depth; }
   exit(_term: RdfJsTerm, _shapeLabel: string, _res: shapeExprTest) { --this.depth; }
+}
+
+/** Each memoized result's set of recursion assumptions, held off the result
+ * object in a WeakMap so it never shows up in a proof or perturbs a comparison
+ * (a property -- even a Symbol one -- is seen by chai's deep-equal), and is
+ * reclaimed with the result. */
+const assumptionMemo = new WeakMap<object, Set<string>>();
+
+/** The recursion assumptions a result rests on, as a set of `node`@`shape`
+ * keys.  A `Recursion` node is the validator assuming a pair holds because it
+ * is already on the validation stack -- the greatest-fixed-point step -- so a
+ * result carrying one passed only on that assumption.  These are collected when
+ * the result is memoized and indexed, so that if an assumed pair later fails
+ * the results resting on it can be dropped by lookup (issue #14); the key
+ * matches the one a failing pair computes for itself.
+ *
+ * A result that has itself been memoized carries its set on `assumptionsTag`:
+ * the walk takes it and stops rather than descending again.  Every
+ * separately-validated sub-result (a `@`-reference) is such a memoized object,
+ * so a result is walked over its own inline structure once, not re-walked
+ * through every ancestor -- which keeps indexing a large, deeply-recursive
+ * schema (e.g. ShExR) linear instead of quadratic.  Lazy accessors (the
+ * `repairs` getter builds its answer on first read, and this walk must not be
+ * that read) are skipped; they hold no Recursion node anyway. */
+function recursionAssumptions (res: any, into: Set<string> = new Set<string>()): Set<string> {
+  if (res && typeof res === "object") {
+    const memo = assumptionMemo.get(res);
+    if (memo !== undefined)
+      memo.forEach(k => into.add(k));
+    else if (res.type === "Recursion")
+      into.add(JSON.stringify(res.node) + "@" + res.shape);
+    else if (Array.isArray(res))
+      res.forEach(x => recursionAssumptions(x, into));
+    else
+      for (const key of Object.keys(res)) {
+        const desc = Object.getOwnPropertyDescriptor(res, key);
+        if (desc && desc.get === undefined)
+          recursionAssumptions(res[key], into);
+      }
+  }
+  return into;
 }
 
 type LabelOrStart = shapeDeclLabel | typeof NeighborhoodStart;
@@ -573,6 +613,11 @@ export class ShExValidator {
   public readonly known: {
     [id: string]: shapeExprTest;
   }
+  /** For each recursion assumption (a `node`@`shape` a `Recursion` node stood
+   * in for), the `known` keys whose result rests on it -- so that when a pair
+   * fails, the results that assumed it can be evicted by lookup instead of
+   * rescanning the whole cache (issue #14). */
+  private readonly contingentOn: { [assumption: string]: Set<string> } = {};
   public readonly schema: InternalSchema;
   /** SemActDispatcherImpl rather than the interface: this is the one that
    * holds the overlay index, and the validator asks it about that. */
@@ -822,8 +867,31 @@ export class ShExValidator {
     if (!ctx.subGraph) {
       ctx.tracker.exit(focus, ctx.label, ret);
       delete ctx.seen[seenKey];
-      if ("known" in this)
+      if ("known" in this) {
         this.known[seenKey] = ret;
+        // Collect the recursion assumptions this result rests on, stamp them on
+        // it (so an ancestor reuses them instead of re-walking this sub-proof),
+        // and index them so a later failure evicts its dependents by lookup.
+        const assumed = recursionAssumptions(ret);
+        if (ret && typeof ret === "object")
+          assumptionMemo.set(ret, assumed);
+        for (const a of assumed)
+          (this.contingentOn[a] || (this.contingentOn[a] = new Set<string>())).add(seenKey);
+        // If this pair has itself failed, evict every memoized result that
+        // passed only by assuming it on the recursion stack: the recursion
+        // loophole of issue #14, where such a result was reused after its
+        // assumption had been refuted.  A genuinely-recursive result whose
+        // assumption holds is never evicted, so valid co-recursion still
+        // memoizes as before and its proofs are unchanged.
+        if ("errors" in ret) {
+          const failedKey = JSON.stringify(rdfJsTerm2Ld(focus)) + "@" + ctx.label;
+          const dependents = this.contingentOn[failedKey];
+          if (dependents !== undefined) {
+            dependents.forEach(k => { if (k !== seenKey) delete this.known[k]; });
+            delete this.contingentOn[failedKey];
+          }
+        }
+      }
     }
     return ret;
   }
@@ -1293,12 +1361,6 @@ export class ShExValidator {
         (ret as any).shared = shared;
     }
 
-    // remove N3jsTripleToString
-    if (VERBOSE)
-      neighborhood.forEach(function (t) {
-        // @ts-ignore
-        delete t.toString;
-      });
 
     return this.addShapeAttributes(shape, ret!);
   }
@@ -1695,7 +1757,19 @@ export class ShExValidator {
     for (let eNo = 0; eNo < expr.extends.length; ++eNo) {
       const extend = expr.extends[eNo];
       const subgraph = new TrivialNeighborhood(null); // These triples were tracked earlier.
-      extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
+      // Direction matters: a triple the base shape matched with an inverse
+      // constraint (^p) has the focus as its object and must land in the
+      // subgraph's *incoming* arcs. Filing every allocation as outgoing hid
+      // inverse arcs from an extended shape's inverse triple constraints, so
+      // e.g. `<B> { ^<p2> . } <A> EXTENDS @<B> { ^<p1> . }` wrongly reported a
+      // missing <p2> (a reflexive triple, focus on both ends, lands in both).
+      const focusStr = ShExTerm.rdfJsTerm2Turtle(focus);
+      extendsToTriples[eNo].forEach(t => {
+        if (ShExTerm.rdfJsTerm2Turtle(t.subject) === focusStr)
+          subgraph.addOutgoingTriples([t]);
+        if (ShExTerm.rdfJsTerm2Turtle(t.object) === focusStr)
+          subgraph.addIncomingTriples([t]);
+      });
 
       // The same extension tested against the same subgraph in an earlier partition is
       // not repeated: the first result was named; later ones reference it.
@@ -2282,26 +2356,6 @@ function CrossProduct<KEY, LISTELT, EMPTY_VALUE>(sets: MapArray<KEY, LISTELT>, e
   };
 }
 
-/* N3jsTripleToString - simple toString function to make N3.js's triples
- * printable.
- */
-const N3jsTripleToString = function () {
-  function fmt (n: RdfJsTerm) {
-    return n.termType === "Literal" ?
-      [ "http://www.w3.org/2001/XMLSchema#integer",
-        "http://www.w3.org/2001/XMLSchema#float",
-        "http://www.w3.org/2001/XMLSchema#double"
-      ].indexOf(n.datatype.value) !== -1 ?
-      parseInt(n.value) :
-      n :
-    n.termType === "BlankNode" ?
-      n :
-      "<" + n + ">";
-  }
-  // @ts-ignore what's an elegant way add toString to Quads?
-  return fmt(this.subject) + " " + fmt(this.predicate) + " " + fmt(this.object) + " .";
-};
-
 /* indexNeighborhood - index triples by predicate
  * returns: {
  *     byPredicate: Object: mapping from predicate to triples containing that
@@ -2360,10 +2414,6 @@ function indexNeighborhood (triples: Quad[]): NeighborhoodIndex {
       if (!ret.has(p))
         ret.set(p, []);
       ret.get(p).push(t);
-
-      // If in VERBOSE mode, add a nice toString to N3.js's triple objects.
-      if (VERBOSE)
-        t.toString = N3jsTripleToString;
 
       return ret;
     }, new Map()),

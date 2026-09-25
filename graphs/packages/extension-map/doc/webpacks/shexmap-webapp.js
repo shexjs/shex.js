@@ -1,547 +1,6 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 146
-(__unused_webpack_module, exports) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports["default"] = void 0;
-const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-  XSD = 'http://www.w3.org/2001/XMLSchema#',
-  SWAP = 'http://www.w3.org/2000/10/swap/';
-var _default = exports["default"] = {
-  xsd: {
-    decimal: `${XSD}decimal`,
-    boolean: `${XSD}boolean`,
-    double: `${XSD}double`,
-    integer: `${XSD}integer`,
-    string: `${XSD}string`
-  },
-  rdf: {
-    type: `${RDF}type`,
-    nil: `${RDF}nil`,
-    first: `${RDF}first`,
-    rest: `${RDF}rest`,
-    langString: `${RDF}langString`
-  },
-  owl: {
-    sameAs: 'http://www.w3.org/2002/07/owl#sameAs'
-  },
-  r: {
-    forSome: `${SWAP}reify#forSome`,
-    forAll: `${SWAP}reify#forAll`
-  },
-  log: {
-    implies: `${SWAP}log#implies`,
-    isImpliedBy: `${SWAP}log#isImpliedBy`
-  }
-};
-
-/***/ },
-
-/***/ 998
-(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports["default"] = exports.Variable = exports.Triple = exports.Term = exports.Quad = exports.NamedNode = exports.Literal = exports.DefaultGraph = exports.BlankNode = void 0;
-exports.escapeQuotes = escapeQuotes;
-exports.fromQuad = fromQuad;
-exports.fromTerm = fromTerm;
-exports.termFromId = termFromId;
-exports.termToId = termToId;
-exports.unescapeQuotes = unescapeQuotes;
-var _IRIs = _interopRequireDefault(__webpack_require__(146));
-function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
-// N3.js implementations of the RDF/JS core data types
-// See http://rdf.js.org/data-model-spec/
-
-const {
-  rdf,
-  xsd
-} = _IRIs.default;
-
-// eslint-disable-next-line prefer-const
-let DEFAULTGRAPH;
-let _blankNodeCounter = 0;
-const escapedLiteral = /^"(.*".*)(?="[^"]*$)/;
-
-// ## DataFactory singleton
-const DataFactory = {
-  namedNode,
-  blankNode,
-  variable,
-  literal,
-  defaultGraph,
-  quad,
-  triple: quad,
-  fromTerm,
-  fromQuad
-};
-var _default = exports["default"] = DataFactory; // ## Term constructor
-class Term {
-  constructor(id) {
-    this.id = id;
-  }
-
-  // ### The value of this term
-  get value() {
-    return this.id;
-  }
-
-  // ### Returns whether this object represents the same term as the other
-  equals(other) {
-    // If both terms were created by this library,
-    // equality can be computed through ids
-    if (other instanceof Term) return this.id === other.id;
-    // Otherwise, compare term type and value
-    return !!other && this.termType === other.termType && this.value === other.value;
-  }
-
-  // ### Implement hashCode for Immutable.js, since we implement `equals`
-  // https://immutable-js.com/docs/v4.0.0/ValueObject/#hashCode()
-  hashCode() {
-    return 0;
-  }
-
-  // ### Returns a plain object representation of this term
-  toJSON() {
-    return {
-      termType: this.termType,
-      value: this.value
-    };
-  }
-}
-
-// ## NamedNode constructor
-exports.Term = Term;
-class NamedNode extends Term {
-  // ### The term type of this term
-  get termType() {
-    return 'NamedNode';
-  }
-}
-
-// ## Literal constructor
-exports.NamedNode = NamedNode;
-class Literal extends Term {
-  // ### The term type of this term
-  get termType() {
-    return 'Literal';
-  }
-
-  // ### The text value of this literal
-  get value() {
-    return this.id.substring(1, this.id.lastIndexOf('"'));
-  }
-
-  // ### The language of this literal
-  get language() {
-    // Find the last quotation mark (e.g., '"abc"@en-us')
-    const id = this.id;
-    let atPos = id.lastIndexOf('"') + 1;
-    // If "@" it follows, return the remaining substring; empty otherwise
-    return atPos < id.length && id[atPos++] === '@' ? id.substr(atPos).toLowerCase() : '';
-  }
-
-  // ### The datatype IRI of this literal
-  get datatype() {
-    return new NamedNode(this.datatypeString);
-  }
-
-  // ### The datatype string of this literal
-  get datatypeString() {
-    // Find the last quotation mark (e.g., '"abc"^^http://ex.org/types#t')
-    const id = this.id,
-      dtPos = id.lastIndexOf('"') + 1;
-    const char = dtPos < id.length ? id[dtPos] : '';
-    // If "^" it follows, return the remaining substring
-    return char === '^' ? id.substr(dtPos + 2) :
-    // If "@" follows, return rdf:langString; xsd:string otherwise
-    char !== '@' ? xsd.string : rdf.langString;
-  }
-
-  // ### Returns whether this object represents the same term as the other
-  equals(other) {
-    // If both literals were created by this library,
-    // equality can be computed through ids
-    if (other instanceof Literal) return this.id === other.id;
-    // Otherwise, compare term type, value, language, and datatype
-    return !!other && !!other.datatype && this.termType === other.termType && this.value === other.value && this.language === other.language && this.datatype.value === other.datatype.value;
-  }
-  toJSON() {
-    return {
-      termType: this.termType,
-      value: this.value,
-      language: this.language,
-      datatype: {
-        termType: 'NamedNode',
-        value: this.datatypeString
-      }
-    };
-  }
-}
-
-// ## BlankNode constructor
-exports.Literal = Literal;
-class BlankNode extends Term {
-  constructor(name) {
-    super(`_:${name}`);
-  }
-
-  // ### The term type of this term
-  get termType() {
-    return 'BlankNode';
-  }
-
-  // ### The name of this blank node
-  get value() {
-    return this.id.substr(2);
-  }
-}
-exports.BlankNode = BlankNode;
-class Variable extends Term {
-  constructor(name) {
-    super(`?${name}`);
-  }
-
-  // ### The term type of this term
-  get termType() {
-    return 'Variable';
-  }
-
-  // ### The name of this variable
-  get value() {
-    return this.id.substr(1);
-  }
-}
-
-// ## DefaultGraph constructor
-exports.Variable = Variable;
-class DefaultGraph extends Term {
-  constructor() {
-    super('');
-    return DEFAULTGRAPH || this;
-  }
-
-  // ### The term type of this term
-  get termType() {
-    return 'DefaultGraph';
-  }
-
-  // ### Returns whether this object represents the same term as the other
-  equals(other) {
-    // If both terms were created by this library,
-    // equality can be computed through strict equality;
-    // otherwise, compare term types.
-    return this === other || !!other && this.termType === other.termType;
-  }
-}
-
-// ## DefaultGraph singleton
-exports.DefaultGraph = DefaultGraph;
-DEFAULTGRAPH = new DefaultGraph();
-
-// ### Constructs a term from the given internal string ID
-// The third 'nested' parameter of this function is to aid
-// with recursion over nested terms. It should not be used
-// by consumers of this library.
-// See https://github.com/rdfjs/N3.js/pull/311#discussion_r1061042725
-function termFromId(id, factory, nested) {
-  factory = factory || DataFactory;
-
-  // Falsy value or empty string indicate the default graph
-  if (!id) return factory.defaultGraph();
-
-  // Identify the term type based on the first character
-  switch (id[0]) {
-    case '?':
-      return factory.variable(id.substr(1));
-    case '_':
-      return factory.blankNode(id.substr(2));
-    case '"':
-      // Shortcut for internal literals
-      if (factory === DataFactory) return new Literal(id);
-      // Literal without datatype or language
-      if (id[id.length - 1] === '"') return factory.literal(id.substr(1, id.length - 2));
-      // Literal with datatype or language
-      const endPos = id.lastIndexOf('"', id.length - 1);
-      return factory.literal(id.substr(1, endPos - 1), id[endPos + 1] === '@' ? id.substr(endPos + 2) : factory.namedNode(id.substr(endPos + 3)));
-    case '[':
-      id = JSON.parse(id);
-      break;
-    default:
-      if (!nested || !Array.isArray(id)) {
-        return factory.namedNode(id);
-      }
-  }
-  return factory.quad(termFromId(id[0], factory, true), termFromId(id[1], factory, true), termFromId(id[2], factory, true), id[3] && termFromId(id[3], factory, true));
-}
-
-// ### Constructs an internal string ID from the given term or ID string
-// The third 'nested' parameter of this function is to aid
-// with recursion over nested terms. It should not be used
-// by consumers of this library.
-// See https://github.com/rdfjs/N3.js/pull/311#discussion_r1061042725
-function termToId(term, nested) {
-  if (typeof term === 'string') return term;
-  if (term instanceof Term && term.termType !== 'Quad') return term.id;
-  if (!term) return DEFAULTGRAPH.id;
-
-  // Term instantiated with another library
-  switch (term.termType) {
-    case 'NamedNode':
-      return term.value;
-    case 'BlankNode':
-      return `_:${term.value}`;
-    case 'Variable':
-      return `?${term.value}`;
-    case 'DefaultGraph':
-      return '';
-    case 'Literal':
-      return `"${term.value}"${term.language ? `@${term.language}` : term.datatype && term.datatype.value !== xsd.string ? `^^${term.datatype.value}` : ''}`;
-    case 'Quad':
-      const res = [termToId(term.subject, true), termToId(term.predicate, true), termToId(term.object, true)];
-      if (term.graph && term.graph.termType !== 'DefaultGraph') {
-        res.push(termToId(term.graph, true));
-      }
-      return nested ? res : JSON.stringify(res);
-    default:
-      throw new Error(`Unexpected termType: ${term.termType}`);
-  }
-}
-
-// ## Quad constructor
-class Quad extends Term {
-  constructor(subject, predicate, object, graph) {
-    super('');
-    this._subject = subject;
-    this._predicate = predicate;
-    this._object = object;
-    this._graph = graph || DEFAULTGRAPH;
-  }
-
-  // ### The term type of this term
-  get termType() {
-    return 'Quad';
-  }
-  get subject() {
-    return this._subject;
-  }
-  get predicate() {
-    return this._predicate;
-  }
-  get object() {
-    return this._object;
-  }
-  get graph() {
-    return this._graph;
-  }
-
-  // ### Returns a plain object representation of this quad
-  toJSON() {
-    return {
-      termType: this.termType,
-      subject: this._subject.toJSON(),
-      predicate: this._predicate.toJSON(),
-      object: this._object.toJSON(),
-      graph: this._graph.toJSON()
-    };
-  }
-
-  // ### Returns whether this object represents the same quad as the other
-  equals(other) {
-    return !!other && this._subject.equals(other.subject) && this._predicate.equals(other.predicate) && this._object.equals(other.object) && this._graph.equals(other.graph);
-  }
-}
-exports.Triple = exports.Quad = Quad;
-// ### Escapes the quotes within the given literal
-function escapeQuotes(id) {
-  return id.replace(escapedLiteral, (_, quoted) => `"${quoted.replace(/"/g, '""')}`);
-}
-
-// ### Unescapes the quotes within the given literal
-function unescapeQuotes(id) {
-  return id.replace(escapedLiteral, (_, quoted) => `"${quoted.replace(/""/g, '"')}`);
-}
-
-// ### Creates an IRI
-function namedNode(iri) {
-  return new NamedNode(iri);
-}
-
-// ### Creates a blank node
-function blankNode(name) {
-  return new BlankNode(name || `n3-${_blankNodeCounter++}`);
-}
-
-// ### Creates a literal
-function literal(value, languageOrDataType) {
-  // Create a language-tagged string
-  if (typeof languageOrDataType === 'string') return new Literal(`"${value}"@${languageOrDataType.toLowerCase()}`);
-
-  // Automatically determine datatype for booleans and numbers
-  let datatype = languageOrDataType ? languageOrDataType.value : '';
-  if (datatype === '') {
-    // Convert a boolean
-    if (typeof value === 'boolean') datatype = xsd.boolean;
-    // Convert an integer or double
-    else if (typeof value === 'number') {
-      if (Number.isFinite(value)) datatype = Number.isInteger(value) ? xsd.integer : xsd.double;else {
-        datatype = xsd.double;
-        if (!Number.isNaN(value)) value = value > 0 ? 'INF' : '-INF';
-      }
-    }
-  }
-
-  // Create a datatyped literal
-  return datatype === '' || datatype === xsd.string ? new Literal(`"${value}"`) : new Literal(`"${value}"^^${datatype}`);
-}
-
-// ### Creates a variable
-function variable(name) {
-  return new Variable(name);
-}
-
-// ### Returns the default graph
-function defaultGraph() {
-  return DEFAULTGRAPH;
-}
-
-// ### Creates a quad
-function quad(subject, predicate, object, graph) {
-  return new Quad(subject, predicate, object, graph);
-}
-function fromTerm(term) {
-  if (term instanceof Term) return term;
-
-  // Term instantiated with another library
-  switch (term.termType) {
-    case 'NamedNode':
-      return namedNode(term.value);
-    case 'BlankNode':
-      return blankNode(term.value);
-    case 'Variable':
-      return variable(term.value);
-    case 'DefaultGraph':
-      return DEFAULTGRAPH;
-    case 'Literal':
-      return literal(term.value, term.language || term.datatype);
-    case 'Quad':
-      return fromQuad(term);
-    default:
-      throw new Error(`Unexpected termType: ${term.termType}`);
-  }
-}
-function fromQuad(inQuad) {
-  if (inQuad instanceof Quad) return inQuad;
-  if (inQuad.termType !== 'Quad') throw new Error(`Unexpected termType: ${inQuad.termType}`);
-  return quad(fromTerm(inQuad.subject), fromTerm(inQuad.predicate), fromTerm(inQuad.object), fromTerm(inQuad.graph));
-}
-
-/***/ },
-
-/***/ 818
-(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.inDefaultGraph = inDefaultGraph;
-exports.isBlankNode = isBlankNode;
-exports.isDefaultGraph = isDefaultGraph;
-exports.isLiteral = isLiteral;
-exports.isNamedNode = isNamedNode;
-exports.isQuad = isQuad;
-exports.isVariable = isVariable;
-exports.prefix = prefix;
-exports.prefixes = prefixes;
-var _N3DataFactory = _interopRequireDefault(__webpack_require__(998));
-function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
-// **N3Util** provides N3 utility functions.
-
-// Tests whether the given term represents an IRI
-function isNamedNode(term) {
-  return !!term && term.termType === 'NamedNode';
-}
-
-// Tests whether the given term represents a blank node
-function isBlankNode(term) {
-  return !!term && term.termType === 'BlankNode';
-}
-
-// Tests whether the given term represents a literal
-function isLiteral(term) {
-  return !!term && term.termType === 'Literal';
-}
-
-// Tests whether the given term represents a variable
-function isVariable(term) {
-  return !!term && term.termType === 'Variable';
-}
-
-// Tests whether the given term represents a quad
-function isQuad(term) {
-  return !!term && term.termType === 'Quad';
-}
-
-// Tests whether the given term represents the default graph
-function isDefaultGraph(term) {
-  return !!term && term.termType === 'DefaultGraph';
-}
-
-// Tests whether the given quad is in the default graph
-function inDefaultGraph(quad) {
-  return isDefaultGraph(quad.graph);
-}
-
-// Creates a function that prepends the given IRI to a local name
-function prefix(iri, factory) {
-  return prefixes({
-    '': iri.value || iri
-  }, factory)('');
-}
-
-// Creates a function that allows registering and expanding prefixes
-function prefixes(defaultPrefixes, factory) {
-  // Add all of the default prefixes
-  const prefixes = Object.create(null);
-  for (const prefix in defaultPrefixes) processPrefix(prefix, defaultPrefixes[prefix]);
-  // Set the default factory if none was specified
-  factory = factory || _N3DataFactory.default;
-
-  // Registers a new prefix (if an IRI was specified)
-  // or retrieves a function that expands an existing prefix (if no IRI was specified)
-  function processPrefix(prefix, iri) {
-    // Create a new prefix if an IRI is specified or the prefix doesn't exist
-    if (typeof iri === 'string') {
-      // Create a function that expands the prefix
-      const cache = Object.create(null);
-      prefixes[prefix] = local => {
-        return cache[local] || (cache[local] = factory.namedNode(iri + local));
-      };
-    } else if (!(prefix in prefixes)) {
-      throw new Error(`Unknown prefix: ${prefix}`);
-    }
-    return prefixes[prefix];
-  }
-  return processPrefix;
-}
-
-/***/ },
-
 /***/ 50
 (__unused_webpack_module, exports, __webpack_require__) {
 
@@ -640,11 +99,14 @@ class DataFactory {
     }
     /**
      * @param value              The literal value.
-     * @param languageOrDatatype The optional language or datatype.
+     * @param languageOrDatatype The optional language, datatype, or directional language.
      *                           If `languageOrDatatype` is a NamedNode,
      *                           then it is used for the value of `NamedNode.datatype`.
-     *                           Otherwise `languageOrDatatype` is used for the value
+     *                           If `languageOrDatatype` is a NamedNode, it is used for the value
      *                           of `NamedNode.language`.
+     *                           Otherwise, it is used as a directional language,
+     *                           from which the language is set to `languageOrDatatype.language`
+     *                           and the direction to `languageOrDatatype.direction`.
      * @return A new instance of Literal.
      * @see Literal
      */
@@ -762,7 +224,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Literal = void 0;
 const NamedNode_1 = __webpack_require__(963);
 /**
- * A term that represents an RDF literal, containing a string with an optional language tag or datatype.
+ * A term that represents an RDF literal,
+ * containing a string with an optional language tag and optional direction
+ * or datatype.
  */
 class Literal {
     constructor(value, languageOrDatatype) {
@@ -771,23 +235,38 @@ class Literal {
         if (typeof languageOrDatatype === 'string') {
             this.language = languageOrDatatype;
             this.datatype = Literal.RDF_LANGUAGE_STRING;
+            this.direction = '';
         }
         else if (languageOrDatatype) {
-            this.language = '';
-            this.datatype = languageOrDatatype;
+            if ('termType' in languageOrDatatype) {
+                this.language = '';
+                this.datatype = languageOrDatatype;
+                this.direction = '';
+            }
+            else {
+                this.language = languageOrDatatype.language;
+                this.datatype = languageOrDatatype.direction ?
+                    Literal.RDF_DIRECTIONAL_LANGUAGE_STRING :
+                    Literal.RDF_LANGUAGE_STRING;
+                this.direction = languageOrDatatype.direction || '';
+            }
         }
         else {
             this.language = '';
             this.datatype = Literal.XSD_STRING;
+            this.direction = '';
         }
     }
     equals(other) {
         return !!other && other.termType === 'Literal' && other.value === this.value &&
-            other.language === this.language && this.datatype.equals(other.datatype);
+            other.language === this.language &&
+            ((other.direction === this.direction) || (!other.direction && this.direction === '')) &&
+            this.datatype.equals(other.datatype);
     }
 }
 exports.Literal = Literal;
 Literal.RDF_LANGUAGE_STRING = new NamedNode_1.NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#langString');
+Literal.RDF_DIRECTIONAL_LANGUAGE_STRING = new NamedNode_1.NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#dirLangString');
 Literal.XSD_STRING = new NamedNode_1.NamedNode('http://www.w3.org/2001/XMLSchema#string');
 //# sourceMappingURL=Literal.js.map
 
@@ -887,11 +366,11 @@ exports.Variable = Variable;
  * }
  */
 // **N3Writer** writes N3 documents.
-const namespaces = (__webpack_require__(146)["default"]);
-const N3Fac = __webpack_require__(998);
+const namespaces = (__webpack_require__(215)["default"]);
+const N3Fac = __webpack_require__(601);
 const { Term } = N3Fac;
 const N3DataFactory = N3Fac.default;
-const { isDefaultGraph } = __webpack_require__(818);
+const { isDefaultGraph } = __webpack_require__(539);
 const DEFAULTGRAPH = N3DataFactory.defaultGraph();
 const { rdf, xsd } = namespaces;
 // Characters in literals that require escaping
@@ -1414,9 +893,7 @@ const ShExMapMaterializerCjsModule = function (config) {
             "exhaustive": "search all mappings of triples to triple constriant"
         }
     };
-    const VERBOSE = false; // "VERBOSE" in process.env;
     // **ShExValidator** provides ShEx utility functions
-    const ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
     const ShExTerm = __webpack_require__(811);
     const UNBOUNDED = -1;
     const XSD = "http://www.w3.org/2001/XMLSchema#";
@@ -1613,7 +1090,6 @@ const ShExMapMaterializerCjsModule = function (config) {
             this.known = makeCache();
         const _ShExValidator = this;
         this.schema = schema;
-        this._expect = this.options.lax ? noop : expect; // report errors on missing types.
         this._optimize = {}; // optimizations:
         // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
         this.reset = function () { }; // included in case we need it later.
@@ -1622,21 +1098,6 @@ const ShExMapMaterializerCjsModule = function (config) {
         let blankNodeCount = 0;
         const nextBNode = options.nextBNode || function () {
             return '_:b' + blankNodeCount++;
-        };
-        /* getAST - compile a traditional regular expression abstract syntax tree.
-         * Tested but not used at present.
-         */
-        this.getAST = function () {
-            return {
-                type: "AST",
-                shapes: Object.keys(this.schema._index.shapeExprs).reduce(function (ret, label) {
-                    ret[label] = {
-                        type: "ASTshape",
-                        expression: _compileShapeToAST(_ShExValidator.schema._index.shapeExprs[label].expression, [], _ShExValidator.schema)
-                    };
-                    return ret;
-                }, {})
-            };
         };
         /* indexTripleConstraints - compile regular expression and index triple constraints
          */
@@ -1647,14 +1108,14 @@ const ShExMapMaterializerCjsModule = function (config) {
                 indexTripleConstraints_dive(expression);
             return tripleConstraints;
             function indexTripleConstraints_dive(expr) {
-                if (expr.type === "TripleConstraint")
+                if (typeof expr === "string") // an inclusion: the labelled expression it names
+                    indexTripleConstraints_dive(schema._index.tripleExprs[expr]);
+                else if (expr.type === "TripleConstraint")
                     tripleConstraints.push(expr) - 1;
                 else if (expr.type === "OneOf" || expr.type === "EachOf")
                     expr.expressions.forEach(function (nested) {
                         indexTripleConstraints_dive(nested);
                     });
-                else if (expr.type === "Inclusion")
-                    indexTripleConstraints_dive(schema.productions[expr.include]);
                 else
                     runtimeError("unexpected expr type: " + expr.type);
             }
@@ -1707,17 +1168,6 @@ const ShExMapMaterializerCjsModule = function (config) {
         this._validateShapeDecl = function (db, point, shapeDecl, shapeLabel, depth, tracker, seen, subgraph) {
             return this._validateShapeExpr(db, point, shapeDecl.shapeExpr, shapeLabel, depth, tracker, seen, subgraph);
         };
-        this._lookupShape = function (label) {
-            if (!("shapes" in this.schema) || this.schema.shapes.length === 0) {
-                runtimeError("shape " + label + " not found; no shapes in schema");
-            }
-            else if (label in this.schema._index.shapeExprs) {
-                return this.schema._index.shapeExprs[label];
-            }
-            else {
-                runtimeError("shape " + label + " not found in:\n" + Object.keys(this.schema._index.shapeExprs || []).map((s) => "  " + s).join("\n"));
-            }
-        };
         this._validateShapeExpr = function (db, point, shapeExpr, shapeLabel, depth, seen) {
             if ("known" in this && this.known.cached(point, shapeExpr))
                 return this.known.cached(point, shapeExpr);
@@ -1728,12 +1178,12 @@ const ShExMapMaterializerCjsModule = function (config) {
                 ret = this._validateShapeDecl(db, point, schema._index.shapeExprs[shapeExpr], shapeExpr, depth, seen);
             }
             else if (shapeExpr.type === "NodeConstraint") {
-                const errors = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
-                ret = errors.length ? {
+                const checked = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
+                ret = "errors" in checked ? {
                     type: "Failure",
                     node: rdfJsTerm2Ld(point),
                     shape: shapeLabel,
-                    errors: errors.map(function (_miss) {
+                    errors: checked.errors.map(function (_miss) {
                         return {
                             type: "NodeConstraintViolation",
                             shapeExpr: shapeExpr
@@ -1798,18 +1248,10 @@ const ShExMapMaterializerCjsModule = function (config) {
             // logging stuff
             if (depth === undefined)
                 depth = 0;
-            const padding = (new Array(depth + 1)).join("  "); // AKA "  ".repeat(depth);
-            function _log(...args) {
-                if (!VERBOSE) {
-                    return;
-                }
-                console.log(padding + args.join(""));
-            }
             let ret = null;
             const startAcionStorage = {}; // !!! need test to see this write to results structure.
             if ("startActs" in schema && !this.semActHandler.dispatchAll(schema.startActs, null, startAcionStorage))
                 return null; // some semAct aborted !! return real error
-            _log("validating <" + point + "> as <" + shapeLabel + ">");
             // const outgoing = indexNeighborhood(db.findByIRI(point, null, null, null).sort(byObject));
             // const incoming = indexNeighborhood(db.findByIRI(null, null, point, null).sort(bySubject));
             const neighborhood = []; // outgoing.triples.concat(incoming.triples); // @@ make fancy array holder.
@@ -1924,20 +1366,7 @@ const ShExMapMaterializerCjsModule = function (config) {
                     const oldLen = neighborhood.length;
                     const created = [...target.match()];
                     neighborhood.push.apply(neighborhood, created);
-                    if (false)
-                        // removed by dead control flow
-{}
                     return Array.apply(null, { length: created.length }).map((_, idx) => { return idx + oldLen; });
-                    // if ("semActs" in tc) {
-                    //   tc.semActs.forEach(function (semAct: any) {
-                    //     if (semAct.name === ShExMap.url) {
-                    //       const prefixes = _ShExValidator.schema.prefixes;
-                    //     }
-                    //   });
-                    // }
-                    // console.dir();
-                    // removed by dead control flow
-
                 }
                 // {// testing parity between two engines
                 //   const nfa = require("@shexjs/eval-simple-1err").compile(schema, shape);
@@ -1990,34 +1419,10 @@ const ShExMapMaterializerCjsModule = function (config) {
                     errors: missErrors.concat(partitionErrors.length === 1 ? partitionErrors[0].errors : partitionErrors)
                 };
             }
-            if (VERBOSE) { // remove N3jsTripleToString
-                neighborhood.forEach(function (t) {
-                    delete t.toString;
-                });
-            }
             if ("startActs" in schema && depth === 0) {
                 ret.startActs = schema.startActs;
             }
-            _log("</" + shapeLabel + ">");
             return ret;
-        };
-        this._triplesMatchingShapeExpr = function (triples, valueExpr, inverse, recurse, direct) {
-            const _ShExValidator = this;
-            const misses = [];
-            const hits = [];
-            triples.forEach(function (triple) {
-                const value = inverse ? triple.subject : triple.object;
-                const errors = valueExpr === undefined ?
-                    [] :
-                    _ShExValidator._errorsMatchingShapeExpr(value, valueExpr, recurse, direct);
-                if (errors.length === 0) {
-                    hits.push(triple);
-                }
-                else if (hits.indexOf(triple) === -1) {
-                    misses.push({ triple: triple, errors: errors });
-                }
-            });
-            return { hits: hits, misses: misses };
         };
         this._errorsMatchingShapeExpr = function (value, valueExpr, recurse, direct) {
             const _ShExValidator = this;
@@ -2031,19 +1436,24 @@ const ShExMapMaterializerCjsModule = function (config) {
                 return direct === undefined ? [] : direct(value, valueExpr);
             }
             else if (valueExpr.type === "ShapeOr") {
-                let ret = [];
+                // Every checker answers a result object, with `errors` when it failed (the
+                // engine tests `"errors" in`); these used to treat them as error lists.
+                const errors = [];
                 for (let i = 0; i < valueExpr.shapeExprs.length; ++i) {
                     const nested = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExprs[i], recurse, direct);
-                    if (nested.length === 0)
-                        return nested;
-                    ret = ret.concat(nested);
+                    if (!("errors" in nested))
+                        return { type: "ShapeOrResults", solution: nested };
+                    errors.push(nested);
                 }
-                return ret;
+                return { type: "ShapeOrFailure", errors };
             }
             else if (valueExpr.type === "ShapeAnd") {
-                return valueExpr.shapeExprs.reduce(function (ret, nested, _iter) {
-                    return ret.concat(_ShExValidator._errorsMatchingShapeExpr(value, nested, recurse, direct, true));
-                }, []);
+                const solutions = [], errors = [];
+                for (const nested of valueExpr.shapeExprs) {
+                    const sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, recurse, direct);
+                    ("errors" in sub ? errors : solutions).push(sub);
+                }
+                return errors.length ? { type: "ShapeAndFailure", errors } : { type: "ShapeAndResults", solutions };
             }
             else {
                 throw Error("unknown value expression type '" + valueExpr.type + "'");
@@ -2062,10 +1472,7 @@ const ShExMapMaterializerCjsModule = function (config) {
                 errors.push("Error validating " + ShExTerm.rdfJsTerm2Turtle(value) + " as " + JSON.stringify(valueExpr) + ": " + errorStr);
                 return false;
             }
-            // if (negated) ;
-            if (false) // removed by dead control flow
-{}
-            else {
+            {
                 if ("nodeKind" in valueExpr) {
                     if (["iri", "bnode", "literal", "nonliteral"].indexOf(valueExpr.nodeKind) === -1) {
                         validationError("unknown node kind '" + valueExpr.nodeKind + "'");
@@ -2157,13 +1564,8 @@ const ShExMapMaterializerCjsModule = function (config) {
                                             return validationError("literal " + JSON.stringify(val) + " not comparable with non-literal " + ref);
                                         }
                                     }
-                                    else {
-                                        if (["IriStem", "IriStemRange"].indexOf(valueConstraint.type) === -1) {
-                                            return validationError("nonliteral " + JSON.stringify(val) + " not comparable with literal " + JSON.stringify(ref));
-                                        }
-                                        else {
-                                            return func(val.value, ref);
-                                        }
+                                    else { // an Iri stem or range: the value is a NamedNode (tested above)
+                                        return func(val.value, ref);
                                     }
                                 }
                                 function startsWith(val, ref) {
@@ -2180,7 +1582,8 @@ const ShExMapMaterializerCjsModule = function (config) {
                                     return normalizedTest(val, ref, (l, r) => { return l === r; });
                                 }
                                 if (!isTerm(valueConstraint.stem)) {
-                                    expect(valueConstraint.stem, "type", "Wildcard");
+                                    if (valueConstraint.stem.type !== "Wildcard")
+                                        runtimeError("expected stem " + JSON.stringify(valueConstraint.stem) + " to be a Wildcard.");
                                     // match whatever but check exclusions below
                                 }
                                 else {
@@ -2308,266 +1711,16 @@ const ShExMapMaterializerCjsModule = function (config) {
             }
         };
     }
-    /* _compileShapeToAST - compile a shape expression to an abstract syntax tree.
-     *
-     * currently tested but not used.
-     */
-    function _compileShapeToAST(expression, tripleConstraints, schema) {
-        class Epsilon {
-            constructor() {
-                this.type = "Epsilon";
-            }
-        }
-        class TripleConstraint {
-            constructor(_ordinal, predicate, inverse, negated, valueExpr) {
-                this.type = "TripleConstraint";
-                // this.ordinal = ordinal; @@ does 1card25
-                this.inverse = !!inverse;
-                this.negated = !!negated;
-                this.predicate = predicate;
-                if (valueExpr !== undefined)
-                    this.valueExpr = valueExpr;
-            }
-        }
-        class Choice {
-            constructor(disjuncts) {
-                this.type = "Choice";
-                this.disjuncts = disjuncts;
-            }
-        }
-        class EachOf {
-            constructor(conjuncts) {
-                this.type = "EachOf";
-                this.conjuncts = conjuncts;
-            }
-        }
-        class SemActs {
-            constructor(expression, semActs) {
-                this.type = "SemActs";
-                this.expression = expression;
-                this.semActs = semActs;
-            }
-        }
-        class KleeneStar {
-            constructor(expression) {
-                this.type = "KleeneStar";
-                this.expression = expression;
-            }
-        }
-        function _compileExpression(expr, schema) {
-            let repeated, container;
-            /* _repeat: map expr with a min and max cardinality to a corresponding AST with Groups and Stars.
-               expr 1 1 => expr
-               expr 0 1 => Choice(expr, Eps)
-               expr 0 3 => Choice(EachOf(expr, Choice(EachOf(expr, Choice(expr, EPS)), Eps)), Eps)
-               expr 2 5 => EachOf(expr, expr, Choice(EachOf(expr, Choice(EachOf(expr, Choice(expr, EPS)), Eps)), Eps))
-               expr 0 * => KleeneStar(expr)
-               expr 1 * => EachOf(expr, KleeneStar(expr))
-               expr 2 * => EachOf(expr, expr, KleeneStar(expr))
-        
-               @@TODO: favor Plus over Star if Epsilon not in expr.
-            */
-            function _repeat(expr, min, max) {
-                if (min === undefined) {
-                    min = 1;
-                }
-                if (max === undefined) {
-                    max = 1;
-                }
-                if (min === 1 && max === 1) {
-                    return expr;
-                }
-                const opts = max === UNBOUNDED ?
-                    new KleeneStar(expr) :
-                    _seq(max - min).reduce(function (ret, _elt, ord) {
-                        return ord === 0 ?
-                            new Choice([expr, new Epsilon]) :
-                            new Choice([new EachOf([expr, ret]), new Epsilon]);
-                    }, undefined);
-                const reqd = min !== 0 ?
-                    new EachOf(_seq(min).map(function (_ret) {
-                        return expr; // @@ something with ret
-                    }).concat(opts)) : opts;
-                return reqd;
-            }
-            if (expr.type === "TripleConstraint") {
-                // predicate, inverse, negated, valueExpr, annotations, semActs, min, max
-                const valueExpr = "valueExprRef" in expr ?
-                    schema.valueExprDefns[expr.valueExprRef] :
-                    expr.valueExpr;
-                const ordinal = tripleConstraints.push(expr) - 1;
-                const tp = new TripleConstraint(ordinal, expr.predicate, expr.inverse, expr.negated, valueExpr);
-                repeated = _repeat(tp, expr.min, expr.max);
-                return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
-            }
-            else if (expr.type === "OneOf") {
-                container = new Choice(expr.expressions.map(function (e) {
-                    return _compileExpression(e, schema);
-                }));
-                repeated = _repeat(container, expr.min, expr.max);
-                return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
-            }
-            else if (expr.type === "EachOf") {
-                container = new EachOf(expr.expressions.map(function (e) {
-                    return _compileExpression(e, schema);
-                }));
-                repeated = _repeat(container, expr.min, expr.max);
-                return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
-            }
-            else if (expr.type === "Inclusion") {
-                const included = schema._index.shapeExprs[expr.include].expression;
-                return _compileExpression(included, schema);
-            }
-            else
-                throw Error("unexpected expr type: " + expr.type);
-        }
-        return expression ? _compileExpression(expression, schema) : new Epsilon();
-    }
-    // http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
-    function crossProduct(sets) {
-        const n = sets.length, carets = [];
-        let args = null;
-        function init() {
-            args = [];
-            for (let i = 0; i < n; i++) {
-                carets[i] = 0;
-                args[i] = sets[i][0];
-            }
-        }
-        function next() {
-            // special case: crossProduct([]).next().next() returns false.
-            if (args !== null && args.length === 0)
-                return false;
-            if (args === null) {
-                init();
-                return true;
-            }
-            let i = n - 1;
-            carets[i]++;
-            if (carets[i] < sets[i].length) {
-                args[i] = sets[i][carets[i]];
-                return true;
-            }
-            while (carets[i] >= sets[i].length) {
-                if (i == 0) {
-                    return false;
-                }
-                carets[i] = 0;
-                args[i] = sets[i][0];
-                carets[--i]++;
-            }
-            args[i] = sets[i][carets[i]];
-            return true;
-        }
-        return {
-            next: next,
-            do: function (block, _context) {
-                return block.apply(_context, args);
-            },
-            // new API because
-            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments#Description
-            // cautions about functions over arguments.
-            get: function () { return args; }
-        };
-    }
-    /* N3jsTripleToString - simple toString function to make N3.js's triples
-     * printable.
-     */
-    const N3jsTripleToString = function () {
-        function fmt(n) {
-            return n.termType === "Literal" ?
-                ["http://www.w3.org/2001/XMLSchema#integer",
-                    "http://www.w3.org/2001/XMLSchema#float",
-                    "http://www.w3.org/2001/XMLSchema#double"
-                ].indexOf(n.datatype.value) !== -1 ?
-                    parseInt(n.value) :
-                    n :
-                n.termType === "BlankNode" ?
-                    n :
-                    "<" + n + ">";
-        }
-        return fmt(this.subject) + " " + fmt(this.predicate) + " " + fmt(this.object) + " .";
-    };
-    /* indexNeighborhood - index triples by predicate
-     * returns: {
-     *     byPredicate: Object: mapping from predicate to triples containing that
-     *                  predicate.
-     *
-     *     candidates: [[1,3], [0,2]]: mapping from triple to the triple constraints
-     *                 it matches.  It is initialized to []. Mappings that remain an
-     *                 empty set indicate a triple which didn't matching anything in
-     *                 the shape.
-     *
-     *     misses: list to recieve value constraint failures.
-     *   }
-     */
-    function indexNeighborhood(triples) {
-        return {
-            triples: triples,
-            byPredicate: triples.reduce(function (ret, t) {
-                const p = t.predicate;
-                if (!(p in ret))
-                    ret[p] = [];
-                ret[p].push(t);
-                // If in VERBOSE mode, add a nice toString to N3.js's triple objects.
-                if (VERBOSE)
-                    t.toString = N3jsTripleToString;
-                return ret;
-            }, {}),
-            candidates: _seq(triples.length).map(function () {
-                return [];
-            }),
-            misses: []
-        };
-    }
-    /* bySubject - sort triples by subject following SPARQL partial ordering.
-     */
-    function bySubject(t1, t2) {
-        // if (t1.predicate !== t2.predicate) // sort predicate first for easier scanning of results
-        //   return t1.predicate > t2.predicate;
-        const l = t1.subject, r = t2.subject;
-        const lprec = l.termType === "BlankNode" ? 1 : l.termType === "Literal" ? 2 : 3;
-        const rprec = r.termType === "BlankNode" ? 1 : r.termType === "Literal" ? 2 : 3;
-        return lprec === rprec ? l > r : lprec > rprec;
-    }
-    /* byObject - sort triples by object following SPARQL partial ordering.
-     */
-    function byObject(t1, t2) {
-        // if (t1.predicate !== t2.predicate) // sort predicate first for easier scanning of results
-        //   return t1.predicate > t2.predicate;
-        const l = t1.object, r = t2.object;
-        const lprec = l.termType === "BlankNode" ? 1 : l.termType === "Literal" ? 2 : 3;
-        const rprec = r.termType === "BlankNode" ? 1 : r.termType === "Literal" ? 2 : 3;
-        return lprec === rprec ? l > r : lprec > rprec;
-    }
-    /* Return a list of n ""s.
-     *
-     * Note that Array(n) on its own returns a "sparse array" so Array(n).map(f)
-     * never calls f.
-     */
-    function _seq(n) {
-        return n === 0 ?
-            [] :
-            Array(n).join(" ").split(/ /); // hahaha, javascript, you suck.
-    }
-    /* Expect property p with value v in object o
-     */
-    function expect(o, p, v) {
-        if (!(p in o))
-            runtimeError("expected " + JSON.stringify(o) + " to have a '" + p + "' attribute.");
-        if (arguments.length > 2 && o[p] !== v)
-            runtimeError("expected " + p + " attribute '" + o[p] + "' to equal '" + v + "'.");
-    }
     function isTerm(t) {
         return typeof t !== "object" || "value" in t && Object.keys(t).reduce(function (r, k) {
             return r === false ? r : ["value", "type", "language"].indexOf(k) !== -1;
         }, true);
     }
-    function noop() { }
     function runtimeError(...args) {
         const errorStr = args.join("");
         const e = new Error("Runtime error: " + errorStr);
-        Error.captureStackTrace(e, runtimeError);
+        if ("captureStackTrace" in Error)
+            Error.captureStackTrace(e, runtimeError);
         throw e;
     }
     return {
@@ -3573,9 +2726,9 @@ function tripleConstraints(schema) {
     (schema.shapes || []).forEach(shapeExpr);
     return found;
 }
-module.exports = { ThreadedMaterializer, MaterializerDebugger,
-    normalizeBindingTree, normalizeBindingTreeWithOrigins,
-    MaterializationError, tripleConstraints };
+module.exports = { BS: ThreadedMaterializer, fW: MaterializerDebugger,
+    ...void (normalizeBindingTree), ...void (normalizeBindingTreeWithOrigins),
+    k: MaterializationError, Fl: tripleConstraints };
 //# sourceMappingURL=ThreadedMaterializer.js.map
 
 /***/ },
@@ -4385,8 +3538,8 @@ const ShExMapCjsModule = function (config) {
     const extensions = __webpack_require__(787);
     const { ShExVisitor, ShExIndexVisitor } = __webpack_require__(747);
     const ShExUtil = __webpack_require__(837);
-    const N3Util = __webpack_require__(818);
-    const N3DataFactory = (__webpack_require__(998)["default"]);
+    const N3Util = __webpack_require__(539);
+    const N3DataFactory = (__webpack_require__(601)["default"]);
     const materializer = __webpack_require__(554)(config);
     const StringToRdfJs = __webpack_require__(638);
     const MapExt = "http://shex.io/extensions/Map/#";
@@ -4429,10 +3582,13 @@ const ShExMapCjsModule = function (config) {
              * @param {string} code - text of the semantic action.
              * @param {object} ctx - matched triple or results subset.
              * @param {object} extensionStorage - place where the extension writes into the result structure.
-             * @return {bool} false if the extension failed or did not accept the ctx object.
+             * @return {Array} [] on success; otherwise the errors that fail the
+             *   constraint (by convention [{type: "SemActFailure", errors: [msg]}]).
+             *   Throw for an invocation error, e.g. code that doesn't parse.
              */
             dispatch: function (code, ctx, extensionStorage) {
-                function fail(msg) { const e = Error(msg); Error.captureStackTrace(e, fail); throw e; }
+                function fail(msg) { const e = Error(msg); if ("captureStackTrace" in Error)
+                    Error.captureStackTrace(e, fail); throw e; }
                 function getPrefixedName(bindingName) {
                     // already have the fully prefixed binding name ready to go
                     if (typeof bindingName === "string")
@@ -4734,52 +3890,14 @@ const ShExMapCjsModule = function (config) {
             : prefixedName.substr(0, index + 3) +
                 base + prefixedName.substr(index + prefix.length + 4);
     }
-    function extractBindingsDelMe(soln, min, max, depth) {
-        if ("min" in soln && soln.min < min)
-            min = soln.min;
-        const myMax = "max" in soln ?
-            (soln.max === UNBOUNDED ?
-                Infinity :
-                soln.max) :
-            1;
-        if (myMax > max)
-            max = myMax;
-        function walkExpressions(s) {
-            return s.expressions.reduce((inner, e) => {
-                return inner.concat(extractBindingsDelMe(e, min, max, depth + 1));
-            }, []);
-        }
-        function walkTriple(s) {
-            const fromTriple = "extensions" in s && MapExt in s.extensions ?
-                [{ depth: depth, min: min, max: max, obj: s.extensions[MapExt] }] :
-                [];
-            return "referenced" in s ?
-                fromTriple.concat(extractBindingsDelMe(s.referenced.solution, min, max, depth + 1)) :
-                fromTriple;
-        }
-        function structuralError(msg) { throw Error(msg); }
-        const walk = // function to explore each solution
-         soln.type === "someOfSolutions" ||
-            soln.type === "eachOfSolutions" ? walkExpressions :
-            soln.type === "tripleConstraintSolutions" ? walkTriple :
-                structuralError("unknown type: " + soln.type);
-        if (myMax > 1) // preserve important associations:
-            // map: e.g. [[1,2],[3,4]]
-            // [walk(soln.solutions[0]), walk(soln.solutions[1]),...]
-            return soln.solutions.map(walk);
-        else // hide unimportant nesting:
-            // flatmap: e.g. [1,2,3,4]
-            // [].concat(walk(soln.solutions[0])).concat(walk(soln.solutions[1]))...
-            return [].concat.apply([], soln.solutions.map(walk));
-    }
     return {
         register: register,
         done: done,
         materializer: materializer,
-        ThreadedMaterializer: (__webpack_require__(245).ThreadedMaterializer),
-        MaterializerDebugger: (__webpack_require__(245).MaterializerDebugger),
-        MaterializationError: (__webpack_require__(245).MaterializationError),
-        tripleConstraints: (__webpack_require__(245).tripleConstraints),
+        ThreadedMaterializer: (__webpack_require__(245)/* .ThreadedMaterializer */ .BS),
+        MaterializerDebugger: (__webpack_require__(245)/* .MaterializerDebugger */ .fW),
+        MaterializationError: (__webpack_require__(245)/* .MaterializationError */ .k),
+        tripleConstraints: (__webpack_require__(245)/* .tripleConstraints */ .Fl),
         // binder: binder,
         url: MapExt,
         // visitTripleConstraint: myvisitTripleConstraint
@@ -4848,6 +3966,628 @@ function n3idTerm2RdfJs(term) {
     }
 }
 //# sourceMappingURL=stringToRdfJs.js.map
+
+/***/ },
+
+/***/ 215
+(__unused_webpack_module, exports) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = void 0;
+const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+  XSD = 'http://www.w3.org/2001/XMLSchema#',
+  SWAP = 'http://www.w3.org/2000/10/swap/';
+var _default = exports["default"] = {
+  xsd: {
+    decimal: `${XSD}decimal`,
+    boolean: `${XSD}boolean`,
+    dateTime: `${XSD}dateTime`,
+    double: `${XSD}double`,
+    integer: `${XSD}integer`,
+    string: `${XSD}string`
+  },
+  rdf: {
+    type: `${RDF}type`,
+    nil: `${RDF}nil`,
+    first: `${RDF}first`,
+    rest: `${RDF}rest`,
+    langString: `${RDF}langString`,
+    dirLangString: `${RDF}dirLangString`,
+    reifies: `${RDF}reifies`
+  },
+  owl: {
+    sameAs: 'http://www.w3.org/2002/07/owl#sameAs'
+  },
+  r: {
+    forSome: `${SWAP}reify#forSome`,
+    forAll: `${SWAP}reify#forAll`
+  },
+  log: {
+    implies: `${SWAP}log#implies`,
+    isImpliedBy: `${SWAP}log#isImpliedBy`
+  }
+};
+
+/***/ },
+
+/***/ 601
+(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = exports.Variable = exports.Triple = exports.Term = exports.Quad = exports.NamedNode = exports.Literal = exports.DefaultGraph = exports.BlankNode = void 0;
+exports.escapeQuotes = escapeQuotes;
+exports.fromQuad = fromQuad;
+exports.fromTerm = fromTerm;
+exports.termFromId = termFromId;
+exports.termToId = termToId;
+exports.unescapeQuotes = unescapeQuotes;
+var _IRIs = _interopRequireDefault(__webpack_require__(215));
+function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
+// N3.js implementations of the RDF/JS core data types
+// See http://rdf.js.org/data-model-spec/
+
+const {
+  rdf,
+  xsd
+} = _IRIs.default;
+
+// eslint-disable-next-line prefer-const
+let DEFAULTGRAPH;
+let _blankNodeCounter = 0;
+const escapedLiteral = /^"(.*".*)(?="[^"]*$)/;
+
+// ## DataFactory singleton
+const DataFactory = {
+  namedNode,
+  blankNode,
+  variable,
+  literal,
+  defaultGraph,
+  quad,
+  triple: quad,
+  fromTerm,
+  fromQuad
+};
+var _default = exports["default"] = DataFactory; // ## Term constructor
+class Term {
+  constructor(id) {
+    this.id = id;
+  }
+
+  // ### The value of this term
+  get value() {
+    return this.id;
+  }
+
+  // ### Returns whether this object represents the same term as the other
+  equals(other) {
+    // If both terms were created by this library,
+    // equality can be computed through ids
+    if (other instanceof Term) return this.id === other.id;
+    // Otherwise, compare term type and value
+    return !!other && this.termType === other.termType && this.value === other.value;
+  }
+
+  // ### Implement hashCode for Immutable.js, since we implement `equals`
+  // https://immutable-js.com/docs/v4.0.0/ValueObject/#hashCode()
+  hashCode() {
+    return 0;
+  }
+
+  // ### Returns a plain object representation of this term
+  toJSON() {
+    return {
+      termType: this.termType,
+      value: this.value
+    };
+  }
+}
+
+// ## NamedNode constructor
+exports.Term = Term;
+class NamedNode extends Term {
+  // ### Creates a named node
+  /**
+   * @deprecated Create named nodes through a data factory instead
+   * (`DataFactory.namedNode(iri)`), so that term validation can be applied;
+   * the constructor assumes an already-validated IRI.
+   */
+  constructor(iri) {
+    super(iri);
+  }
+
+  // ### The term type of this term
+  get termType() {
+    return 'NamedNode';
+  }
+}
+
+// ## Literal constructor
+exports.NamedNode = NamedNode;
+class Literal extends Term {
+  // ### Creates a literal
+  /**
+   * @deprecated Create literals through a data factory instead
+   * (`DataFactory.literal(value, languageOrDatatype)`), so that term
+   * validation can be applied; the constructor takes the internal
+   * id representation and assumes it is already valid.
+   */
+  constructor(id) {
+    super(id);
+  }
+
+  // ### The term type of this term
+  get termType() {
+    return 'Literal';
+  }
+
+  // ### The text value of this literal
+  get value() {
+    return this.id.substring(1, this.id.lastIndexOf('"'));
+  }
+
+  // ### The language of this literal
+  get language() {
+    // Find the last quotation mark (e.g., '"abc"@en-us')
+    const id = this.id;
+    let atPos = id.lastIndexOf('"') + 1;
+    const dirPos = id.lastIndexOf('--');
+    // If "@" it follows, return the remaining substring; empty otherwise
+    return atPos < id.length && id[atPos++] === '@' ? (dirPos > atPos ? id.substr(0, dirPos) : id).substr(atPos).toLowerCase() : '';
+  }
+
+  // ### The direction of this literal
+  get direction() {
+    // Find the last double dash after the closing quote (e.g., '"abc"@en-us--ltr')
+    const id = this.id;
+    const endPos = id.lastIndexOf('"');
+    const dirPos = id.lastIndexOf('--');
+    return dirPos > endPos && dirPos + 2 < id.length ? id.substr(dirPos + 2).toLowerCase() : '';
+  }
+
+  // ### The datatype IRI of this literal
+  get datatype() {
+    return new NamedNode(this.datatypeString);
+  }
+
+  // ### The datatype string of this literal
+  get datatypeString() {
+    // Find the last quotation mark (e.g., '"abc"^^http://ex.org/types#t')
+    const id = this.id,
+      dtPos = id.lastIndexOf('"') + 1;
+    const char = dtPos < id.length ? id[dtPos] : '';
+    // If "^" it follows, return the remaining substring
+    return char === '^' ? id.substr(dtPos + 2) :
+    // If "@" follows, return rdf:langString or rdf:dirLangString; xsd:string otherwise
+    char !== '@' ? xsd.string : id.indexOf('--', dtPos) > 0 ? rdf.dirLangString : rdf.langString;
+  }
+
+  // ### Returns whether this object represents the same term as the other
+  equals(other) {
+    // If both literals were created by this library,
+    // equality can be computed through ids
+    if (other instanceof Literal) return this.id === other.id;
+    // Otherwise, compare term type, value, language, and datatype
+    return !!other && !!other.datatype && this.termType === other.termType && this.value === other.value && this.language === other.language && (this.direction === other.direction || this.direction === '' && !other.direction) && this.datatype.value === other.datatype.value;
+  }
+  toJSON() {
+    return {
+      termType: this.termType,
+      value: this.value,
+      language: this.language,
+      direction: this.direction,
+      datatype: {
+        termType: 'NamedNode',
+        value: this.datatypeString
+      }
+    };
+  }
+}
+
+// ## BlankNode constructor
+exports.Literal = Literal;
+class BlankNode extends Term {
+  // ### Creates a blank node
+  /**
+   * @deprecated Create blank nodes through a data factory instead
+   * (`DataFactory.blankNode(name)`), so that term validation can be applied;
+   * the constructor assumes an already-validated name.
+   */
+  constructor(name) {
+    super(`_:${name}`);
+  }
+
+  // ### The term type of this term
+  get termType() {
+    return 'BlankNode';
+  }
+
+  // ### The name of this blank node
+  get value() {
+    return this.id.substr(2);
+  }
+}
+exports.BlankNode = BlankNode;
+class Variable extends Term {
+  // ### Creates a variable
+  /**
+   * @deprecated Create variables through a data factory instead
+   * (`DataFactory.variable(name)`), so that term validation can be applied;
+   * the constructor assumes an already-validated name.
+   */
+  constructor(name) {
+    super(`?${name}`);
+  }
+
+  // ### The term type of this term
+  get termType() {
+    return 'Variable';
+  }
+
+  // ### The name of this variable
+  get value() {
+    return this.id.substr(1);
+  }
+}
+
+// ## DefaultGraph constructor
+exports.Variable = Variable;
+class DefaultGraph extends Term {
+  // ### Creates the default graph
+  /**
+   * @deprecated Obtain the default graph through a data factory instead
+   * (`DataFactory.defaultGraph()`).
+   */
+  constructor() {
+    super('');
+    return DEFAULTGRAPH || this;
+  }
+
+  // ### The term type of this term
+  get termType() {
+    return 'DefaultGraph';
+  }
+
+  // ### Returns whether this object represents the same term as the other
+  equals(other) {
+    // If both terms were created by this library,
+    // equality can be computed through strict equality;
+    // otherwise, compare term types.
+    return this === other || !!other && this.termType === other.termType;
+  }
+}
+
+// ## DefaultGraph singleton
+exports.DefaultGraph = DefaultGraph;
+DEFAULTGRAPH = new DefaultGraph();
+
+// ### Constructs a term from the given internal string ID
+// The third 'nested' parameter of this function is to aid
+// with recursion over nested terms. It should not be used
+// by consumers of this library.
+// See https://github.com/rdfjs/N3.js/pull/311#discussion_r1061042725
+function termFromId(id, factory, nested) {
+  factory = factory || DataFactory;
+
+  // Falsy value or empty string indicate the default graph
+  if (!id) return factory.defaultGraph();
+
+  // Identify the term type based on the first character
+  switch (id[0]) {
+    case '?':
+      return factory.variable(id.substr(1));
+    case '_':
+      return factory.blankNode(id.substr(2));
+    case '"':
+      // Shortcut for internal literals
+      if (factory === DataFactory) return new Literal(id);
+      // Literal without datatype or language
+      if (id[id.length - 1] === '"') return factory.literal(id.substr(1, id.length - 2));
+      // Literal with datatype or language
+      const endPos = id.lastIndexOf('"', id.length - 1);
+      let languageOrDatatype;
+      if (id[endPos + 1] === '@') {
+        languageOrDatatype = id.substr(endPos + 2);
+        const dashDashIndex = languageOrDatatype.lastIndexOf('--');
+        if (dashDashIndex > 0 && dashDashIndex < languageOrDatatype.length) {
+          languageOrDatatype = {
+            language: languageOrDatatype.substr(0, dashDashIndex),
+            direction: languageOrDatatype.substr(dashDashIndex + 2)
+          };
+        }
+      } else {
+        languageOrDatatype = factory.namedNode(id.substr(endPos + 3));
+      }
+      return factory.literal(id.substr(1, endPos - 1), languageOrDatatype);
+    case '[':
+      id = JSON.parse(id);
+      break;
+    default:
+      if (!nested || !Array.isArray(id)) {
+        return factory.namedNode(id);
+      }
+  }
+  return factory.quad(termFromId(id[0], factory, true), termFromId(id[1], factory, true), termFromId(id[2], factory, true), id[3] && termFromId(id[3], factory, true));
+}
+
+// ### Constructs an internal string ID from the given term or ID string
+// The third 'nested' parameter of this function is to aid
+// with recursion over nested terms. It should not be used
+// by consumers of this library.
+// See https://github.com/rdfjs/N3.js/pull/311#discussion_r1061042725
+function termToId(term, nested) {
+  if (typeof term === 'string') return term;
+  if (term instanceof Term && term.termType !== 'Quad') return term.id;
+  if (!term) return DEFAULTGRAPH.id;
+
+  // Term instantiated with another library
+  switch (term.termType) {
+    case 'NamedNode':
+      return term.value;
+    case 'BlankNode':
+      return `_:${term.value}`;
+    case 'Variable':
+      return `?${term.value}`;
+    case 'DefaultGraph':
+      return '';
+    case 'Literal':
+      return `"${term.value}"${term.language ? `@${term.language}${term.direction ? `--${term.direction}` : ''}` : term.datatype && term.datatype.value !== xsd.string ? `^^${term.datatype.value}` : ''}`;
+    case 'Quad':
+      const res = [termToId(term.subject, true), termToId(term.predicate, true), termToId(term.object, true)];
+      if (term.graph && term.graph.termType !== 'DefaultGraph') {
+        res.push(termToId(term.graph, true));
+      }
+      return nested ? res : JSON.stringify(res);
+    default:
+      throw new Error(`Unexpected termType: ${term.termType}`);
+  }
+}
+
+// ## Quad constructor
+class Quad extends Term {
+  // ### Creates a quad
+  /**
+   * @deprecated Create quads through a data factory instead
+   * (`DataFactory.quad(subject, predicate, object, graph)`), so that term
+   * validation can be applied; the constructor assumes already-validated terms.
+   */
+  constructor(subject, predicate, object, graph) {
+    super('');
+    this._subject = subject;
+    this._predicate = predicate;
+    this._object = object;
+    this._graph = graph || DEFAULTGRAPH;
+  }
+
+  // ### The term type of this term
+  get termType() {
+    return 'Quad';
+  }
+  get subject() {
+    return this._subject;
+  }
+  get predicate() {
+    return this._predicate;
+  }
+  get object() {
+    return this._object;
+  }
+  get graph() {
+    return this._graph;
+  }
+
+  // ### Returns a plain object representation of this quad
+  toJSON() {
+    return {
+      termType: this.termType,
+      subject: this._subject.toJSON(),
+      predicate: this._predicate.toJSON(),
+      object: this._object.toJSON(),
+      graph: this._graph.toJSON()
+    };
+  }
+
+  // ### Returns whether this object represents the same quad as the other
+  equals(other) {
+    return !!other && this._subject.equals(other.subject) && this._predicate.equals(other.predicate) && this._object.equals(other.object) && this._graph.equals(other.graph);
+  }
+}
+exports.Triple = exports.Quad = Quad;
+// ### Escapes the quotes within the given literal
+function escapeQuotes(id) {
+  return id.replace(escapedLiteral, (_, quoted) => `"${quoted.replace(/"/g, '""')}`);
+}
+
+// ### Unescapes the quotes within the given literal
+function unescapeQuotes(id) {
+  return id.replace(escapedLiteral, (_, quoted) => `"${quoted.replace(/""/g, '"')}`);
+}
+
+// ### Creates an IRI
+function namedNode(iri) {
+  return new NamedNode(iri);
+}
+
+// ### Creates a blank node
+function blankNode(name) {
+  return new BlankNode(name || `n3-${_blankNodeCounter++}`);
+}
+
+// ### Creates a literal
+function literal(value, languageOrDataType) {
+  // Create a language-tagged string
+  if (typeof languageOrDataType === 'string') return new Literal(`"${value}"@${languageOrDataType.toLowerCase()}`);
+
+  // Create a language-tagged string with base direction
+  if (languageOrDataType !== undefined && !('termType' in languageOrDataType)) {
+    return new Literal(`"${value}"@${languageOrDataType.language.toLowerCase()}${languageOrDataType.direction ? `--${languageOrDataType.direction.toLowerCase()}` : ''}`);
+  }
+
+  // Automatically determine datatype for booleans, numbers, and dates
+  let datatype = languageOrDataType ? languageOrDataType.value : '';
+  if (datatype === '') {
+    // Convert a boolean
+    if (typeof value === 'boolean') datatype = xsd.boolean;
+    // Convert an integer or double
+    else if (typeof value === 'number') {
+      if (Number.isFinite(value)) datatype = Number.isInteger(value) ? xsd.integer : xsd.double;else {
+        datatype = xsd.double;
+        if (!Number.isNaN(value)) value = value > 0 ? 'INF' : '-INF';
+      }
+    }
+    // Convert a valid date
+    else if (value instanceof Date && !Number.isNaN(value.getTime())) {
+      datatype = xsd.dateTime;
+      value = value.toISOString();
+    }
+  }
+
+  // Create a datatyped literal
+  return datatype === '' || datatype === xsd.string ? new Literal(`"${value}"`) : new Literal(`"${value}"^^${datatype}`);
+}
+
+// ### Creates a variable
+function variable(name) {
+  return new Variable(name);
+}
+
+// ### Returns the default graph
+function defaultGraph() {
+  return DEFAULTGRAPH;
+}
+
+// ### Creates a quad
+function quad(subject, predicate, object, graph) {
+  return new Quad(subject, predicate, object, graph);
+}
+function fromTerm(term) {
+  if (term instanceof Term) return term;
+
+  // Term instantiated with another library
+  switch (term.termType) {
+    case 'NamedNode':
+      return namedNode(term.value);
+    case 'BlankNode':
+      return blankNode(term.value);
+    case 'Variable':
+      return variable(term.value);
+    case 'DefaultGraph':
+      return DEFAULTGRAPH;
+    case 'Literal':
+      return literal(term.value, term.language || term.datatype);
+    case 'Quad':
+      return fromQuad(term);
+    default:
+      throw new Error(`Unexpected termType: ${term.termType}`);
+  }
+}
+function fromQuad(inQuad) {
+  if (inQuad instanceof Quad) return inQuad;
+  if (inQuad.termType !== 'Quad') throw new Error(`Unexpected termType: ${inQuad.termType}`);
+  return quad(fromTerm(inQuad.subject), fromTerm(inQuad.predicate), fromTerm(inQuad.object), fromTerm(inQuad.graph));
+}
+
+/***/ },
+
+/***/ 539
+(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.inDefaultGraph = inDefaultGraph;
+exports.isBlankNode = isBlankNode;
+exports.isDefaultGraph = isDefaultGraph;
+exports.isLiteral = isLiteral;
+exports.isNamedNode = isNamedNode;
+exports.isQuad = isQuad;
+exports.isVariable = isVariable;
+exports.prefix = prefix;
+exports.prefixes = prefixes;
+var _N3DataFactory = _interopRequireDefault(__webpack_require__(601));
+function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
+// **N3Util** provides N3 utility functions.
+
+// Tests whether the given term represents an IRI
+function isNamedNode(term) {
+  return !!term && term.termType === 'NamedNode';
+}
+
+// Tests whether the given term represents a blank node
+function isBlankNode(term) {
+  return !!term && term.termType === 'BlankNode';
+}
+
+// Tests whether the given term represents a literal
+function isLiteral(term) {
+  return !!term && term.termType === 'Literal';
+}
+
+// Tests whether the given term represents a variable
+function isVariable(term) {
+  return !!term && term.termType === 'Variable';
+}
+
+// Tests whether the given term represents a quad
+function isQuad(term) {
+  return !!term && term.termType === 'Quad';
+}
+
+// Tests whether the given term represents the default graph
+function isDefaultGraph(term) {
+  return !!term && term.termType === 'DefaultGraph';
+}
+
+// Tests whether the given quad is in the default graph
+function inDefaultGraph(quad) {
+  return isDefaultGraph(quad.graph);
+}
+
+// Creates a function that prepends the given IRI to a local name
+function prefix(iri, factory) {
+  return prefixes({
+    '': iri.value || iri
+  }, factory)('');
+}
+
+// Creates a function that allows registering and expanding prefixes
+function prefixes(defaultPrefixes, factory) {
+  // Add all of the default prefixes
+  const prefixes = Object.create(null);
+  for (const prefix in defaultPrefixes) processPrefix(prefix, defaultPrefixes[prefix]);
+  // Set the default factory if none was specified
+  factory = factory || _N3DataFactory.default;
+
+  // Registers a new prefix (if an IRI was specified)
+  // or retrieves a function that expands an existing prefix (if no IRI was specified)
+  function processPrefix(prefix, iri) {
+    // Create a new prefix if an IRI is specified or the prefix doesn't exist
+    if (typeof iri === 'string') {
+      // Create a function that expands the prefix
+      const cache = Object.create(null);
+      prefixes[prefix] = local => {
+        return cache[local] || (cache[local] = factory.namedNode(iri + local));
+      };
+    } else if (!(prefix in prefixes)) {
+      throw new Error(`Unknown prefix: ${prefix}`);
+    }
+    return prefixes[prefix];
+  }
+  return processPrefix;
+}
 
 /***/ },
 

@@ -30,7 +30,7 @@ Given a local `1dotOr2dot.shex` (say `PREFIX : <http://a.example/> :S1 { :p1 . |
 ``` js
 const ShExLoader = require("@shexjs/node")({
   rdfjs: require("n3"),          // an RDF/JS implementation
-  fetch: require("node-fetch"),  // for http(s): URLs
+  fetch: globalThis.fetch,  // for http(s): URLs
 });
 
 ShExLoader.load(

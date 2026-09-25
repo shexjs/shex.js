@@ -1,0 +1,117 @@
+{
+  "type": "ShapeTest",
+  "node": "http://a.example/via-G0-1",
+  "shape": "http://a.example/G0-1",
+  "solution": {
+    "type": "ExtendedResults",
+    "extensions": {
+      "type": "ExtensionResults",
+      "solutions": [
+        {
+          "type": "ShapeTest",
+          "node": "http://a.example/via-G0-1",
+          "shape": "http://a.example/G0",
+          "solution": {
+            "type": "TripleConstraintSolutions",
+            "predicate": "http://a.example/p",
+            "valueExpr": {
+              "type": "NodeConstraint",
+              "values": [
+                {
+                  "value": "G0A"
+                },
+                {
+                  "value": "G0B"
+                },
+                {
+                  "value": "G0C"
+                }
+              ]
+            },
+            "solutions": [
+              {
+                "type": "TestedTriple",
+                "subject": "http://a.example/via-G0-1",
+                "predicate": "http://a.example/p",
+                "object": {
+                  "value": "G0A"
+                },
+                "referenced": {
+                  "type": "NodeConstraintTest",
+                  "node": {
+                    "value": "G0A"
+                  },
+                  "shape": "http://a.example/G0",
+                  "shapeExpr": {
+                    "type": "NodeConstraint",
+                    "values": [
+                      {
+                        "value": "G0A"
+                      },
+                      {
+                        "value": "G0B"
+                      },
+                      {
+                        "value": "G0C"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "resultName": "<http://a.example/via-G0-1>@<http://a.example/G0>"
+        }
+      ]
+    },
+    "local": {
+      "type": "TripleConstraintSolutions",
+      "predicate": "http://a.example/p",
+      "valueExpr": {
+        "type": "NodeConstraint",
+        "values": [
+          {
+            "value": "G0-1A"
+          },
+          {
+            "value": "G0-1B"
+          },
+          {
+            "value": "G0-1C"
+          }
+        ]
+      },
+      "solutions": [
+        {
+          "type": "TestedTriple",
+          "subject": "http://a.example/via-G0-1",
+          "predicate": "http://a.example/p",
+          "object": {
+            "value": "G0-1A"
+          },
+          "referenced": {
+            "type": "NodeConstraintTest",
+            "node": {
+              "value": "G0-1A"
+            },
+            "shape": "http://a.example/G0-1",
+            "shapeExpr": {
+              "type": "NodeConstraint",
+              "values": [
+                {
+                  "value": "G0-1A"
+                },
+                {
+                  "value": "G0-1B"
+                },
+                {
+                  "value": "G0-1C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,7 +1,7 @@
 // Test the shex-debug command line script.
 
 "use strict";
-const TEST_cli = "TEST_cli" in process.env ? JSON.parse(process.env["TEST_cli"]) : false;
+const TEST_cli = require("./testGate.js")("TEST_cli");
 const TIME = "TIME" in process.env;
 
 const TestUtils = require("@shexjs/util/tools/common-test-infrastructure.js");

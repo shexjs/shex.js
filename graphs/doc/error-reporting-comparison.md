@@ -132,5 +132,5 @@ validating :x as :S:
 ```
 
 The schema fragments in those sentences are ShExC, written by
-`ShExWriter.writeShapeExpr` in the schema's own prefixes, rather than the
+`ShExCWriter.writeShapeExpr` in the schema's own prefixes, rather than the
 ShExJ they are made of.

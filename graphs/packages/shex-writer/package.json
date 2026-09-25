@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/writer",
-  "version": "1.0.0-alpha.30",
+  "version": "1.0.0-alpha.33",
   "files": [
     "lib",
     "src"
@@ -23,7 +23,8 @@
     "node": ">=18"
   },
   "dependencies": {
-    "relativize-url": "^0.1.0"
+    "@types/shexj": "^2.1.7",
+    "relativize-url": "^1.0.0"
   },
   "scripts": {
     "test": "cd ../.. && npm run test",

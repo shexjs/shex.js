@@ -160,6 +160,12 @@ export interface ErrorPair {
   /** the matched/failed data triple (same object as in the validation
    * results, so identity ties a pair to its results-JSON rendering) */
   triple?: TestedTriple | null;
+  /** structured shape path to this constraint (schema side): the enclosing
+   * labeled shape's IRI, the enclosing constraint predicates (outermost first,
+   * which distinguish structurally identical inline shapes), this constraint's
+   * predicate, and which occurrence of it -- enough to render `@Shape/pred`
+   * with an `[ordinal]` discriminator. */
+  pathTo?: { shape: string; via: string[]; predicate: string; ordinal: number } | null;
 }
 
 export interface MappedErrors {
@@ -1622,6 +1628,9 @@ export function mapValidationErrors (valResult: unknown,
       schemaParts: viaConstraint ? viaConstraint.parts : undefined,
       schemaPath: viaConstraint ? viaConstraint.path : undefined,
       triple: leaf.triple || (leaf.triples && leaf.triples[0]) || null,
+      pathTo: leaf.predicate && ctx.shape
+        ? { shape: ctx.shape, via: leaf.constraintPath || [], predicate: leaf.predicate, ordinal: leaf.constraintOrdinal || 0 }
+        : null,
     });
   }
 
