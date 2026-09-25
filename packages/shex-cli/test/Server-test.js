@@ -3,6 +3,7 @@
 "use strict";
 const DEBUG = "DEBUG" in process.env;
 const TEST_server = require("./testGate.js")("TEST_server");
+const {testPort, portInUseHint} = require("../../../tools/testPorts");
 const TIME = "TIME" in process.env;
 const TESTS = "TESTS" in process.env ?
     process.env.TESTS.split(/,/) :
@@ -57,8 +58,8 @@ if (!TEST_server) {
 
 } else {
 
-  const ServeArgs = ["-S", "http://localhost:8088/validate", "--serve-n", "1", "-Q"];
-  const ServerEndpoint = "http://localhost:8088/validate";
+  const ServeArgs = ["-S", `http://localhost:${testPort(8088)}/validate`, "--serve-n", "1", "-Q"];
+  const ServerEndpoint = `http://localhost:${testPort(8088)}/validate`;
   const ValidateScript = "../bin/validate";
 
   async function tryPostToServer (serverName, serverTest, postTest) {
@@ -107,7 +108,9 @@ if (!TEST_server) {
 
       function expectNothing (data) {
         server.kill();
-        reject(Error(`unexpected stderr starting server: ${data.toString('utf8')}`));
+        const text = data.toString('utf8');
+        reject(Error(`unexpected stderr starting server: ${text}`
+                     + (/EADDRINUSE|Unable to bind/.test(text) ? "\n" + portInUseHint(testPort(8088)) : "")));
       }
 
       function ignoreData (data) { }
