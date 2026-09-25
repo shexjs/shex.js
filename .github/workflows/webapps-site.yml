@@ -5,7 +5,7 @@ name: webapps-site
 # branch: the full main tree (so every URL GitHub Pages served from main keeps
 # working, CNAME included) plus
 #
-#   packages/{shex-webapp,extension-map,extension-reduce,extension-wasi}/doc/webpacks/
+#   packages/{shex-webapp,extension-map,extension-reduce,extension-wasi,extension-shacl-sparql}/doc/webpacks/
 #                 (the built bundles)
 #   <branch>/     experiment sites published by webapps-site-branch.yml,
 #                 carried over from the previous gh-pages commit (EXPERIMENTS)
@@ -85,7 +85,8 @@ jobs:
           git add -A .
           git add -f .nojekyll \
             packages/shex-webapp/doc/webpacks packages/extension-map/doc/webpacks \
-            packages/extension-reduce/doc/webpacks packages/extension-wasi/doc/webpacks
+            packages/extension-reduce/doc/webpacks packages/extension-wasi/doc/webpacks \
+            packages/extension-shacl-sparql/doc/webpacks
           OURS=$(git write-tree)
           # the experiment-branch sites to carry across this root rebuild:
           # index.html's experiment-sites data block, the same source that

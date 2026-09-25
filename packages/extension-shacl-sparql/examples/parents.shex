@@ -1,0 +1,7 @@
+PREFIX : <http://a.example/>
+PREFIX shacl-sparql: <http://shex.io/extensions/SHACL-SPARQL/>
+%shacl-sparql:{
+  SELECT ?child ?parent ("a parent that isn't a Person" AS ?message)
+  WHERE { ?child :parent ?parent . FILTER NOT EXISTS { ?parent a :Person } }
+%}
+:Person { a [:Person] ; :name . ; :parent @:Person * }

@@ -49,6 +49,48 @@ ShExLoader.load({shexc: [shexc]}, {turtle: [data]})
 The exposed properties are `Parser`, `Writer`, `Validator`, `RdfJsDb`, `Loader`, `NodeLoader` (adds `file:` URL support), `Term`, `Util`, `Visitor` and `ShapeMap`.
 The rest of the suite is there too, loaded on first use: `Engines` (`Simple1Err`, `ThreadedNErr`), `ValidatorApi`, `NeighborhoodApi`, `Neighborhoods` (`RdfJs`, `Sparql`, `Wikibase`), `Extensions` (`Map`, `Eval`, `Test`, `Reduce`, `ReduceJs`, `Wasi`, `WasiTest`), `EditorServices`, `SemActOverlay` and `ShapePathQuery` -- so `new ShEx.Validator.ShExValidator(schema, ShEx.Neighborhoods.Sparql.fromParams({endpoint}))` asks a query service, and `ShEx.Extensions.Test.register(validator, ShEx)` installs a semantic-action handler.
 
+### SHACL-SPARQL isn't included
+
+[`@shexjs/extension-shacl-sparql`](https://github.com/shexjs/shex.js/tree/main/packages/extension-shacl-sparql#readme), which runs SHACL-SPARQL queries as semantic actions (`%shacl-sparql:{ SELECT … %}`), is not a dependency of `shex` and not among `Extensions`, because of its size.
+It runs its queries with [Comunica](https://comunica.dev/): some 270 packages and about 47 MB in `node_modules` (about 3 MB in a browser bundle).
+Everyone who installs `shex` would pay for that, including everyone who never writes a SPARQL action.
+
+To use it, install it beside `shex`:
+
+``` shell
+npm install shex @shexjs/extension-shacl-sparql
+```
+
+and register it on a validator yourself.
+Its queries answer asynchronously, so validate with `validateShapeMapAsync`:
+
+```js
+const ShEx = require("shex");
+const ShaclSparql = require("@shexjs/extension-shacl-sparql");
+const N3 = require("n3");
+
+const schema = ShEx.Parser.construct("http://a.example/", {}, {index: true}).parse(`
+PREFIX : <http://a.example/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX shacl-sparql: <http://shex.io/extensions/SHACL-SPARQL/>
+:Event { :start xsd:date ; :end xsd:date } %shacl-sparql:{
+  SELECT $this ("ends before it starts" AS ?message)
+  WHERE { $this :start ?start ; :end ?end FILTER (?end < ?start) }
+%}`);
+const data = new N3.Store(new N3.Parser().parse(`
+PREFIX : <http://a.example/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+:conf :start "2026-10-07"^^xsd:date ; :end "2026-10-05"^^xsd:date .`));
+
+const validator = new ShEx.Validator.ShExValidator(schema, ShEx.RdfJsDb(data));
+ShaclSparql.register(validator, {ShExTerm: ShEx.Term});
+validator.validateShapeMapAsync([{node: "http://a.example/conf", shape: "http://a.example/Event"}])
+  .then(([result]) => console.log(result.node, result.status)); // http://a.example/conf nonconformant
+```
+
+On the command line, name it with `--extension` once it's installed (`npx shex-validate … --extension @shexjs/extension-shacl-sparql`).
+In the web app it's a plugin: its [examples](https://shex.io/webapps/packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-shacl-sparql%2Fexamples%2Fmanifest.yaml) load it.
+
 ## command line tools
 
 The executables come from [`@shexjs/cli`](https://github.com/shexjs/shex.js/tree/main/packages/shex-cli#readme) (pulled in by this package) and land in `node_modules/.bin/`, so `npx` finds them:
@@ -130,6 +172,7 @@ The RDF root IRI (`-r`, default `tag:eric@w3.org/2016/root`) names the node from
 - [`@shexjs/neighborhood-api`](https://github.com/shexjs/shex.js/tree/main/packages/neighborhood-api#readme), [`-rdfjs`](https://github.com/shexjs/shex.js/tree/main/packages/neighborhood-rdfjs#readme), [`-sparql`](https://github.com/shexjs/shex.js/tree/main/packages/neighborhood-sparql#readme), [`-wikibase`](https://github.com/shexjs/shex.js/tree/main/packages/neighborhood-wikibase#readme) -- where the data comes from: an RDF/JS store, a SPARQL endpoint, a Wikibase's entity pages
 - [`@shexjs/extension-map`](https://github.com/shexjs/shex.js/tree/main/packages/extension-map#readme) -- ShExMap: transform data from one schema to another
 - [`@shexjs/extension-eval`](https://github.com/shexjs/shex.js/tree/main/packages/extension-eval#readme), [`-test`](https://github.com/shexjs/shex.js/tree/main/packages/extension-test#readme), [`-reduce`](https://github.com/shexjs/shex.js/tree/main/packages/extension-reduce#readme), [`-reduce-js`](https://github.com/shexjs/shex.js/tree/main/packages/extension-reduce-js#readme), [`-wasi`](https://github.com/shexjs/shex.js/tree/main/packages/extension-wasi#readme), [`-wasi-test`](https://github.com/shexjs/shex.js/tree/main/packages/extension-wasi-test#readme) -- the other semantic-action extensions
+- [`@shexjs/extension-shacl-sparql`](https://github.com/shexjs/shex.js/tree/main/packages/extension-shacl-sparql#readme) -- SHACL-SPARQL constraints as semantic actions; installed separately ([why](#shacl-sparql-isnt-included))
 - [`@shexjs/semact-overlay`](https://github.com/shexjs/shex.js/tree/main/packages/semact-overlay#readme) -- semantic actions declared beside a schema
 - [`@shexjs/shape-path-query`](https://github.com/shexjs/shex.js/tree/main/packages/shex-shape-path-query#readme) -- ShapePath queries over a schema
 - [`@shexjs/editor-services`](https://github.com/shexjs/shex.js/tree/main/packages/shex-editor-services#readme) and [`lezer-shexc`](https://github.com/shexjs/lezer-shexc#readme) -- what an editor needs: parsing with locations, diagnostics, results anchored in the text, a ShExC grammar for CodeMirror

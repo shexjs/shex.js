@@ -2,7 +2,7 @@
  */
 import * as RdfJs from "@rdfjs/types";
 import {Shape} from "shexj";
-import {DbParamSpec, DbQueryTracker, Neighborhood, NeighborhoodDb, ParamEditor, Start} from "@shexjs/neighborhood-api";
+import {DbParamSpec, DbQueryTracker, Neighborhood, NeighborhoodDb, ParamEditor, QueryableDb, QuerySource, Start} from "@shexjs/neighborhood-api";
 
 /** The subset of an RDF/JS quad store needed by rdfjsDB, satisfied by e.g. an N3.Store.
  */
@@ -15,7 +15,7 @@ export interface RdfJsQuadSource {
   readonly size: number;
 }
 
-export function rdfjsDB (db: RdfJsQuadSource, queryTracker?: DbQueryTracker): NeighborhoodDb {
+export function rdfjsDB (db: RdfJsQuadSource, queryTracker?: DbQueryTracker): NeighborhoodDb & QueryableDb {
 
   function getNeighborhood (point: RdfJs.Term, shapeLabel: string | typeof Start, _shape: Shape): Neighborhood {
     // I'm guessing a local DB doesn't benefit from shape optimization.
@@ -49,6 +49,7 @@ export function rdfjsDB (db: RdfJsQuadSource, queryTracker?: DbQueryTracker): Ne
     getObjects: () => db.getObjects(),
     getQuads: (...args: any[]) => db.getQuads(...args),
     get size(): number { return db.size; },
+    querySource: (): QuerySource => ({kind: "rdfjs", dataset: db}),
   };
 }
 
@@ -113,7 +114,7 @@ export const dbParams: DbParamSpec[] = [
     cli: {option: "jsonld", alias: "l", typeLabel: "file|URL"} },
 ];
 
-export function fromParams (params: { [name: string]: any }, queryTracker?: DbQueryTracker): NeighborhoodDb {
+export function fromParams (params: { [name: string]: any }, queryTracker?: DbQueryTracker): NeighborhoodDb & QueryableDb {
   return rdfjsDB(params.store, queryTracker);
 }
 

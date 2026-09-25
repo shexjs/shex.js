@@ -1,0 +1,60 @@
+{
+  "name": "@shexjs/extension-shacl-sparql",
+  "version": "1.0.0-alpha.33",
+  "files": [
+    "lib",
+    "src",
+    "doc",
+    "examples"
+  ],
+  "description": "SHACL-SPARQL constraints as ShEx semantic actions: %shacl-sparql:{ SELECT ... %} fails on each row, %shacl-sparql:{ ASK ... %} passes when true",
+  "author": {
+    "name": "Eric Prud'hommeaux",
+    "email": "eric@w3.org",
+    "url": "http://www.w3.org/People/Eric/"
+  },
+  "keywords": [
+    "shex",
+    "shape expressions",
+    "shacl",
+    "sparql",
+    "rdf"
+  ],
+  "license": "MIT",
+  "main": "./lib/shex-extension-shacl-sparql.js",
+  "types": "./src/shex-extension-shacl-sparql.ts",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "cd ../.. && mocha -C -R dot packages/extension-shacl-sparql/test/*test.js",
+    "build": "tsc",
+    "webpack": "webpack --config webpack.config.js --mode production",
+    "prepublishOnly": "npm run webpack"
+  },
+  "dependencies": {
+    "@comunica/query-sparql-rdfjs": "^5.4.1",
+    "@comunica/utils-bindings-factory": "^5.4.0",
+    "rdf-data-factory": "^2.0.2",
+    "sparqljs": "^3.7.4"
+  },
+  "devDependencies": {
+    "@shexjs/neighborhood-api": "^1.0.0-alpha.33",
+    "@shexjs/webapp": "^1.0.0-alpha.33",
+    "@types/sparqljs": "^3.1.12",
+    "terser-webpack-plugin": "*",
+    "webpack": "*",
+    "webpack-cli": "*"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shexjs/shex.js.git",
+    "directory": "packages/extension-shacl-sparql"
+  },
+  "bugs": {
+    "url": "https://github.com/shexjs/shex.js/issues"
+  }
+}

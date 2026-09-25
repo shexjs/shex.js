@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * doc/tests-manifest.yaml: the three example manifests as one test suite.
+ * doc/tests-manifest.yaml: the example manifests as one test suite.
  *
  * Each package's examples are written to be read from that package -- the
  * validator's from packages/shex-webapp/examples/, ShExMap's from
@@ -45,6 +45,8 @@ const SOURCES = [
    what: "the WASI extension: WAT semantic actions, compiled in the page"},
   {file: "packages/extension-wasi-test/examples/manifest.yaml",
    what: "the Test extension in hand-written WebAssembly"},
+  {file: "packages/extension-shacl-sparql/examples/manifest.yaml",
+   what: "the SPARQL extension: SHACL-SPARQL constraints, with ShEx's semantics"},
 ];
 
 /** the keys whose value is a document reference: what the runner and the

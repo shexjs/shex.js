@@ -1840,6 +1840,22 @@ const ShExUtil = {
   },
 
   executeQueryPromise: function (query: string, endpoint: string, dataFactory: any): Promise<any[][]> {
+    return this.fetchSparqlJson(query, endpoint).then(
+      (jsonObject: any) => this.parseSparqlJsonResults(jsonObject, dataFactory));
+  },
+
+  /** Any query, answered as its variables and rows or, for an ASK, its
+   * boolean -- where executeQueryPromise answers only a SELECT's rows. */
+  executeSparqlPromise: function (query: string, endpoint: string, dataFactory: any)
+  : Promise<{vars: string[], rows: any[][]} | {boolean: boolean}> {
+    return this.fetchSparqlJson(query, endpoint).then((jsonObject: any) =>
+      "boolean" in jsonObject
+        ? {boolean: jsonObject.boolean === true}
+        : {vars: jsonObject.head.vars, rows: this.parseSparqlJsonResults(jsonObject, dataFactory)});
+  },
+
+  /** a query's application/sparql-results+json, over fetch() */
+  fetchSparqlJson: function (query: string, endpoint: string): Promise<any> {
     if (!endpoint)
       throw Error(`Can't execute a SPARQL query with no endpoint`);
 
@@ -1864,9 +1880,7 @@ const ShExUtil = {
                                    await resp.text().catch(() => ""), query,
                                    resp.headers && resp.headers.get("retry-after"));
       return resp.json();
-    }).then(jsonObject => {
-        return this.parseSparqlJsonResults(jsonObject, dataFactory);
-      }, (e: Error) => {
+    }).then(undefined, (e: Error) => {
         // a timeout arrives as an AbortError, which says nothing about what
         // was being waited on
         if (e && (e.name === "TimeoutError" || e.name === "AbortError"))

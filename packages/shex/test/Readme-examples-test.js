@@ -84,8 +84,15 @@ const Specs = [
   {
     readme: "shex",
     first: 'const ShEx = require("shex");',
+    nth: 0, // the quick start; the SHACL-SPARQL work-around below starts alike
     network: true,
     expect: ['"status": "conformant"'],
+  },
+  { // the SHACL-SPARQL work-around: installed beside shex, registered by hand
+    readme: "shex",
+    first: 'const ShEx = require("shex");',
+    nth: 1,
+    expect: ["http://a.example/conf nonconformant"],
   },
   {
     readme: "shex-loader",

@@ -204,3 +204,6 @@ working.
 - A new plugin bundle dir has to be added to the `git add -f` list in
   `webapps-site.yml`, or it won't be published. (`tools/sync-webpacks.sh`
   then picks it up by itself.)
+- A new examples manifest needs a way in from `/index.html`: a link in a
+  box, or a box of its own (the shexjs-extensions skill has the checklist).
+  Otherwise the site never shows it.
