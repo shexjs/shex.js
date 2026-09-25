@@ -21,13 +21,14 @@ const node_fetch = globalThis.fetch;
 let Harness;
 
 const ROOT = Path.join(__dirname, "../../..");
+const {testPort} = require("../../../tools/testPorts");
 const [[GitRootServer, ElsewhereServer, ElsewhereRepoServer]] = require("../../../tools/testServer")
       .startServer(
-        [ { url: "http://localhost:9999/shex.js/", fromDir: ROOT },
+        [ { url: `http://localhost:${testPort(9999)}/shex.js/`, fromDir: ROOT },
           // somebody else's host, on somebody else's port
-          { url: "http://localhost:9994/extensions/", fromDir: Path.join(ROOT, "doc/plugin-skeleton") },
+          { url: `http://localhost:${testPort(9994)}/extensions/`, fromDir: Path.join(ROOT, "doc/plugin-skeleton") },
           // ...and a host serving a whole plugin with a worker half
-          { url: "http://localhost:9993/elsewhere/", fromDir: ROOT },
+          { url: `http://localhost:${testPort(9993)}/elsewhere/`, fromDir: ROOT },
         ]
       );
 

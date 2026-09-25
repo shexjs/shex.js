@@ -1,8 +1,9 @@
 /**
  * Test doubles for HTTP resources.
  *
+ *   const {testPort} = require('../../../tools/testPorts')
  *   const [[GitRootServer]] = require('../../../tools/testServer')
- *     .startServer([{url: 'http://localhost:9999/shex.js/', fromDir: Path.join(__dirname, '../../..')}]);
+ *     .startServer([{url: `http://localhost:${testPort(9999)}/shex.js/`, fromDir: Path.join(__dirname, '../../..')}]);
  *   fetch(GitRootServer.urlFor('getSomethingOrItsA404'))
  *
  * `startServer(paths, files)` returns `[pathScopes, fileScopes]`, one entry
@@ -13,7 +14,8 @@
  *
  * - **localhost** (`localhost`, `127.0.0.1`, `[::1]`): a real node:http
  *   server on that port, shared by every scope that names the port and left
- *   running (unref'd) for the process.  Any HTTP stack can reach it -- jsdom's
+ *   running (unref'd) for the process.  Name the port with testPort()
+ *   (tools/testPorts.js) so a development session can move it.  Any HTTP stack can reach it -- jsdom's
  *   undici resource loader, a spawned CLI, a Worker -- and it sends the
  *   `Access-Control-Allow-Origin: *` a cross-origin plugin load needs.  Use
  *   `127.0.0.1` rather than `localhost` where a client might race Happy
@@ -30,6 +32,7 @@ const Fs = require('fs')
 const Path = require('path')
 const Http = require('http')
 const Nock = require('nock');
+const {portInUseHint} = require('./testPorts');
 
 // Uncomment logs to watch HTTP traffic.
 function log200 (url, filePath, length) {
@@ -92,6 +95,12 @@ function realServer (port) {
             : [404, `${reqPath} not found`, {}];
       res.writeHead(status, Object.assign({'Content-Type': contentTypeFor(reqPath)}, Cors, headers));
       res.end(body);
+    });
+    // a taken port is fatal either way; say which and why it might be
+    entry.server.on('error', e => {
+      if (e.code === 'EADDRINUSE')
+        e.message += ': ' + portInUseHint(port);
+      throw e;
     });
     entry.server.listen(port);
     entry.server.unref(); // don't hold the test process open

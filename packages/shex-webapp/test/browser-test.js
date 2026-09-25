@@ -31,9 +31,10 @@ let jsdom, JSDOM, StaticResourceConfig
 const ShExParser = require('@shexjs/parser')
 let SharedForTests = null // gets set by shex-simple.js
 
+const {testPort} = require('../../../tools/testPorts')
 const [[GitRootServer]] = require('../../../tools/testServer')
       .startServer(
-        [ { url: 'http://localhost:9999/shex.js/',
+        [ { url: `http://localhost:${testPort(9999)}/shex.js/`,
             fromDir: Path.join(__dirname, '../../..') }
         ]
       )
@@ -57,7 +58,7 @@ if (!TEST_browser) {
           return new Response(Fs.readFileSync(StaticResources[request.url], 'utf8'), {
             headers: { "Content-Type": "text/javascript" }
           })
-        // undefined lets the request proceed to the network (localhost:9999)
+        // undefined lets the request proceed to the network (the repo server)
       })
     ]
   }
