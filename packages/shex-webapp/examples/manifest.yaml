@@ -442,7 +442,6 @@
   schemaURL: triple-terms.shex
   dataLabel: an assertion, with provenance
   data: |
-    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
     PREFIX ex: <http://ex.example/ns#>
 
@@ -450,18 +449,17 @@
     <henry> a foaf:Person ; foaf:name "Henry Story" .
     <alice> a foaf:Person ; foaf:name "Alice" .
 
-    <a1> rdf:reifies << <tim> foaf:knows <henry> >> ;
+    << <tim> foaf:knows <henry> ~ <a1> >>
       ex:assertedBy <alice> ;
       ex:confidence 0.95 .
   queryMap: |
     <a1>@<#Assertion>
   status: conformant
-  comment: 'The reifier model: <a1> is an ordinary node whose rdf:reifies value is a triple term.  The <<( @<#Person> foaf:knows @<#Person> )>> atom checks the term positionally, and its components against their *asserted* descriptions -- quotation itself asserts nothing.'
+  comment: 'The reifier model: <a1> is an ordinary node whose rdf:reifies value is a triple term.  RDF 1.2 Turtle''s reified-triple form << s p o ~ <a1> >> names the reifier inside the delimiters -- it is shorthand for <a1> rdf:reifies <<( s p o )>> -- and doesn''t assert the triple.  The <<( @<#Person> foaf:knows @<#Person> )>> atom checks the term positionally, and its components against their *asserted* descriptions -- quotation itself asserts nothing.'
 - schemaLabel: triple terms
   schemaURL: triple-terms.shex
   dataLabel: a dispute, by reference
   data: |
-    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
     PREFIX ex: <http://ex.example/ns#>
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -471,17 +469,16 @@
     <alice> a foaf:Person ; foaf:name "Alice" .
     <bob> a foaf:Person ; foaf:name "Bob" .
 
-    <a1> rdf:reifies << <tim> foaf:knows <henry> >> ;
-      ex:assertedBy <alice> .
-
-    <d1> ex:disputes <a1> ;
+    <d1> ex:disputes << <tim> foaf:knows <henry> ~ <a1> >> ;
       ex:isDisputedBy <bob> ;
       ex:disputeReason "They have not been in contact for several years" ;
       ex:disputedOn "2024-01-16"^^xsd:date .
+
+    <a1> ex:assertedBy <alice> .
   queryMap: |
     <d1>@<#Dispute>
   status: conformant
-  comment: 'Bob disputes Alice''s assertion -- and because the assertion is a reifier node, the dispute is a plain reference.  Nesting quotations to talk about talk is the pre-reifier habit; the model flattens it away.'
+  comment: 'Bob disputes Alice''s assertion -- and because the assertion is a reifier node, the dispute is a plain reference.  Written in object position, << s p o ~ <a1> >> is <a1> itself: the value of ex:disputes, and the subject of the rdf:reifies arc it implies.  Nesting quotations to talk about talk is the pre-reifier habit; the model flattens it away.'
 - schemaLabel: triple terms
   schemaURL: triple-terms.shex
   dataLabel: a weighted edge
@@ -490,12 +487,12 @@
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
     PREFIX ex: <http://ex.example/ns#>
 
-    <e1> rdf:reifies << <a> foaf:knows <b> >> ;
+    <e1> rdf:reifies <<( <a> foaf:knows <b> )>> ;
       ex:weight 0.9 .
   queryMap: |
     <e1>@<#WeightedEdge>
   status: conformant
-  comment: 'The property-graph case: an edge''s weight is a property of *this* edge -- this reifier -- so it is a plain arc on the focus, checked directly.  A statement may carry other reifiers (see "a well-sourced statement"); this edge''s weight is none of their business.'
+  comment: 'The property-graph case, written with the triple term itself: <<( s p o )>> is the term, legal only as an object, so the rdf:reifies arc is spelled out.  An edge''s weight is a property of *this* edge -- this reifier -- so it is a plain arc on the focus, checked directly.  A statement may carry other reifiers (see "a well-sourced statement"); this edge''s weight is none of their business.'
 - schemaLabel: triple terms
   schemaURL: triple-terms.shex
   dataLabel: a mention of strangers
@@ -503,7 +500,7 @@
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
-    <m1> rdf:reifies << <nobody> foaf:knows <noone> >> .
+    <m1> rdf:reifies <<( <nobody> foaf:knows <noone> )>> .
   queryMap: |
     <m1>@<#Mention>
   status: conformant
@@ -512,14 +509,12 @@
   schemaURL: triple-terms.shex
   dataLabel: asserting about strangers
   data: |
-    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
     PREFIX ex: <http://ex.example/ns#>
 
     <alice> a foaf:Person ; foaf:name "Alice" .
 
-    <a1> rdf:reifies << <nobody> foaf:knows <noone> >> ;
-      ex:assertedBy <alice> .
+    << <nobody> foaf:knows <noone> ~ <a1> >> ex:assertedBy <alice> .
   queryMap: |
     <a1>@<#Assertion>
   status: nonconformant
@@ -531,7 +526,7 @@
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
-    <e1> rdf:reifies << <a> foaf:knows <b> >> .
+    <e1> rdf:reifies <<( <a> foaf:knows <b> )>> .
   queryMap: |
     <e1>@<#WeightedEdge>
   status: nonconformant
@@ -540,27 +535,102 @@
   schemaURL: triple-terms.shex
   dataLabel: a well-sourced statement
   data: |
-    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
     PREFIX ex: <http://ex.example/ns#>
 
-    <a1> rdf:reifies << <tim> foaf:knows <henry> >> ; ex:source <archive> .
-    <a2> rdf:reifies << <tim> foaf:knows <henry> >> ; ex:source <register> .
+    << <tim> foaf:knows <henry> ~ <a1> >> ex:source <archive> .
+    << <tim> foaf:knows <henry> >> ex:source <register> .
   queryMap: |
     <a1>@<#WellSourced>
   status: conformant
-  comment: 'Term as focus, done right: well-sourcedness is a property of the *statement*, so <#WellSourced> reaches every reifier of it through ^rdf:reifies.  Both attestations of <tim> knowing <henry> name a source, so the statement is well-sourced.  (Contrast <#WeightedEdge>, where reaching across reifiers would be a bug.)'
+  comment: 'Term as focus, done right: well-sourcedness is a property of the *statement*, so <#WellSourced> reaches every reifier of it through ^rdf:reifies.  The second attestation leaves its reifier unnamed -- << s p o >> mints a blank node -- and both name a source, so the statement is well-sourced.  (Contrast <#WeightedEdge>, where reaching across reifiers would be a bug.)'
 - schemaLabel: triple terms
   schemaURL: triple-terms.shex
   dataLabel: a statement one source short
   data: |
-    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
     PREFIX ex: <http://ex.example/ns#>
 
-    <a1> rdf:reifies << <tim> foaf:knows <henry> >> ; ex:source <archive> .
-    <a2> rdf:reifies << <tim> foaf:knows <henry> >> .
+    << <tim> foaf:knows <henry> ~ <a1> >> ex:source <archive> .
+    << <tim> foaf:knows <henry> ~ <a2> >> .
   queryMap: |
     <a1>@<#WellSourced>
   status: nonconformant
-  comment: 'Even though <a1> names a source, the statement is not well-sourced: <a2> reifies the same fact without one, and ^rdf:reifies reaches it.  This is why the check belongs on the statement, not on <a1> alone.'
+  comment: 'Even though <a1> names a source, the statement is not well-sourced: <a2> reifies the same fact without one, and ^rdf:reifies reaches it.  (A reified triple needs no properties: << s p o ~ <a2> >> . alone is <a2> rdf:reifies <<( s p o )>> .)  This is why the check belongs on the statement, not on <a1> alone.'
+- schemaLabel: triple terms
+  schemaURL: triple-terms.shex
+  dataLabel: an annotated assertion
+  data: |
+    PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+    PREFIX ex: <http://ex.example/ns#>
+
+    <tim> a foaf:Person ; foaf:name "Tim Berners-Lee" .
+    <henry> a foaf:Person ; foaf:name "Henry Story" .
+    <alice> a foaf:Person ; foaf:name "Alice" .
+
+    <tim> foaf:knows <henry> ~ <a1> {|
+      ex:assertedBy <alice> ;
+      ex:confidence 0.95
+    |} .
+  queryMap: |
+    <a1>@<#Assertion>
+  status: conformant
+  comment: 'The annotation form: s p o ~ <a1> {| ... |} asserts the triple *and* names <a1> as a reifier of it, the {| |} block describing <a1>.  <a1> is the same Assertion as in "an assertion, with provenance"; what the annotation adds is the asserted <tim> foaf:knows <henry> itself -- see "an annotation asserts".'
+- schemaLabel: triple terms
+  schemaURL: triple-terms.shex
+  dataLabel: an annotation asserts
+  data: |
+    PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+    PREFIX ex: <http://ex.example/ns#>
+
+    <tim> a foaf:Person ; foaf:name "Tim Berners-Lee" .
+    <henry> a foaf:Person ; foaf:name "Henry Story" .
+    <alice> a foaf:Person ; foaf:name "Alice" .
+
+    <tim> foaf:knows <henry> {| ex:assertedBy <alice> |} .
+  queryMap: |
+    <tim>@<#Knower>
+  status: conformant
+  comment: 'An annotation with no ~ name reifies with a blank node, and still asserts the triple it follows: <tim> really foaf:knows <henry>, so <tim> is a <#Knower>.  Compare "a reified triple does not assert".'
+- schemaLabel: triple terms
+  schemaURL: triple-terms.shex
+  dataLabel: a reified triple does not assert
+  data: |
+    PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+    PREFIX ex: <http://ex.example/ns#>
+
+    <tim> a foaf:Person ; foaf:name "Tim Berners-Lee" .
+    <henry> a foaf:Person ; foaf:name "Henry Story" .
+    <alice> a foaf:Person ; foaf:name "Alice" .
+
+    << <tim> foaf:knows <henry> >> ex:assertedBy <alice> .
+  queryMap: |
+    <tim>@<#Knower>
+  status: nonconformant
+  comment: 'The same words in the other spelling: << s p o >> talks *about* the triple without asserting it, so there is no <tim> foaf:knows arc and <tim> is no <#Knower>.  Choosing between << >> and {| |} is choosing whether the data claims the fact.'
+- schemaLabel: triple terms
+  schemaURL: triple-terms.shex
+  dataLabel: annotations, named and not
+  data: |
+    PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+    PREFIX ex: <http://ex.example/ns#>
+
+    <tim> foaf:knows <henry>
+      ~ <a1> {| ex:source <archive> |}
+      {| ex:source <register> |} .
+  queryMap: |
+    <a1>@<#WellSourced>
+  status: conformant
+  comment: 'One asserted triple, two reifiers: each {| |} block annotates the triple anew, the first describing the named <a1>, the second a fresh blank node.  Both name a source, so the statement is well-sourced.'
+- schemaLabel: triple terms
+  schemaURL: triple-terms.shex
+  dataLabel: a bare reifier name
+  data: |
+    PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+    PREFIX ex: <http://ex.example/ns#>
+
+    <tim> foaf:knows <henry> ~ <a1> {| ex:source <archive> |} ~ <a2> .
+  queryMap: |
+    <a1>@<#WellSourced>
+  status: nonconformant
+  comment: 'A ~ name needs no {| |} block: ~ <a2> alone makes <a2> a reifier of the triple, with nothing to say about it -- so it names no source and the statement is one source short.'

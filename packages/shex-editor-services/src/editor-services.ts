@@ -1126,12 +1126,6 @@ function ldTermToRdfJs (ld: LdTerm): any {
     : F.namedNode(ld as string);
 }
 
-/** the text span of a quoted triple (an RDF 1.2 triple term) in the data.
- * The located parser (lezer-turtle) reads `<< s p o >>` as an RDF 1.2
- * reifier while the validator's N3 reads it as a quoted-triple object, so
- * the two disagree on the arc but agree on the *term*: this finds the parsed
- * quad whose object is that term and returns where its `<< ... >>` is
- * written (doc/triple-terms.md). */
 /** the range between an atom's delimiters, whitespace trimmed:
  * `<<( X )>>` (delim 3) or `<< X >>` (delim 2) -> X.  The delimiters stay
  * with the container, as `{ }` do with their shape (doc/triple-terms.md). */
@@ -1142,15 +1136,46 @@ function innerRange (range: Range, delim: number, text: string): Range | null {
   return to > from ? {from, to} : null;
 }
 
-function tripleTermSpan (parsed: ParsedTurtle, ttLd: any): Range | null {
+/** the parsed quad that first refers to a triple term (as its object) */
+function tripleTermQuad (parsed: ParsedTurtle, ttLd: any): any {
   const term = ldTermToRdfJs(ttLd);
-  for (const q of parsed.quads)
-    if (q.object.termType === "Quad" && q.object.equals(term)) {
-      const a = quadAnchors(parsed, q, parsed.text);
-      if (a && a.object)
-        return a.object;
-    }
-  return null;
+  return parsed.quads.find((q: any) => q.object.termType === "Quad" && q.object.equals(term)) || null;
+}
+
+/** how the triple term a quad refers to is written (doc/triple-terms.md):
+ * the delimiters, which stay with the referring triple the way { } stay
+ * with a shape, and the contents `s p o` between them.  RDF 1.2 Turtle has
+ * three spellings:
+ *   `<a1> rdf:reifies <<( s p o )>>`  the term itself;
+ *   `<< s p o >>`, `<< s p o ~ <a1> >>`  a reifier of it, the reifier (when
+ *                                      named) written inside the delimiters;
+ *   `s p o {| … |}`, `s p o ~ <a1> {| … |}`  an asserted triple, annotated:
+ *                                      the contents are that triple, and
+ *                                      there are no delimiters. */
+function tripleTermLayout (parsed: ParsedTurtle, quad: any, text: string):
+    {delims: Range[] | undefined, contents: Range | null} | null {
+  const a = quadAnchors(parsed, quad, text);
+  if (!a || !a.object)
+    return null;
+  const o = a.object;
+  const ends = (n: number): Range[] => [{from: o.from, to: o.from + n}, {from: o.to - n, to: o.to}];
+  if (text.startsWith("<<(", o.from))
+    return {delims: ends(3), contents: innerRange(o, 3, text)};
+  if (text.startsWith("<<", o.from)) {
+    const inner = innerRange(o, 2, text);
+    // `~ <a1>` is the reifier quad's subject; the term's contents precede it
+    const r = a.subject;
+    const contents = inner && r && r.from > inner.from && r.to <= inner.to
+      ? trimRange({from: inner.from, to: r.from}, text)
+      : inner;
+    return {delims: ends(2), contents};
+  }
+  const t = quad.object;
+  const asserted = parsed.quads.find((q: any) => q !== quad &&
+    q.subject.equals(t.subject) && q.predicate.equals(t.predicate) && q.object.equals(t.object));
+  const aa = asserted && quadAnchors(parsed, asserted, text);
+  return {delims: undefined,
+          contents: aa && aa.subject && aa.object ? {from: aa.subject.from, to: aa.object.to} : null};
 }
 
 function uttRange (spans: {start: number, end: number}[] | undefined): Range | null {
@@ -1206,15 +1231,6 @@ function alignQuad (parsed: ParsedTurtle, s: any, p: any, o: any, bnodes: BnodeA
   for (const q of parsed.quads)
     if (q.subject.equals(s) && q.predicate.equals(p) && q.object.equals(o))
       return q;
-  // a quoted-triple object: the parsers disagree on the arc's structure
-  // (N3 quotes, lezer reifies), so match by subject and predicate -- the
-  // reifier quad's own utterance already spans the `<< ... >>` -- and let
-  // tripleTermSpan anchor the term itself (doc/triple-terms.md)
-  if (o.termType === "Quad") {
-    for (const q of parsed.quads)
-      if (q.subject.equals(s) && q.predicate.equals(p) && q.object.termType !== "Quad")
-        return q;
-  }
   const sB = s.termType === "BlankNode", oB = o.termType === "BlankNode";
   if (!sB && !oB)
     return null;
@@ -1701,18 +1717,20 @@ export function mapValidationErrors (valResult: unknown,
       }
       if (!dataRange && leaf.node !== undefined && leaf.node !== null)
         dataRange = rangeOfNode(turtleParsed, leaf.node, bnodes);
-      // region 2: the contents between << and >> (doc/triple-terms.md)
+      // region 2: the term's contents, delimiters aside (doc/triple-terms.md)
       if (leaf.tripleTerm) {
-        const span = tripleTermSpan(turtleParsed, leaf.tripleTerm);
-        const inner = span && innerRange(span, 2, turtleParsed.text);
-        if (inner) { anchors.object = inner; dataRange = inner; }
+        const q = tripleTermQuad(turtleParsed, leaf.tripleTerm);
+        const layout = q && tripleTermLayout(turtleParsed, q, turtleParsed.text);
+        if (layout && layout.contents) { anchors.object = layout.contents; dataRange = layout.contents; }
       }
-      // region 1: the referring triple keeps the << >> delimiters, the way a
-      // shape keeps its { } -- so the term's contents stay region 2's alone
-      if (leaf.reifiesOuter && anchors.object) {
-        const s = anchors.object;
-        (anchors as any).objectParts = [{from: s.from, to: s.from + 2}, {from: s.to - 2, to: s.to}];
-        dataRange = anchors.subject || s;
+      // region 1: the referring triple keeps the delimiters, the way a shape
+      // keeps its { } -- so the term's contents stay region 2's alone
+      if (leaf.reifiesOuter && triple && anchors.object) {
+        const q = alignQuad(turtleParsed, ldTermToRdfJs(triple.subject), ldTermToRdfJs(triple.predicate),
+                            ldTermToRdfJs(triple.object), bnodes);
+        const layout = q && tripleTermLayout(turtleParsed, q, turtleParsed.text);
+        (anchors as any).objectParts = layout ? layout.delims : undefined;
+        dataRange = anchors.subject || anchors.object;
       }
     }
     pairs.push({

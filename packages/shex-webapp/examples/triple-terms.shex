@@ -49,3 +49,7 @@ PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
 
 # The purely syntactic reading: a mention, components unexamined.
 <#Mention> { rdf:reifies <<( IRI foaf:knows IRI )>> }
+
+# Asserted, not quoted: <tim> knows someone only if the data says so
+# outright -- an annotation ({| |}) does, a reified triple (<< >>) doesn't.
+<#Knower> { foaf:knows @<#Person> + }

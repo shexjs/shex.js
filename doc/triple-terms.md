@@ -70,6 +70,25 @@ annotation is about. A schema can even enforce that discipline:
 `rdf:reifies` constraints are where triple terms may appear, and nothing
 else in the shape touches them.
 
+**Writing the data.** RDF 1.2 Turtle/TriG (N3.js v2 parses all of it)
+spells one reifier `<a1>` of one triple term several ways, and only the
+annotation forms also assert the triple:
+
+| data | quads | asserts `s p o`? |
+|---|---|---|
+| `<a1> rdf:reifies <<( s p o )>>` | the triple term itself — legal only as an object | no |
+| `<< s p o ~ <a1> >> ex:by <alice>` | `<a1> rdf:reifies <<( s p o )>>` + `<a1> ex:by <alice>` | no |
+| `<< s p o >> ex:by <alice>` | the same with a fresh blank-node reifier | no |
+| `<d1> ex:disputes << s p o ~ <a1> >>` | a reified triple in object position *is* its reifier: `<d1> ex:disputes <a1>` | no |
+| `s p o ~ <a1> {\| ex:by <alice> \|}` | `s p o` + `<a1> rdf:reifies <<( s p o )>>` + `<a1> ex:by <alice>` | yes |
+| `s p o {\| ex:by <alice> \|}` | the same with a blank-node reifier | yes |
+| `s p o ~ <a1>` | `s p o` + `<a1> rdf:reifies <<( s p o )>>` | yes |
+
+Several `~ name` / `{| |}` may follow one triple, each a further reifier.
+The pre-1.2 habit `<a1> rdf:reifies << s p o >>` still parses but now
+means `<a1> rdf:reifies _:r . _:r rdf:reifies <<( s p o )>>` — one reifier
+too many — so the examples use the forms above.
+
 ## 3. Semantics
 
 A term `T` satisfies `<<( Se pe Oe )>>` iff `T` is a triple term, `pe` is
@@ -156,8 +175,8 @@ results as `{type: "TripleTerm", subject, predicate, object}`.
 | parse / write / visit `<<( )>>` and `TRIPLE` | done, round-trips |
 | term layer (Turtle, LD, both ways) + SPARQL ordering of Quads | done |
 | validator: atom, kind, term-as-focus, nesting | done — [TripleTerms-test.js](../packages/shex-validator/test/TripleTerms-test.js) |
-| data mouths: `application/trig*` (classic star syntax; N3 has no `<<( )>>`/annotation syntax yet) | done |
+| data mouths: `application/trig`, RDF 1.2 syntax via N3.js v2 | done |
 | worker marshalling of Quad terms | done |
-| examples | six manifest entries, machine-checked |
+| examples | thirteen manifest entries covering every data spelling above, machine-checked |
 | `REIFIER` arc modifier (§4), value sets of ground terms, predicate value-sets | open |
-| editor anchoring of quoted triples (lezer-turtle utterances for star data) | open |
+| editor anchoring of triple terms in every data spelling (lezer-turtle and N3.js now agree on the quads) | done — [EditorLocations-test.js](../packages/shex-editor-services/test/EditorLocations-test.js) |

@@ -98,7 +98,7 @@ describe("EditorServices: located query maps and non-ShExC schemas", function ()
       "<#Person> { foaf:name . }",
       "<#Assertion> { rdf:reifies <<( @<#Person> foaf:knows @<#Person> )>> ; ex:assertedBy @<#Person> }",
     ].join("\n");
-    const DATA = [
+    const PREAMBLE = [
       "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
       "PREFIX foaf: <http://xmlns.com/foaf/0.1/>",
       "PREFIX ex: <http://ex.example/#>",
@@ -107,44 +107,61 @@ describe("EditorServices: located query maps and non-ShExC schemas", function ()
       "<henry> foaf:name \"Henry\" .",
       "<alice> foaf:name \"Alice\" .",
       "",
-      "<a1> rdf:reifies << <tim> foaf:knows <henry> >> ;",
-      "  ex:assertedBy <alice> .",
-    ].join("\n");
-    const schema = EditorServices.parseShExC
-      ? null : null; // parse via ShExParser for identity with the validator
+    ];
+    // RDF 1.2 Turtle's spellings of one reifier <a1> of one triple term:
+    // the same quads, written with the delimiters in different places
+    const SPELLINGS = [
+      {name: "the triple term, <<( )>>",
+       data: "<a1> rdf:reifies <<( <tim> foaf:knows <henry> )>> ;\n  ex:assertedBy <alice> .",
+       reifier: "<a1>", delims: ["<<(", ")>>"]},
+      {name: "a reified triple, << ~ <a1> >>",
+       data: "<< <tim> foaf:knows <henry> ~ <a1> >> ex:assertedBy <alice> .",
+       reifier: "~ <a1>", delims: ["<<", ">>"]},
+      {name: "an annotation, ~ <a1> {| |} (asserts the triple too)",
+       data: "<tim> foaf:knows <henry> ~ <a1> {| ex:assertedBy <alice> |} .",
+       reifier: "~ <a1>", delims: undefined},
+    ];
     const parser = require("@shexjs/parser").construct("http://a.example/schema", {}, {index: true});
     const parsed = parser.parse(SCHEMA);
-    const store = new Store(new N3Parser({baseIRI: "http://a.example/", format: "application/trig*"}).parse(DATA));
-    const res = new ShExValidator(parsed, RdfJsDb(store), {results: "api"})
-      .validateShapeMap([{node: "http://a.example/a1", shape: "http://a.example/schema#Assertion"}])[0];
-    const mapped = EditorServices.mapValidationErrors(
-      res.appinfo, EditorServices.locateInParsed(SCHEMA, parsed),
-      EditorServices.parseTurtle(DATA, {baseIRI: "http://a.example/"}), {});
     const partsText = p => (p.schemaParts || (p.schema ? [p.schema] : [])).map(r => slice(SCHEMA, r)).join("");
-    const anchorText = (p, k) => p.anchors && p.anchors[k] ? slice(DATA, p.anchors[k]) : null;
 
-    it("should split the referring triple (region 1) from the term (region 2)", function () {
-      const region1 = mapped.pairs.find(p => anchorText(p, "predicate") === "rdf:reifies");
-      const region2 = mapped.pairs.find(p => p.message && p.message.indexOf("triple term") >= 0);
-      expect(region1, "region 1 exists").to.exist;
-      expect(region2, "region 2 exists").to.exist;
-      // region 1 keeps the delimiters: <a1> rdf:reifies << ... >> <-> rdf:reifies <<( ... )>>
-      expect(anchorText(region1, "subject")).to.equal("<a1>");
-      expect(partsText(region1)).to.equal("rdf:reifies <<()>>"); // <<( head + )>> tail
-      const dParts = region1.anchors.objectParts.map(r => slice(DATA, r));
-      expect(dParts, "the << >> delimiters go with region 1").to.deep.equal(["<<", ">>"]);
-      // region 2 is the contents between the delimiters
-      expect(partsText(region2)).to.equal("@<#Person> foaf:knows @<#Person>");
-      expect(anchorText(region2, "object")).to.equal("<tim> foaf:knows <henry>");
-    });
+    SPELLINGS.forEach(({name, data, reifier, delims}) => describe(name, function () {
+      const DATA = PREAMBLE.concat(data).join("\n");
+      const store = new Store(new N3Parser({baseIRI: "http://a.example/", format: "application/trig"}).parse(DATA));
+      const res = new ShExValidator(parsed, RdfJsDb(store), {results: "api"})
+        .validateShapeMap([{node: "http://a.example/a1", shape: "http://a.example/schema#Assertion"}])[0];
+      const mapped = EditorServices.mapValidationErrors(
+        res.appinfo, EditorServices.locateInParsed(SCHEMA, parsed),
+        EditorServices.parseTurtle(DATA, {baseIRI: "http://a.example/"}), {});
+      const anchorText = (p, k) => p.anchors && p.anchors[k] ? slice(DATA, p.anchors[k]) : null;
 
-    it("should anchor the term's components to <#Person> in the data", function () {
-      const tim = mapped.pairs.filter(p => anchorText(p, "subject") === "<tim>");
-      const henry = mapped.pairs.filter(p => anchorText(p, "subject") === "<henry>");
-      expect(tim.length, "<tim> now hovers").to.be.above(0);
-      expect(henry.length, "<henry> now hovers").to.be.above(0);
-      expect(tim.map(partsText)).to.include("foaf:name .");
-    });
+      it("should conform", function () {
+        expect(res.status).to.equal("conformant");
+      });
+
+      it("should split the referring triple (region 1) from the term (region 2)", function () {
+        const region1 = mapped.pairs.find(p => p.message && p.message.indexOf("matched <http://www.w3.org/1999/02/22-rdf-syntax-ns#reifies>") >= 0);
+        const region2 = mapped.pairs.find(p => p.message && p.message.indexOf("triple term") >= 0);
+        expect(region1, "region 1 exists").to.exist;
+        expect(region2, "region 2 exists").to.exist;
+        // region 1 keeps the delimiters, wherever the spelling puts them
+        expect(anchorText(region1, "subject")).to.equal(reifier);
+        expect(partsText(region1)).to.equal("rdf:reifies <<()>>"); // <<( head + )>> tail
+        const dParts = region1.anchors.objectParts && region1.anchors.objectParts.map(r => slice(DATA, r));
+        expect(dParts, "the delimiters go with region 1").to.deep.equal(delims);
+        // region 2 is the term's contents
+        expect(partsText(region2)).to.equal("@<#Person> foaf:knows @<#Person>");
+        expect(anchorText(region2, "object")).to.equal("<tim> foaf:knows <henry>");
+      });
+
+      it("should anchor the term's components to <#Person> in the data", function () {
+        const tim = mapped.pairs.filter(p => anchorText(p, "subject") === "<tim>");
+        const henry = mapped.pairs.filter(p => anchorText(p, "subject") === "<henry>");
+        expect(tim.length, "<tim> now hovers").to.be.above(0);
+        expect(henry.length, "<henry> now hovers").to.be.above(0);
+        expect(tim.map(partsText)).to.include("foaf:name .");
+      });
+    }));
   });
 
   describe("nodeRange", function () {
