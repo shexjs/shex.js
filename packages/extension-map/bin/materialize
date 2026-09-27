@@ -5,6 +5,10 @@
  * shex.js/bin/validate -d data.ttl -x sourceSchema.shex -s StartShape -n startNode \
  *   | shexSpec/shex.js/bin/materialize -t targetSchema.shex [-j vars.json] [-r rootnode]
  *
+ * --into graph.ttl updates that graph in place: what the target schema currently holds
+ * at the root is replaced, the rest kept (see doc/iteration-scopes.md).
+ * --bindings prints the binding tree the validation made instead of materializing.
+ *
  * See https://github.com/shexSpec for more information.
  */
 
@@ -21,6 +25,8 @@ const CommandLineOptions = [
   { name: "jsonvars", alias: "j", type: String, typeLabel: "file", multiple: false, defaultValue: undefined, description: "json vars file" },
   { name: "root", alias: "r", type: String, typeLabel: "IRI", multiple: false, defaultValue: "tag:eric@w3.org/2016/root", description: "RDF root node IRI" },
   { name: "target", alias: "t", type: String, typeLabel: "file", multiple: false, defaultValue: undefined, description: "target shex file" },
+  { name: "into", alias: "i", type: String, typeLabel: "file", multiple: false, defaultValue: undefined, description: "Turtle file to update in place: what the target schema holds at the root is replaced" },
+  { name: "bindings", alias: "b", type: Boolean, description: "print the binding tree of the validation result and stop" },
 ];
 const CLI = require("command-line-args")(CommandLineOptions);
 
@@ -68,12 +74,13 @@ if (cmds.help) {
    abort("");
 }
 
-if (typeof cmds.target === "undefined") {
+if (typeof cmds.target === "undefined" && !cmds.bindings) {
   abort("\nNo ShEx target schema file specified.");
 }
 
 try {
-  FS.accessSync(cmds.target, FS.r_OK);
+  if (cmds.target)
+    FS.accessSync(cmds.target, FS.r_OK);
   if (typeof cmds.jsonvars !== "undefined") {
     FS.accessSync(cmds.jsonvars, FS.r_OK);
   }
@@ -82,7 +89,7 @@ try {
   process.exit(1);
 }
 
-Promise.all([ShExNode.load({shexc: [cmds.target]}, null, {index: true}),
+Promise.all([cmds.target ? ShExNode.load({shexc: [cmds.target]}, null, {index: true}) : Promise.resolve({schema: null}),
              new Promise((resolve, reject) => {
                const inputChunks = [];
                process.stdin.resume();
@@ -110,15 +117,41 @@ Promise.all([ShExNode.load({shexc: [cmds.target]}, null, {index: true}),
     const val = loads[1];
     const statics = loads[2];
 
-    const resultBindings = ShExUtil.valToExtension(val, Mapper.url);
+    // the binding tree of the validation result (doc/iteration-scopes.md)
+    const resultBindings = Mapper.bindingTree(val);
+    if (cmds.bindings) {
+      console.log(JSON.stringify(resultBindings, null, 2));
+      return;
+    }
 
-    // NFA-thread materializer: each thread of the materialization carries its
-    // own binding-tree cursor, and --jsonvars are always-available globals.
-    // See ../doc/threaded-materializer.md.
+    // --jsonvars are always-available static variables
     const materializer = new Mapper.ThreadedMaterializer(schema, {staticVars: statics});
+    if (cmds.into) {
+      // replace what the target schema holds at the root; a validator over the
+      // graph says what that is
+      const {ShExValidator, resultMapToShapeExprTest} = require("@shexjs/validator");
+      const {ctor: RdfJsDb} = require("@shexjs/neighborhood-rdfjs");
+      const store = new N3.Store();
+      store.addQuads(new N3.Parser({format: "text/turtle"}).parse(FS.readFileSync(cmds.into, "utf8")));
+      const rebind = (root, shape) => {
+        const rootTerm = root.startsWith("_:") ? N3.DataFactory.blankNode(root.slice(2)) : N3.DataFactory.namedNode(root);
+        if (store.countQuads(rootTerm, null, null, null) === 0 && store.countQuads(null, null, rootTerm, null) === 0)
+          return null;
+        const validator = new ShExValidator(schema, RdfJsDb(store), {noCache: true});
+        return resultMapToShapeExprTest(validator.validateShapeMap([{node: root, shape: shape || ShExValidator.Start}]));
+      };
+      const {added, removed} = materializer.update(store, resultBindings, cmds.root, undefined, rebind);
+      const writer = new N3.Writer({ prefixes: {} });
+      writer.addQuads(store.getQuads(null, null, null, null));
+      writer.end(function (error, result) {
+        FS.writeFileSync(cmds.into, result);
+        console.error(cmds.into + ": " + added.length + " triples added, " + removed.length + " removed");
+      });
+      return;
+    }
     const writer = new N3.Writer({ prefixes: {} });
     writer.addQuads(materializer.materialize(resultBindings, cmds.root));
     writer.end(function (error, result) { console.log(result); });
-  }).catch(e => { console.error("stack" in e ? e.stack : e); });
+  }).catch(e => { console.error("stack" in e ? e.stack : e); process.exit(1); });
 
 

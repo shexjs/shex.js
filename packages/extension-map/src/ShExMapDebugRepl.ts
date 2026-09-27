@@ -1,5 +1,6 @@
 /** ShExMapDebugRepl - the interactive layer of shexmap-debug (see
- * doc/debugger-design.md at the repository root).
+ * doc/debugger-design.md at the repository root; the materializer's events are
+ * described in ./ThreadedMaterializer.ts and ../doc/iteration-scopes.md).
  *
  * I/O is injected (write/prompt callbacks), so tests drive it with string
  * arrays and bin/shexmap-debug supplies a synchronous stdin reader -- the
@@ -129,9 +130,8 @@ class ShExMapDebugRepl extends DebugRepl {
     case "return":
       this.write("returned to " + event.thread.subject + this.threadStr(event.thread) + "\n");
       break;
-    case "advance":
-      this.write("advance to frame " + event.toFrame + " for " + this.lex(event.tc.predicate) +
-                 " -- thread deferred so in-frame alternatives go first" +
+    case "enter":
+      this.write("entering scope " + event.scope.join(".") + (event.tc ? " for " + this.lex(event.tc.predicate) : "") +
                  this.threadStr(event.thread) + "\n");
       break;
     case "accept":
@@ -162,7 +162,8 @@ class ShExMapDebugRepl extends DebugRepl {
 
   threadStr (thread: any) {
     return "  [subject " + thread.subject + ", depth " + thread.depth +
-      ", frame " + thread.frame + ", consumed " + thread.consumed +
+      ", scope " + (thread.scope && thread.scope.length ? thread.scope.join(".") : "root") +
+      ", consumed " + thread.consumed +
       (thread.skipped ? ", skipped " + thread.skipped : "") +
       ", emitted " + thread.emitted + "]";
   }
@@ -178,7 +179,7 @@ class ShExMapDebugRepl extends DebugRepl {
         (a === this.dbg.materializer.chosen ? "  <- chosen" : ""),
       quads: a.quads,
     })).concat(live.map((t: any) => ({
-      label: (t.deferred ? "deferred" : "pending") + ":" + this.threadStr(t).substring(1),
+      label: "pending:" + this.threadStr(t).substring(1),
       quads: t.quads,
     })));
     if (all.length === 0)

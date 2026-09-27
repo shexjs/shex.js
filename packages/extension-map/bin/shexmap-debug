@@ -75,7 +75,7 @@ try {
         .parse(schemaText);
   const bindings = cmds.bindings
         ? JSON.parse(FS.readFileSync(cmds.bindings, "utf8"))
-        : ShExUtil.valToExtension(JSON.parse(FS.readFileSync(cmds.val, "utf8")), MapExt);
+        : require("..")({rdfjs: require("n3"), Validator: {}}).bindingTree(JSON.parse(FS.readFileSync(cmds.val, "utf8")));
   const staticVars = cmds.jsonvars ? JSON.parse(FS.readFileSync(cmds.jsonvars, "utf8")) : {};
 
   const repl = new ShExMapDebugRepl(schemaText, schema, bindings, cmds.root, {

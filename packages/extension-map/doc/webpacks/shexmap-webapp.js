@@ -1737,57 +1737,59 @@ module.exports = ShExMapMaterializerCjsModule;
 (module, __unused_webpack_exports, __webpack_require__) {
 
 "use strict";
-/** ThreadedMaterializer - prototype NFA-thread-based ShExMap materializer.
+/** ThreadedMaterializer - materialization by iteration scopes.
  *
- * Motivation: the trivialMaterializer/ShExMaterializer pair walks the target
- * schema depth-first while sharing ONE mutable binder (a pointer into the
- * binding tree plus destructive "used" marks -- see binder() in
- * ./shex-extension-map.ts).  When a required node deep in the schema can't be
- * satisfied, the containing node is eliminated, but the binder's pointer and
- * used-marks are NOT restored, so success depends precariously on visit order.
+ * Builds an instance of an output schema from a ShExMap binding tree, read as a scope
+ * tree (./scopes.ts): a scope's own bindings, and one list of iteration scopes per
+ * repeated constraint or group of the input.  Nothing is flattened and nothing is
+ * consumed (../doc/iteration-scopes.md is the normative description):
  *
- * This prototype treats materialization like Thompson/Pike NFA simulation
- * (c.f. rbenx in ./eval-simple-1err-materializer.js): the target schema
- * compiles to an NFA (plus a call stack for shape references, making it an
- * RTN/pushdown machine), and each live thread carries ITS OWN immutable
- * binding-tree cursor along with its NFA state, repetition counters and
- * emitted triples.  A thread that hits an unbound required variable simply
- * dies; sibling threads (fewer repetitions, skipped optional, other OneOf
- * disjunct) proceed with an uncorrupted cursor, giving the state rollback the
- * single-threaded implementation lacks.
+ * - A constraint with a Map variable READS it from the scope it is evaluated at, or
+ *   from the nearest ancestor scope that binds it.  Reading marks nothing, so a
+ *   parent's binding can be read in every item, and twice in one.  A variable bound
+ *   nowhere on that chain fails the constraint.
+ * - A REPETITION in the output schema iterates one list of the input: the deepest list
+ *   its body's variables are bound at (nested repetitions count through their parent
+ *   list).  Its body runs once per iteration of that list, in list order, at that
+ *   iteration's scope; an iteration whose body fails is skipped; the count of successful
+ *   iterations must reach the minimum, and the repetition stops at the maximum.  A body
+ *   whose variables are all bound at or above the current scope runs once, there.  A
+ *   body whose variables live in two lists neither of which contains the other is
+ *   ill-formed, and says so.
+ * - CHOICES (OneOf, ShapeOr, an optional constraint, a shape with extensions) yield
+ *   alternatives, per scope; the alternatives of the parts of a group or conjunction
+ *   combine by product, pruned to the best maxAccepts as they combine.  Every complete
+ *   alternative is an accept; materialize() returns the one that read the most distinct
+ *   bindings (ties: most quads, then schema order), or whichever options.prefer ranks
+ *   first, and keeps the rest in this.accepts.
+ * - A value a Map code produces must SATISFY the constraint's value expression when
+ *   that is a node constraint; a plain literal whose lexical form fits the datatype is
+ *   retyped to it; any other mismatch fails the constraint (options.checkValues=false
+ *   turns this off).
+ * - NODE IDENTITY: a shape-valued constraint with a Map variable names its node; one
+ *   with %Map:{ id(...) %} (./keys.ts) keys it, so equal keys merge; otherwise the node
+ *   is a blank node determined by the root, the constraint, its call depth and the
+ *   scope (its @node when it is an iteration, else its path), so runs agree.
  *
- * Thread anatomy:
- *   nfa       - compiled NFA of the shape instance being synthesized
- *   stateNo   - current state in that NFA
- *   subject   - N3id term whose arcs we are emitting
- *   repeats   - {reptStateNo: count} for counted repetitions (this instance)
- *   callStack - persistent list of {nfa, outs, subject, repeats, parent}
- *   cursor    - {idx, used, n, sk} pointer into the normalized binding frames
- *   quads     - persistent list of emitted {s, p, o} N3id triples
- *   bnode     - counter for inventing intermediate blank nodes
+ * run() is a generator of debugger step events (MaterializerDebugger drives it):
+ *   {type: "tripleConstraint", tc, thread}   before synthesizing a constraint
+ *   {type: "fail", failure, thread}          the constraint failed (its alternative dies)
+ *   {type: "enter", tc, thread, scope}       a repetition's body starts on an iteration
+ *   {type: "return", thread}                 a subshape call completed
+ *   {type: "accept", thread, quads}          a complete alternative (at the end, each)
+ * The thread view is {subject, depth, frame (the scope's index in walk order), scope
+ * (its path), consumed (distinct bindings read so far on this branch), skipped (always
+ * 0), emitted, used ("<frame> <variable>" marks)}.  Every quad carries `tc` and `src`,
+ * its provenance; this.provenance is parallel to the chosen quads.
  *
- * Scheduling here is depth-first with greedy priority (prefer another
- * repetition / the emitting arm of an optional / the first OneOf disjunct),
- * with one demotion: a TC whose variable lookup has to ADVANCE the frame
- * cursor is a choice point, not a fait accompli.  Its continuation is parked
- * on a deferred stack so every alternative that can still consume from the
- * current frame (other disjuncts, the exit arm of a repetition) explores
- * first, and the advance -- which forfeits any unused bindings it skips --
- * remains a fallback.  Without this, a pessimally-ordered OneOf pairs
- * bindings across frames (e.g. frame 0's :use with frame 2's :tel) and that
- * mix would win by being first.
- *
- * Acceptance: every distinct accepting thread is collected (bounded by
- * maxAccepts); materialize() returns the one that consumed the most bindings
- * (ties: fewest forfeited by advances, then discovery order).  The accepts
- * array is exposed for UIs to offer the choice when the materialization is
- * ambiguous.  See ../doc/threaded-materializer.md, which also discusses
- * stepping this machine breadth-parallel (PikeVM style) or determinizing it
- * into a DFA.
+ * The frame-cursor design this replaces is described in ../doc/threaded-materializer.md.
  */
 
 const extensions = __webpack_require__(787);
-const { n3idQuad2RdfJs } = __webpack_require__(638);
+const { n3idQuad2RdfJs, n3idTerm2RdfJs } = __webpack_require__(638);
+const scopes_1 = __webpack_require__(680);
+const bindingTree_1 = __webpack_require__(324);
+const keys_1 = __webpack_require__(525);
 const MapExt = "http://shex.io/extensions/Map/#";
 const variablePattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
 const functionPattern = /^\s*[a-zA-Z0-9]+\(.*\)\s*$/;
@@ -1795,35 +1797,30 @@ const UNBOUNDED = -1;
 class MaterializationError extends Error {
     constructor(message, failures) {
         super(failures && failures.length
-            ? message + "; deepest failures: " + JSON.stringify(
-            // `tc` is the schema object (for editors to anchor on); its
-            // serialization would bloat the message
-            failures.slice(-3).map((f) => Object.assign({}, f, { tc: undefined })))
+            ? message + "; deepest failures: " + JSON.stringify(failures.slice(-3).map((f) => Object.assign({}, f, { tc: undefined })))
             : message);
         this.failures = failures || [];
     }
 }
-/** normalizeBindingTree - flatten a binding tree to a sequence of frames.
- *
- * Reproduces the _mults/_cross preprocessing in binder(): bindings whose
- * variable occurs exactly once under an array level (e.g. bp:name next to a
- * list of repeated groups) are distributed into every frame produced by the
- * sibling arrays, preserving the association of multi-bindings while turning
- * the tree into a linear input tape for the NFA.
- */
+// -- results ---------------------------------------------------------------------------
+/** one way to materialize something: its quads (each with tc and src) and the bindings read */
+class Result {
+    constructor(quads = [], reads = new Set()) {
+        this.quads = quads;
+        this.reads = reads;
+    }
+    then(other) {
+        const reads = new Set(this.reads);
+        other.reads.forEach(r => reads.add(r));
+        return new Result(this.quads.concat(other.quads), reads);
+    }
+}
+const rank = (r) => [r.reads.size, r.quads.length];
+const betterRank = (a, b) => a.reads.size > b.reads.size || (a.reads.size === b.reads.size && a.quads.length > b.quads.length);
+/** the legacy flattening, kept for callers that still list frames; @-keys are dropped */
 function normalizeBindingTree(tree) {
     return normalizeBindingTreeWithOrigins(tree).frames;
 }
-/**
- * The same flattening, and where each binding came from in the tree.
- *
- * `origins[i][varName]` is the path to that binding in the *original* JSON
- * -- ["1", 0, "http://…#name"] and so on -- which is the only way back: the
- * frames are copies, and distribution means one written binding can appear
- * in several of them (bp:name beside a list of repeated groups lands in
- * every frame those groups produce).  A UI that wants to point at the
- * binding a triple came from needs the path, not the value.
- */
 function normalizeBindingTreeWithOrigins(tree) {
     const walked = walk(tree, []);
     return { frames: walked.frames, origins: walked.origins };
@@ -1831,11 +1828,15 @@ function normalizeBindingTreeWithOrigins(tree) {
         if (!Array.isArray(node)) {
             const counts = {};
             const origin = {};
+            const own = {};
             for (const k of Object.keys(node)) {
+                if (k.startsWith("@"))
+                    continue;
+                own[k] = node[k];
                 counts[k] = 1;
                 origin[k] = path.concat([k]);
             }
-            return { frames: [Object.assign({}, node)], origins: [origin], leaf: true, counts };
+            return { frames: [own], origins: [origin], leaf: true, counts };
         }
         const kids = node.map((kid, i) => walk(kid, path.concat([i])));
         const counts = {};
@@ -1843,11 +1844,10 @@ function normalizeBindingTreeWithOrigins(tree) {
             for (const k of Object.keys(kid.counts))
                 counts[k] = (counts[k] || 0) + kid.counts[k];
         });
-        if (!kids.some((kid) => !kid.leaf)) // plain sequence of frames
+        if (!kids.some((kid) => !kid.leaf))
             return { frames: [].concat.apply([], kids.map((kid) => kid.frames)),
                 origins: [].concat.apply([], kids.map((kid) => kid.origins)),
                 leaf: false, counts };
-        // distribute each singleton binding from leaf kids into array kids' frames
         const shared = {};
         const sharedOrigin = {};
         const ordered = [];
@@ -1878,461 +1878,745 @@ function normalizeBindingTreeWithOrigins(tree) {
             frames.push(kid.leaf ? frame : Object.assign({}, shared, frame));
             origins.push(kid.leaf ? kid.origins[i] : Object.assign({}, sharedOrigin, kid.origins[i]));
         }));
+        if (frames.length === 0 && Object.keys(shared).length > 0) {
+            // a scope whose lists are all empty still has its own bindings: one frame of them
+            frames.push(shared);
+            origins.push(sharedOrigin);
+        }
         return { frames, origins, leaf: false, counts };
     }
 }
-/** cursorGet - immutable lookup in the frame sequence.
- *
- * Mirrors binder().get: stay on the current frame if it holds an unused
- * binding for the variable, else scan forward; never move backward.  Returns
- * {value, cursor} with a NEW cursor (the caller's cursor is untouched), or
- * null if no unused binding remains -- unlike binder(), failure poisons
- * nothing.  cursor.n counts consumed frame bindings (globals don't count);
- * Rept states use it to demand progress from repeated subexpressions.
- * cursor.sk accumulates the unused bindings abandoned by forward scans (the
- * cursor never moves backward, so skipping past them forfeits them); the
- * acceptance heuristic prefers threads that forfeited less.
- */
-function cursorGet(frames, globals, cursor, varName) {
-    if (varName in globals) // staticVars: always available, never consumed
-        return { value: globals[varName], cursor };
-    for (let i = cursor.idx; i < frames.length; ++i) {
-        const key = i + " " + varName;
-        if (varName in frames[i] && !(key in cursor.used)) {
-            const used = Object.assign({}, cursor.used);
-            used[key] = true;
-            let sk = cursor.sk;
-            for (let j = cursor.idx; j < i; ++j) // abandoned by advancing past frames idx..i-1
-                for (const v of Object.keys(frames[j]))
-                    if (!((j + " " + v) in used))
-                        ++sk;
-            return { value: frames[i][varName], cursor: { idx: i, used, n: cursor.n + 1, sk } };
-        }
-    }
-    return null;
-}
 class ThreadedMaterializer {
     constructor(schema, options = {}) {
+        this.tree = null;
+        this._root = null;
+        this._lists = new Map();
+        this._tcIndex = new Map();
+        this._active = [];
+        this._failures = [];
+        this._referenced = new Set();
+        this._dropped = 0;
+        this._stack = [];
+        this._validator = null;
         this.schema = schema;
         this.index = schema._index || (__webpack_require__(747).ShExIndexVisitor).index(schema);
         this.prefixes = schema._prefixes || schema.prefixes || {};
         this.globals = options.staticVars || {};
-        this.maxRepeat = options.maxRepeat || 50; // clamp unbounded cardinalities
-        this.maxCallDepth = options.maxCallDepth || 50; // guard cyclic shape references
-        this.maxSteps = options.maxSteps || 1000000; // guard thread explosions
-        this.maxAccepts = options.maxAccepts || 20; // stop collecting alternatives here
-        // once one thread has accepted, how many more steps to spend looking for
-        // better/alternative materializations before settling for the best so far
-        this.exploreSteps = options.exploreSteps || 10000;
-        // which accept to return, where several are viable: a comparator over
-        // {quads, consumed, skipped, thread}, negative when its first argument
-        // is the better -- the caller's own weighing of what was forfeited, or
-        // of shape coverage.  Default: most bindings consumed, then fewest
-        // forfeited by advances, then most quads emitted, then discovery order.
+        this.maxRepeat = "maxRepeat" in options && options.maxRepeat !== undefined ? options.maxRepeat : Infinity;
+        this.maxCallDepth = options.maxCallDepth || 50;
+        this.maxSteps = options.maxSteps || 1000000; // accepted for compatibility; the search has no budget to spend
+        this.maxAccepts = options.maxAccepts || 20; // alternatives kept, at every level and at the end
+        this.exploreSteps = options.exploreSteps || 10000; // likewise
         this.prefer = typeof options.prefer === "function" ? options.prefer : null;
-        // an optional subshape that consumed no frame binding (a static-only
-        // island: constants and staticVars) is dropped rather than emitted
         this.requireBindingsInSubshapes = options.requireBindingsInSubshapes === true;
-        this._nfaCache = new Map();
-        this._compiling = [];
+        this.checkValues = options.checkValues !== false;
     }
-    /** materialize - synthesize a graph instance of shapeLabel (default: start)
-     * rooted at createRoot from the given binding tree.
-     * Returns an array of RdfJs quads.
-     */
+    /** materialize - the quads of the best materialization of shapeLabel (default: start)
+     * rooted at createRoot, as RdfJs quads */
     materialize(bindingTree, createRoot, shapeLabel) {
-        // drain the step generator; debuggers drive run() themselves
         const it = this.run(bindingTree, createRoot, shapeLabel);
         let step = it.next();
         while (!step.done)
             step = it.next();
         return step.value;
     }
-    /** run - the materialization as a generator of debugger step events (see
-     * MaterializerDebugger and doc/debugger-design.md at the repository root).
-     * Yields, in traversal order:
-     *   {type: "tripleConstraint", tc, thread}  before synthesizing a constraint
-     *   {type: "fail", failure, thread}         a branch died (its emissions and
-     *                                           cursor marks are discarded)
-     *   {type: "advance", tc, thread, toFrame}  the constraint's variable lookup
-     *                                           advanced the frame cursor: the
-     *                                           thread is deferred so in-frame
-     *                                           alternatives explore first
-     *   {type: "return", thread}                a subshape call completed
-     *   {type: "accept", thread, quads}         a thread reached an accepting
-     *                                           state (exploration continues)
-     * and returns the chosen quads (or throws MaterializationError); all
-     * distinct accepts land in this.accepts = [{quads, consumed, skipped,
-     * thread}].  thread = {subject, depth (subshape call depth), frame
-     * (binding-frame cursor), consumed (bindings consumed), skipped (bindings
-     * forfeited by advances), emitted (quads so far)}.
-     */
+    /** run - the materialization as a generator of debugger step events (see the module
+     * comment); returns the chosen quads or throws MaterializationError */
     *run(bindingTree, createRoot, shapeLabel) {
         this.accepts = null;
         this.chosen = null;
         this.provenance = null;
-        const { frames, origins } = normalizeBindingTreeWithOrigins(bindingTree);
-        this.frames = frames; // exposed so UIs can render binding-tree state
-        this.frameOrigins = origins; // ...and to point back at where it was written
-        const nfa = this._compileShapeExprNFA(shapeLabel || this.schema.start
-            || runtimeError("no shape given and no start in schema"));
-        const failures = [];
-        // for this.lastReport: which variables the schema referenced, and which
-        // were available at all (a typo'd variable name silently prunes every
-        // branch that needs it -- e.g. a starred subshape collapses to zero
-        // iterations -- so surface never-bound variables and unused statics)
-        const report = { referenced: new Set() };
-        const availableVars = new Set(Object.keys(this.globals));
-        frames.forEach((frame) => Object.keys(frame).forEach((v) => availableVars.add(v)));
-        const accepts = [];
-        this.accepts = accepts; // live: debuggers list accepts-so-far mid-run
-        const acceptBySig = new Map(); // consumed-bindings signature -> accept
-        const quadSigs = new Set(); // graph signatures already recorded
-        const finishReport = (error) => {
-            const seen = new Set();
-            this.lastReport = {
-                unboundVariables: failures.filter((f) => {
-                    const key = f.variable + "\t" + (f.tc ? f.tc.predicate : "");
-                    if (!f.variable || availableVars.has(f.variable) || seen.has(key))
-                        return false;
-                    seen.add(key);
-                    return true;
-                }),
-                unusedStatics: Object.keys(this.globals).filter((g) => !report.referenced.has(g)),
-                alternatives: accepts.length,
-                explorationTruncated: truncated,
-                configsPruned: pruned, // duplicate thread configurations dropped (F1)
-            };
-            if (error)
-                error.report = this.lastReport;
-            return error;
-        };
-        // a perfect accept consumed every frame binding; nothing can beat it
-        const totalFrameBindings = frames.reduce((n, f) => n + Object.keys(f).length, 0);
-        const stack = [{
-                nfa, stateNo: nfa.start,
-                subject: createRoot || "_:root",
-                repeats: {}, callStack: null,
-                cursor: { idx: 0, used: {}, n: 0, sk: 0 },
-                quads: null, bnode: 0
-            }];
-        // threads whose last constraint advanced the frame cursor wait here until
-        // every in-frame alternative has been explored
-        const deferred = [];
-        this._live = { stack, deferred }; // liveThreads() inspects these
-        let steps = 0;
-        let pruned = 0; // threads dropped as duplicate configurations (F1)
-        let acceptedAtStep = null; // step count at the first accept
-        let truncated = false; // exploration stopped by a budget, not exhaustion
-        // F1: PikeVM-style worklist dedup.  Two threads at the same NFA state, in
-        // the same call (callStack identity -- persistent, so the head node names
-        // the whole chain and its subject), over the same cursor (frame index +
-        // which bindings are consumed) and the same repetition counters have
-        // identical futures: whatever accepts one can reach, so can the other.
-        // So the first to be popped explores that future and the rest are
-        // dropped.  Under the greedy DFS the first arrival is the highest-priority
-        // (most-emitting) path, and distinct accepts keep distinct cursors, so no
-        // accept is lost; bnode labels differ but the graphs are isomorphic and
-        // collapse at acceptance.  This prunes the redundant re-exploration the
-        // exploreSteps budget was there to bound.
-        const seen = new Set();
-        const csIds = new Map();
-        let nextCsId = 1;
-        const configKey = (th) => {
-            let csId = "0";
-            if (th.callStack !== null) {
-                let id = csIds.get(th.callStack);
-                if (id === undefined) {
-                    id = nextCsId++;
-                    csIds.set(th.callStack, id);
-                }
-                csId = String(id);
-            }
-            const used = Object.keys(th.cursor.used).sort().join(",");
-            const rept = Object.keys(th.repeats).sort()
-                .map((k) => k + ":" + th.repeats[k].n + "@" + th.repeats[k].at).join(";");
-            return th.stateNo + "|" + csId + "|" + th.cursor.idx + "|" + used + "|" + rept;
-        };
-        search: while (stack.length > 0 || deferred.length > 0) {
-            if (++steps > this.maxSteps) {
-                if (accepts.length > 0) { // settle for the best found so far
-                    truncated = true;
-                    break;
-                }
-                throw finishReport(new MaterializationError("exceeded maxSteps=" + this.maxSteps, failures));
-            }
-            if (acceptedAtStep !== null && steps - acceptedAtStep > this.exploreSteps) {
-                truncated = true;
-                break;
-            }
-            // deferred threads resume oldest-first: the greedy leader deferred at a
-            // frame boundary gets back in front of the variants deferred after it
-            const th = stack.length > 0 ? stack.pop() : deferred.shift();
-            // a configuration already explored has nothing new downstream: drop it
-            // (F1).  Checked at pop, not push, so a duplicate sits harmlessly until
-            // its turn -- and the leader that claimed the config is off the lists.
-            const key = configKey(th);
-            if (seen.has(key)) {
-                ++pruned;
-                continue;
-            }
-            seen.add(key);
-            // the thread being stepped is off both lists while it is stepped, so
-            // a debugger paused at a yield inside it would not find it anywhere
-            // -- which is the one thread its reader is looking at
-            this._live.current = th;
-            const st = th.nfa.states[th.stateNo];
-            switch (st.type) {
-                case "Match":
-                    if (th.callStack === null) { // an accepting thread; keep exploring
-                        // accepts are identified by WHICH bindings they consumed: variants
-                        // that differ only in constant emissions (e.g. skipped optional
-                        // constants) collapse onto the most-emitting one, as do
-                        // identical graphs
-                        const sig = Object.keys(th.cursor.used).sort().join("|");
-                        const qsig = quadSignature(th.quads);
-                        if (quadSigs.has(qsig))
-                            break;
-                        quadSigs.add(qsig);
-                        const existing = acceptBySig.get(sig);
-                        const { quads, provenance } = collectQuadsAndProvenance(th.quads);
-                        if (existing) {
-                            if (quads.length > existing.quads.length)
-                                Object.assign(existing, { quads, provenance, skipped: th.cursor.sk, thread: threadView(th) });
-                            break;
-                        }
-                        const accept = { quads, provenance, consumed: th.cursor.n,
-                            skipped: th.cursor.sk, thread: threadView(th),
-                            used: Object.keys(th.cursor.used) };
-                        acceptBySig.set(sig, accept);
-                        accepts.push(accept);
-                        if (acceptedAtStep === null)
-                            acceptedAtStep = steps;
-                        yield { type: "accept", thread: threadView(th), quads: accept.quads };
-                        if (accept.consumed >= totalFrameBindings // perfect: unbeatable
-                            || accepts.length >= this.maxAccepts)
-                            break search;
-                        break;
-                    }
-                    { // return from a shape-reference call
-                        // the return event belongs to the caller's level: step-out from
-                        // inside the call lands here
-                        yield { type: "return",
-                            thread: Object.assign(threadView(th), { depth: stackDepth(th.callStack) - 1 }) };
-                        const frame = th.callStack;
-                        // vacuous-descend rule: greedy entry into an OPTIONAL shape-valued
-                        // constraint whose subshape then emitted nothing and consumed
-                        // nothing would leave a dangling bnode island; drop this thread --
-                        // the skip arm already queued yields the same content without it.
-                        // (A REQUIRED constraint keeps its empty island, as the old
-                        // materializer did.)
-                        // (...or, with requireBindingsInSubshapes, emitted only statics:
-                        // an island nothing in the bindings asked for.)
-                        if (frame.skippable && th.cursor.n === frame.consumedMark
-                            && (th.quads === frame.quadsMark || this.requireBindingsInSubshapes))
-                            break;
-                        frame.outs.forEach((out) => stack.push(Object.assign({}, th, {
-                            nfa: frame.nfa, stateNo: out,
-                            subject: frame.subject, repeats: frame.repeats,
-                            callStack: frame.parent
-                        })));
-                    }
-                    break;
-                case "Split": // OneOf: first disjunct has priority, so push it last
-                    for (let i = st.outs.length - 1; i >= 0; --i)
-                        stack.push(Object.assign({}, th, { stateNo: st.outs[i] }));
-                    break;
-                case "Rept": {
-                    const r = th.repeats[th.stateNo] || { n: 0, at: -1 };
-                    if (r.n >= st.min) { // exit arm (lower priority): reset counter for possible re-entry
-                        const repeats = Object.assign({}, th.repeats);
-                        delete repeats[th.stateNo];
-                        stack.push(Object.assign({}, th, { stateNo: st.outs[1], repeats }));
-                    }
-                    // greedy: another repetition, but only if the previous iteration
-                    // consumed a frame binding -- constant- or staticVar-only
-                    // subexpressions stay satisfiable forever, so without this progress
-                    // guard a starred one would loop to maxRepeat.
-                    if (r.n < Math.min(st.max, this.maxRepeat) && (r.n === 0 || th.cursor.n > r.at)) {
-                        const repeats = Object.assign({}, th.repeats);
-                        repeats[th.stateNo] = { n: r.n + 1, at: th.cursor.n };
-                        stack.push(Object.assign({}, th, { stateNo: st.outs[0], repeats }));
-                    }
-                    break;
-                }
-                case "TC": {
-                    yield { type: "tripleConstraint", tc: st.tc, thread: threadView(th) };
-                    const succs = [];
-                    const failuresLen = failures.length;
-                    this._stepTripleConstraint(th, st, frames, succs, failures, report);
-                    if (succs.length === 0) { // no successors: this branch died
-                        yield { type: "fail",
-                            failure: failures.length > failuresLen ? failures[failures.length - 1] : null,
-                            thread: threadView(th) };
-                    }
-                    else if (succs[0].cursor.idx > th.cursor.idx) {
-                        // the lookup advanced the frame cursor: that's a choice, not a
-                        // consequence -- park the continuation so alternatives that can
-                        // still consume from the current frame explore first
-                        yield { type: "advance", tc: st.tc, thread: threadView(th),
-                            toFrame: succs[0].cursor.idx };
-                        for (const s of succs)
-                            deferred.push(s);
-                    }
-                    else {
-                        for (const s of succs)
-                            stack.push(s);
-                    }
-                    break;
-                }
-                default:
-                    runtimeError("unexpected NFA state type " + st.type);
-            }
+        try {
+            this.tree = new scopes_1.ScopeTree(bindingTree);
         }
+        catch (e) {
+            if (e instanceof scopes_1.BindingTreeError)
+                throw new MaterializationError(e.message);
+            throw e;
+        }
+        const view = this.tree.frames();
+        this.frames = view.frames; // for UIs that list the bindings by scope
+        this.frameOrigins = view.origins;
+        this._root = createRoot || "_:root";
+        this._lists = new Map();
+        this._tcIndex = new Map();
+        this._active = [];
+        this._failures = [];
+        this._referenced = new Set();
+        this._dropped = 0;
+        this._stack = [];
+        const start = shapeLabel || this.schema.start || runtimeError("no shape given and no start in schema");
+        const label = typeof start === "string" ? start : "START";
+        const results = yield* this._shapeExpr(start, this.tree.root, this._root, 0, label);
+        const seen = new Set();
+        const accepts = [];
+        for (const r of results.slice().sort((a, b) => betterRank(a, b) ? -1 : betterRank(b, a) ? 1 : 0)) {
+            const { quads, provenance } = collectQuadsAndProvenance(r.quads);
+            const sig = quadSignature(quads);
+            if (seen.has(sig))
+                continue;
+            seen.add(sig);
+            const used = Array.from(r.reads).map(readMark(this.tree));
+            accepts.push({ quads, provenance, consumed: r.reads.size, skipped: 0,
+                thread: { subject: this._root, depth: 0, frame: 0, scope: [], consumed: r.reads.size, skipped: 0,
+                    emitted: quads.length, used },
+                used });
+        }
+        this.accepts = accepts;
+        const report = this.finishReport(accepts.length);
         if (accepts.length === 0)
-            throw finishReport(new MaterializationError("no thread reached an accepting state", failures));
-        finishReport(null);
-        // most bindings consumed; ties: fewest forfeited by advances, then most
-        // emitted, then discovery (greedy) order -- unless the caller weighs
-        // them otherwise (options.prefer)
-        const better = this.prefer
-            ? (a, b) => this.prefer(a, b) < 0
-            : (a, b) => a.consumed > b.consumed
-                || (a.consumed === b.consumed
-                    && (a.skipped < b.skipped
-                        || (a.skipped === b.skipped && a.quads.length > b.quads.length)));
-        let best = accepts[0];
+            throw Object.assign(new MaterializationError("nothing materializes the shape from these bindings", this._failures), { report });
         for (const a of accepts)
-            if (better(a, best))
-                best = a;
+            yield { type: "accept", thread: a.thread, quads: a.quads };
+        let best = accepts[0];
+        if (this.prefer)
+            for (const a of accepts)
+                if (this.prefer(a, best) < 0)
+                    best = a;
         this.chosen = best;
-        // provenance of the returned graph, parallel to its quads
         this.provenance = best.provenance;
         return best.quads;
     }
-    /** _stepTripleConstraint - one TC visit synthesizes exactly one instance of
-     * the constraint (cardinality is handled by the surrounding Rept states):
-     *  - Map semActs: resolve each variable/function against this thread's
-     *    cursor; any unbound variable kills the thread (rollback comes free).
-     *  - singleton value set: emit the constant.
-     *  - shape-valued: invent a bnode, link it, and call into the sub-shape NFA.
-     * Successor threads go into succs; the caller schedules them (immediately,
-     * or deferred when the cursor advanced).
-     */
-    _stepTripleConstraint(th, st, frames, succs, failures, report) {
-        const tc = st.tc;
+    finishReport(found) {
+        const available = new Set(Object.keys(this.globals).concat(this.tree ? this.tree.variables() : []));
+        const seen = new Set();
+        this.lastReport = {
+            unboundVariables: this._failures.filter((f) => {
+                const key = f.variable + "\t" + (f.tc ? f.tc.predicate : "");
+                if (!f.variable || available.has(f.variable) || seen.has(key))
+                    return false;
+                seen.add(key);
+                return true;
+            }),
+            unusedStatics: Object.keys(this.globals).filter((g) => !this._referenced.has(g)),
+            alternatives: found,
+            explorationTruncated: this._dropped > 0,
+            configsPruned: this._dropped,
+        };
+        return this.lastReport;
+    }
+    /** liveThreads - the open shape calls, outermost first, as thread views; the last
+     * (innermost, most recently entered) is marked current: it is where the debugger is
+     * actually paused, the others merely not yet returned. */
+    liveThreads() {
+        return this._stack.map((ctx, i) => Object.assign(this.threadView(ctx), { deferred: false }, collectQuadsAndProvenance(ctx.lead.quads), { used: Array.from(ctx.lead.reads).map(readMark(this.tree)),
+            current: i === this._stack.length - 1 }));
+    }
+    /** currentThread - the graph as it is built so far: every open shape call's own
+     * emissions, aggregated outer to inner (a shape's completed earlier constraints, then
+     * the shape its current constraint calls into, and so on to where the debugger is
+     * paused).  liveThreads() lists each open call separately -- what #dbgThreads shows as
+     * pending threads; a nested one's quads fold into its caller's only once it returns, so
+     * none of those separate views alone has everything emitted so far.  This is their sum. */
+    currentThread() {
+        if (this._stack.length === 0)
+            return null;
+        const innermost = this._stack[this._stack.length - 1];
+        const lead = this._stack.reduce((acc, ctx) => acc.then(ctx.lead), new Result());
+        return Object.assign(this.threadView(innermost), { deferred: false, current: true }, collectQuadsAndProvenance(lead.quads), { used: Array.from(lead.reads).map(readMark(this.tree)) });
+    }
+    threadView(ctx) {
+        return { subject: ctx.subject, depth: ctx.depth, frame: ctx.scope.index, scope: ctx.scope.path,
+            consumed: ctx.lead.reads.size, skipped: 0, emitted: ctx.lead.quads.length,
+            used: Array.from(ctx.lead.reads).map(readMark(this.tree)) };
+    }
+    // -- shape expressions ----------------------------------------------------------------
+    *_shapeExpr(se, scope, subject, depth, label) {
+        if (typeof se === "string") {
+            const decl = this.index.shapeExprs[se];
+            if (!decl)
+                runtimeError("shape " + se + " not found in schema");
+            const options = this.extensionCandidates(decl);
+            if (options.length === 0)
+                runtimeError("shape " + se + " is abstract and nothing extends it");
+            return yield* this._guarded("ref|" + se + "|" + (0, scopes_1.pathKey)(scope.path) + "|" + subject, se, function* () {
+                const out = [];
+                for (const o of options)
+                    out.push(...(yield* this._shapeExpr(expressionOf(o), scope, subject, depth, se)));
+                return this._prune(out);
+            }.bind(this));
+        }
+        const fromRef = label !== undefined; // a reference's guard already covers what it resolves to
+        label = label || "(inline " + se.type + ")";
+        const guard = (key, run) => fromRef ? run() : this._guarded(key, label, run);
+        switch (se.type) {
+            case "ShapeDecl":
+                return yield* this._shapeExpr(se.shapeExpr, scope, subject, depth, label);
+            case "Shape":
+                return yield* guard("shape|" + idOf(se) + "|" + (0, scopes_1.pathKey)(scope.path) + "|" + subject, function* () {
+                    const parts = this.shapeParts(se).map((p) => p.expression);
+                    const ctx = { subject, scope, depth, lead: new Result() };
+                    this._stack.push(ctx);
+                    try {
+                        let acc = [new Result()];
+                        for (const e of parts) {
+                            const alternatives = e ? yield* this._expression(e, scope, subject, depth) : [new Result()];
+                            if (alternatives.length === 0)
+                                return [];
+                            acc = this._all([acc, alternatives]);
+                            ctx.lead = acc[0];
+                        }
+                        return acc;
+                    }
+                    finally {
+                        this._stack.pop();
+                    }
+                }.bind(this));
+            case "ShapeAnd":
+                return yield* guard("and|" + idOf(se) + "|" + (0, scopes_1.pathKey)(scope.path) + "|" + subject, function* () {
+                    const alternatives = [];
+                    for (const p of se.shapeExprs)
+                        if (this.resolve(p).type !== "NodeConstraint")
+                            alternatives.push(yield* this._shapeExpr(p, scope, subject, depth));
+                    return this._all(alternatives);
+                }.bind(this));
+            case "ShapeOr":
+                return yield* guard("or|" + idOf(se) + "|" + (0, scopes_1.pathKey)(scope.path) + "|" + subject, function* () {
+                    const out = [];
+                    for (const p of se.shapeExprs)
+                        if (this.resolve(p).type !== "NodeConstraint")
+                            out.push(...(yield* this._shapeExpr(p, scope, subject, depth)));
+                    return this._prune(out);
+                }.bind(this));
+            case "NodeConstraint":
+                return [new Result()];
+            default:
+                runtimeError(se.type + " synthesis not supported");
+        }
+    }
+    /** refuse a shape expression that reaches itself at the same scope and subject through
+     * references alone (<A> @<B> OR ..., <B> @<A> OR ...) */
+    *_guarded(key, label, run) {
+        const at = this._active.findIndex(a => a.key === key);
+        if (at !== -1)
+            runtimeError("cycle in shape expressions: ", this._active.slice(at).map(a => a.label).concat(label).join(" -> "));
+        this._active.push({ key, label });
+        try {
+            return yield* run();
+        }
+        finally {
+            this._active.pop();
+        }
+    }
+    /** the declaration itself (unless abstract) first, then its non-abstract extensions */
+    extensionCandidates(decl) {
+        const found = [];
+        if (!decl.abstract)
+            found.push(decl);
+        const label = decl.id;
+        if (label !== undefined) {
+            const queue = [label];
+            const seen = new Set();
+            while (queue.length) {
+                const base = queue.shift();
+                for (const other of this.schema.shapes || []) {
+                    const shape = expressionOf(other);
+                    const ext = shape && shape.extends ? shape.extends : [];
+                    if (ext.indexOf(base) !== -1 && !seen.has(other.id)) {
+                        seen.add(other.id);
+                        if (!other.abstract)
+                            found.push(other);
+                        queue.push(other.id);
+                    }
+                }
+            }
+        }
+        return found;
+    }
+    /** the shapes whose expressions share the node when it matches `shape`: what it EXTENDS
+     * (transitively), then itself */
+    shapeParts(shape, seen = new Set()) {
+        const parts = [];
+        for (const base of shape.extends || []) {
+            if (seen.has(base))
+                continue;
+            seen.add(base);
+            const decl = this.index.shapeExprs[base];
+            const se = decl ? this.resolve(expressionOf(decl)) : null;
+            for (const s of shapesIn(se, this))
+                parts.push(...this.shapeParts(s, seen));
+        }
+        parts.push(shape);
+        return parts;
+    }
+    resolve(se) {
+        for (let hops = 0; typeof se === "string" || (se && se.type === "ShapeDecl"); ++hops) {
+            if (hops > 100)
+                runtimeError("shape reference loop at " + se);
+            if (typeof se === "string") {
+                const decl = this.index.shapeExprs[se];
+                if (!decl)
+                    runtimeError("shape " + se + " not found in schema");
+                se = decl;
+            }
+            else {
+                se = se.shapeExpr;
+            }
+        }
+        return se;
+    }
+    // -- triple expressions ---------------------------------------------------------------
+    *_expression(expr, scope, subject, depth) {
+        if (typeof expr === "string")
+            expr = this.index.tripleExprs[expr];
+        const min = expr.min !== undefined ? expr.min : 1;
+        const max = expr.max !== undefined ? (expr.max === UNBOUNDED ? Infinity : expr.max) : 1;
+        if (min === 1 && max === 1)
+            return yield* this._once(expr, scope, subject, depth, false);
+        return yield* this._repetition(expr, min, max, scope, subject, depth);
+    }
+    *_once(expr, scope, subject, depth, skippable) {
+        switch (expr.type) {
+            case "TripleConstraint":
+                return yield* this._tc(expr, scope, subject, depth, skippable);
+            case "EachOf": {
+                const top = this._stack[this._stack.length - 1];
+                const base = top ? top.lead : new Result();
+                let acc = [new Result()];
+                for (const e of expr.expressions) {
+                    const alternatives = yield* this._expression(e, scope, subject, depth);
+                    if (alternatives.length === 0) {
+                        if (top)
+                            top.lead = base;
+                        return [];
+                    }
+                    acc = this._all([acc, alternatives]);
+                    if (top)
+                        top.lead = base.then(acc[0]);
+                }
+                if (top)
+                    top.lead = base;
+                return acc;
+            }
+            case "OneOf": {
+                const out = [];
+                for (const e of expr.expressions)
+                    out.push(...(yield* this._expression(e, scope, subject, depth)));
+                return this._prune(out);
+            }
+            default:
+                runtimeError("unexpected tripleExpr type " + expr.type);
+        }
+    }
+    *_repetition(expr, min, max, scope, subject, depth) {
+        const listPath = this.listPathOf(expr);
+        const skippable = min === 0;
+        if (listPath === null || listPath.length <= scope.depth) {
+            if (min > 1)
+                return [];
+            const body = yield* this._once(expr, scope, subject, depth, skippable);
+            return body.length ? body : (min === 0 ? [new Result()] : []);
+        }
+        const cap = Math.min(max, this.maxRepeat);
+        let results = [new Result()];
+        let count = 0;
+        for (const item of scope.descendantsAt(listPath)) {
+            if (count >= cap)
+                break;
+            yield { type: "enter", tc: firstConstraint(expr), thread: this.threadView(this.ctx(subject, item, depth)), scope: item.path };
+            const body = yield* this._once(expr, item, subject, depth, skippable);
+            if (body.length === 0)
+                continue; // this item does not fit the body: skip it
+            results = this._all([results, body]);
+            ++count;
+        }
+        return count >= min ? results : [];
+    }
+    *_tc(tc, scope, subject, depth, skippable) {
+        const view = () => this.threadView(this.ctx(subject, scope, depth));
+        yield { type: "tripleConstraint", tc, thread: view() };
+        const before = this._failures.length;
+        const out = yield* this._tcStep(tc, scope, subject, depth, skippable);
+        if (out.length === 0)
+            yield { type: "fail", failure: this._failures.length > before ? this._failures[this._failures.length - 1] : null,
+                thread: view() };
+        return out;
+    }
+    /** the branch being evaluated: the sum of the enclosing shapes' leading partial results */
+    ctx(subject, scope, depth) {
+        let lead = new Result();
+        for (const c of this._stack)
+            lead = lead.then(c.lead);
+        return { subject, scope, depth, lead };
+    }
+    *_tcStep(tc, scope, subject, depth, skippable) {
         const mapExts = (tc.semActs || []).filter((ext) => ext.name === MapExt);
+        const triple = (object, src) => {
+            if (tc.inverse && typeof object === "object")
+                return failure({ predicate: tc.predicate, tc, error: "literal subject of inverse" });
+            return this._triple(tc, subject, object, src);
+        };
+        const failure = (f) => { this._failures.push(f); return null; };
+        if (mapExts.some((ext) => (0, keys_1.isKeyCode)(ext.code)))
+            return yield* this._keyed(tc, mapExts, scope, subject, depth, skippable);
         if (mapExts.length > 0) {
-            let cursor = th.cursor;
+            const reads = new Set();
+            const staticsRead = [];
+            const get = (v) => {
+                this._referenced.add(v);
+                if (v in this.globals) {
+                    staticsRead.push(v);
+                    return this.globals[v];
+                }
+                const hit = scope.lookup(v);
+                if (hit === null)
+                    return undefined;
+                reads.add((0, scopes_1.pathKey)(hit.scope.path) + "|" + v);
+                return hit.value;
+            };
+            const quads = [];
             const objects = [];
-            const sources = []; // provenance, parallel to objects
             for (const ext of mapExts) {
                 const code = ext.code;
                 const m = code.match(variablePattern);
+                const before = new Set(reads);
+                staticsRead.length = 0;
+                let value;
+                let how;
                 if (m) {
                     const varName = m[1] ? m[1] : this._expandPrefix(m[2], m[3]);
-                    report.referenced.add(varName);
-                    const hit = cursorGet(frames, this.globals, cursor, varName);
-                    if (hit === null) {
-                        failures.push({ predicate: tc.predicate, tc, variable: varName, frame: cursor.idx });
-                        return; // unbound required variable: this thread dies
-                    }
-                    const fromStatics = varName in this.globals;
-                    cursor = hit.cursor;
-                    objects.push(n3ify(hit.value));
-                    sources.push({ variables: [varName], frame: fromStatics ? null : cursor.idx, statics: fromStatics });
+                    value = get(varName);
+                    if (value === undefined)
+                        return failure({ predicate: tc.predicate, tc, variable: varName, scope: scope.path }), [];
+                    how = { variables: [varName] };
                 }
                 else if (functionPattern.test(code)) {
-                    const pulled = []; // the variables lower() consulted, in call order
-                    try { // e.g. regex(...)/hashmap(...): lower() pulls variables via get()
-                        const adapter = { get: (v) => {
-                                report.referenced.add(v);
-                                const hit = cursorGet(frames, this.globals, cursor, v);
-                                if (hit === null)
-                                    return undefined;
-                                pulled.push({ variable: v, statics: v in this.globals, frame: hit.cursor.idx });
-                                cursor = hit.cursor;
-                                return hit.value;
-                            } };
-                        objects.push(extensions.lower(code, adapter, this.prefixes));
-                        sources.push({
-                            variables: pulled.map((p) => p.variable),
-                            frame: pulled.length && !pulled[0].statics ? pulled[pulled.length - 1].frame : null,
-                            statics: pulled.length > 0 && pulled.every((p) => p.statics),
-                        });
+                    try {
+                        value = extensions.lower(code, { get: (v) => { const x = get(v); return x === undefined ? undefined : x; } }, this.prefixes);
                     }
                     catch (e) {
-                        failures.push({ predicate: tc.predicate, tc, code, error: e.message });
-                        return;
+                        return failure({ predicate: tc.predicate, tc, code, error: e.message }), [];
                     }
+                    if (value === undefined || value === null)
+                        return failure({ predicate: tc.predicate, tc, code, error: "unbound" }), [];
+                    how = { code: code.trim(), variables: Array.from(reads).filter(r => !before.has(r)).map(r => r.split("|")[1]) };
                 }
                 else {
-                    failures.push({ predicate: tc.predicate, tc, code, error: "unrecognized Map code" });
-                    return;
+                    return failure({ predicate: tc.predicate, tc, code, error: "unrecognized Map code" }), [];
+                }
+                if (this.checkValues) {
+                    const checked = this._checked(tc, value);
+                    if (checked === null)
+                        return failure({ predicate: tc.predicate, tc, code, error: "the value does not satisfy the value expression" }), [];
+                    value = checked;
+                }
+                const object = n3ify(value);
+                const src = Object.assign(how, { frame: scope.index, scope: scope.path, node: scope.nearestNode(),
+                    reads: Array.from(reads).filter(r => !before.has(r)).map(r => r.split("|")),
+                    statics: staticsRead.slice() });
+                const q = triple(object, src);
+                if (q === null)
+                    return [];
+                quads.push(q);
+                objects.push(object);
+            }
+            const result = new Result(quads, reads);
+            if (this.referencesShape(tc.valueExpr) && objects.length === 1 && typeof objects[0] === "string" && !objects[0].startsWith('"')) {
+                // the variable names the node: materialize the nested shape on it
+                if (depth >= this.maxCallDepth)
+                    return failure({ predicate: tc.predicate, tc, error: "exceeded maxCallDepth" }), [];
+                quads[0].src.named = true;
+                const nested = yield* this._shapeExpr(tc.valueExpr, scope, objects[0], depth + 1);
+                return nested.map(n => result.then(n));
+            }
+            return [result];
+        }
+        const valueExpr = tc.valueExpr === undefined ? undefined : this.resolve(tc.valueExpr);
+        if (valueExpr && valueExpr.type === "NodeConstraint" && valueExpr.values && valueExpr.values.length === 1) {
+            const q = triple(n3ify(valueExpr.values[0]), { constant: true, frame: scope.index, scope: scope.path, node: scope.nearestNode(), reads: [], statics: [] });
+            return q === null ? [] : [new Result([q])];
+        }
+        if (this.referencesShape(tc.valueExpr)) {
+            if (depth >= this.maxCallDepth)
+                return failure({ predicate: tc.predicate, tc, error: "exceeded maxCallDepth" }), [];
+            const node = this._mint(tc, scope, depth);
+            const link = triple(node, { structural: true, frame: scope.index, scope: scope.path, node: scope.nearestNode(), reads: [], statics: [] });
+            if (link === null)
+                return [];
+            const out = [];
+            this._stack.push({ subject, scope, depth, lead: new Result([link]) }); // the link counts as emitted while the shape is built
+            let nested;
+            try {
+                nested = yield* this._shapeExpr(tc.valueExpr, scope, node, depth + 1);
+            }
+            finally {
+                this._stack.pop();
+            }
+            yield { type: "return", thread: this.threadView(this.ctx(subject, scope, depth)) };
+            for (const n of nested) {
+                if (skippable && n.reads.size === 0 && (n.quads.length === 0 || this.requireBindingsInSubshapes))
+                    continue; // an optional island nothing asked for
+                out.push(new Result([link].concat(n.quads), n.reads));
+            }
+            return out;
+        }
+        return failure({ predicate: tc.predicate, tc,
+            error: "cannot synthesize valueExpr of type " + (valueExpr ? valueExpr.type : "undefined") + " without a Map semAct" }), [];
+    }
+    /** a shape-valued constraint with id(...): the node is a function of the key */
+    *_keyed(tc, mapExts, scope, subject, depth, skippable) {
+        if (mapExts.length > 1)
+            runtimeError("id() must be the only Map code on the constraint at " + tc.predicate);
+        if (!this.referencesShape(tc.valueExpr))
+            runtimeError("id() at " + tc.predicate + " needs a shape-valued constraint: it names a node, not a value");
+        const code = mapExts[0].code;
+        let terms;
+        try {
+            terms = (0, keys_1.keyTerms)(code, this.prefixes);
+        }
+        catch (e) {
+            runtimeError(e.message);
+        }
+        const reads = new Set();
+        const staticsRead = [];
+        let missing = null;
+        const get = (v) => {
+            this._referenced.add(v);
+            if (v in this.globals) {
+                staticsRead.push(v);
+                return this.globals[v];
+            }
+            const hit = scope.lookup(v);
+            if (hit === null) {
+                missing = v;
+                return null;
+            }
+            reads.add((0, scopes_1.pathKey)(hit.scope.path) + "|" + v);
+            return hit.value;
+        };
+        const values = [];
+        for (const term of terms) {
+            let value;
+            if (term === keys_1.NODE_ARGUMENT) {
+                value = scope.nearestNode();
+                if (value === null) {
+                    this._failures.push({ predicate: tc.predicate, tc, code, error: "no @node in scope" });
+                    return [];
                 }
             }
-            let quads = th.quads;
-            objects.forEach((o, i) => {
-                quads = { q: this._triple(tc, th.subject, o, sources[i]), prev: quads };
-            });
-            st.outs.forEach((out) => succs.push(Object.assign({}, th, { stateNo: out, cursor, quads })));
-            return;
-        }
-        const valueExpr = tc.valueExpr === undefined ? undefined : this._resolveShapeExpr(tc.valueExpr);
-        if (valueExpr && valueExpr.type === "NodeConstraint"
-            && valueExpr.values && valueExpr.values.length === 1) {
-            const quads = { q: this._triple(tc, th.subject, n3ify(valueExpr.values[0]), { constant: true }),
-                prev: th.quads };
-            st.outs.forEach((out) => succs.push(Object.assign({}, th, { stateNo: out, quads })));
-            return;
-        }
-        if (valueExpr && ["Shape", "ShapeAnd", "ShapeOr"].indexOf(valueExpr.type) !== -1) {
-            if (stackDepth(th.callStack) >= this.maxCallDepth) {
-                failures.push({ predicate: tc.predicate, tc, error: "exceeded maxCallDepth" });
-                return;
+            else if (term instanceof keys_1.Template) {
+                value = term.expand(get);
             }
-            const bnode = "_:tm" + th.bnode;
-            const sub = this._compileShapeExprNFA(valueExpr);
-            const quads = { q: this._triple(tc, th.subject, bnode, { structural: true }), prev: th.quads };
-            succs.push(Object.assign({}, th, {
-                nfa: sub, stateNo: sub.start,
-                subject: bnode, repeats: {},
-                callStack: { nfa: th.nfa, outs: st.outs, subject: th.subject, repeats: th.repeats, parent: th.callStack,
-                    skippable: st.skippable === true, quadsMark: quads, consumedMark: th.cursor.n },
-                quads,
-                bnode: th.bnode + 1
-            }));
+            else {
+                value = get(term);
+            }
+            if (value === null || value === undefined) {
+                this._failures.push({ predicate: tc.predicate, tc, variable: missing || code, scope: scope.path });
+                return [];
+            }
+            values.push(value);
+        }
+        const node = values.length === 1 && !(typeof values[0] === "object")
+            ? n3ify(values[0])
+            : "_:k" + digest([typeof tc.valueExpr === "string" ? tc.valueExpr : "inline" + this.tcOrdinal(tc)]
+                .concat(values.map(v => n3ify(v))).join("\u0000"));
+        if (depth >= this.maxCallDepth) {
+            this._failures.push({ predicate: tc.predicate, tc, error: "exceeded maxCallDepth" });
+            return [];
+        }
+        const src = { keyed: code.trim(), frame: scope.index, scope: scope.path, node: scope.nearestNode(),
+            reads: Array.from(reads).map(r => r.split("|")), statics: staticsRead.slice() };
+        const link = tc.inverse && node.startsWith('"') ? null : this._triple(tc, subject, node, src);
+        if (link === null)
+            return [];
+        const out = [];
+        const nested = yield* this._shapeExpr(tc.valueExpr, scope, node, depth + 1);
+        yield { type: "return", thread: this.threadView(this.ctx(subject, scope, depth)) };
+        for (const n of nested) {
+            if (skippable && n.reads.size === 0 && reads.size === 0 && (n.quads.length === 0 || this.requireBindingsInSubshapes))
+                continue;
+            const all = new Set(reads);
+            n.reads.forEach(r => all.add(r));
+            out.push(new Result([link].concat(n.quads), all));
+        }
+        return out;
+    }
+    /** the node for a shape-valued constraint without a key: determined by the root, the
+     * constraint, its call depth, and the scope -- the input node it matched when it is an
+     * iteration, else its path -- so runs agree and materializing a root twice adds nothing */
+    _mint(tc, scope, depth) {
+        const where = scope.node !== undefined && scope.node !== null ? n3ify(scope.node) : "p" + scope.path.join("_");
+        return "_:m" + digest([n3ify(this._root), String(this.tcOrdinal(tc)), String(depth), where].join("\u0000"));
+    }
+    tcOrdinal(tc) {
+        if (!this._tcIndex.has(tc))
+            this._tcIndex.set(tc, this._tcIndex.size);
+        return this._tcIndex.get(tc);
+    }
+    referencesShape(se) {
+        if (se === undefined || se === null)
+            return false;
+        const r = this.resolve(se);
+        return r && r.type !== "NodeConstraint";
+    }
+    // -- value expressions ----------------------------------------------------------------
+    /** `value` (a JSON term) if it satisfies the constraint's value expression, a retyped
+     * copy of a plain literal whose lexical form fits the expression's datatype, or null */
+    _checked(tc, value) {
+        if (tc.valueExpr === undefined)
+            return value;
+        const se = this.resolve(tc.valueExpr);
+        if (!isNodeConstraintish(se, this))
+            return value;
+        if (this._satisfies(se, value))
+            return value;
+        const dt = this._datatypeOf(se);
+        if (dt && typeof value === "object" && value !== null && !("type" in value) && !("language" in value)) {
+            const retyped = { value: value.value, type: dt };
+            if (this._satisfies(se, retyped))
+                return retyped;
+        }
+        return null;
+    }
+    _datatypeOf(se) {
+        se = this.resolve(se);
+        if (se.type === "NodeConstraint")
+            return se.datatype || null;
+        if (se.type === "ShapeAnd") {
+            const found = se.shapeExprs.map((p) => this._datatypeOf(p)).filter((d) => d);
+            return new Set(found).size === 1 ? found[0] : null;
+        }
+        return null;
+    }
+    _satisfies(se, value) {
+        se = this.resolve(se);
+        switch (se.type) {
+            case "NodeConstraint": {
+                const res = this.validator().testNodeConstraint(n3idTerm2RdfJs(n3ify(value)), se, { label: null });
+                return res.type === "NodeConstraintTest";
+            }
+            case "ShapeAnd":
+                return se.shapeExprs.every((p) => !isNodeConstraintish(this.resolve(p), this) || this._satisfies(p, value));
+            case "ShapeOr":
+                return se.shapeExprs.some((p) => this._satisfies(p, value));
+            case "ShapeNot":
+                return !this._satisfies(se.shapeExpr, value);
+            default:
+                return true; // a shape: the nested materialization is the check
+        }
+    }
+    validator() {
+        if (this._validator === null) {
+            const { ShExValidator } = __webpack_require__(179);
+            this._validator = new ShExValidator(this.schema, {}, {});
+        }
+        return this._validator;
+    }
+    // -- which list a repetition iterates -------------------------------------------------
+    listPathOf(expr) {
+        if (!this._lists.has(expr))
+            this._lists.set(expr, this.analyse(expr));
+        return this._lists.get(expr);
+    }
+    /** the list the repetition `expr` iterates: the deepest list its body's variables are
+     * bound at, nested repetitions counting through their parent list */
+    analyse(expr) {
+        const direct = new Set();
+        const nested = [];
+        this.collect(expr, direct, nested, new Set(), true);
+        const bound = this.tree.boundAt;
+        const candidates = [];
+        const add = (path, why) => {
+            if (!candidates.some(c => c.path.length === path.length && (0, scopes_1.isPrefix)(c.path, path)))
+                candidates.push({ path, why });
+        };
+        for (const v of direct)
+            if (v in bound)
+                add(bound[v], v);
+        for (const r of nested) {
+            const lp = this.listPathOf(r);
+            if (lp && lp.length > 0)
+                add(lp.slice(0, -1), "the repetition at " + predicatesOf(r));
+        }
+        if (candidates.length === 0)
+            return null;
+        const deepest = candidates.reduce((a, b) => b.path.length > a.path.length ? b : a);
+        for (const c of candidates)
+            if (!(0, scopes_1.isPrefix)(c.path, deepest.path))
+                runtimeError("the repetition at " + predicatesOf(expr) + " reads from unrelated lists: " +
+                    c.why + " is bound at [" + c.path + "] and " + deepest.why + " at [" + deepest.path + "]");
+        return deepest.path;
+    }
+    /** variables read directly in `expr`'s body, and the repetitions directly inside it */
+    collect(expr, direct, nested, seen, top) {
+        if (typeof expr === "string")
+            expr = this.index.tripleExprs[expr];
+        if (!expr || seen.has(expr))
+            return;
+        seen.add(expr);
+        if (!top && !((expr.min === undefined || expr.min === 1) && (expr.max === undefined || expr.max === 1))) {
+            nested.push(expr);
             return;
         }
-        failures.push({ predicate: tc.predicate, tc,
-            error: "cannot synthesize valueExpr of type "
-                + (valueExpr ? valueExpr.type : "undefined")
-                + " without a Map semAct" });
+        if (expr.type === "TripleConstraint") {
+            for (const ext of (expr.semActs || []).filter((e) => e.name === MapExt)) {
+                try {
+                    for (const v of variablesOf(ext.code, this.prefixes))
+                        direct.add(v);
+                }
+                catch (e) {
+                    // an unparsable code fails at evaluation, where it is reported
+                }
+            }
+            if (this.referencesShape(expr.valueExpr))
+                this.collectShape(expr.valueExpr, direct, nested, seen);
+        }
+        else if (expr.type === "EachOf" || expr.type === "OneOf") {
+            for (const e of expr.expressions)
+                this.collect(e, direct, nested, seen, false);
+        }
     }
-    /** liveThreads - snapshot of the current worklist for debugger UIs: the
-     * inspectable view of every pending thread (exploration order: main stack
-     * first, then deferred) with its partial emissions as RdfJs quads.  Empty
-     * before run() starts and after it finishes.
-     */
-    liveThreads() {
-        if (!this._live)
-            return [];
-        const view = (th, isDeferred) => Object.assign(threadView(th), { deferred: isDeferred }, collectQuadsAndProvenance(th.quads), // quads + provenance
-        { used: Object.keys(th.cursor.used) }); // "<frame> <var>" marks
-        const ret = [];
-        // the thread being stepped leads, since it is the one a paused debugger
-        // is about; it is on neither list while it is being stepped
-        if (this._live.current)
-            ret.push(Object.assign(view(this._live.current, false), { current: true }));
-        for (let i = this._live.stack.length - 1; i >= 0; --i) // top of stack first
-            ret.push(view(this._live.stack[i], false));
-        for (const th of this._live.deferred) // resumed oldest-first
-            ret.push(view(th, true));
-        return ret;
+    collectShape(se, direct, nested, seen) {
+        if (typeof se === "string") {
+            const decl = this.index.shapeExprs[se];
+            if (!decl)
+                return;
+            for (const o of this.extensionCandidates(decl))
+                this.collectShape(expressionOf(o), direct, nested, seen);
+            return;
+        }
+        if (!se || seen.has(se))
+            return;
+        seen.add(se);
+        if (se.type === "ShapeDecl") {
+            this.collectShape(se.shapeExpr, direct, nested, seen);
+        }
+        else if (se.type === "Shape") {
+            for (const p of this.shapeParts(se))
+                if (p.expression)
+                    this.collect(p.expression, direct, nested, seen, false);
+        }
+        else if (se.type === "ShapeAnd" || se.type === "ShapeOr") {
+            for (const p of se.shapeExprs)
+                this.collectShape(p, direct, nested, seen);
+        }
     }
-    /** an emitted triple, tagged with the provenance editor UIs use to tie it
-     * back to the constraint that synthesized it and the binding(s) it read:
-     * src is {variables, frame, statics} | {constant} | {structural} */
+    // -- combining alternatives -----------------------------------------------------------
+    /** every combination of one alternative per part, pruned as it grows */
+    _all(parts) {
+        let acc = [new Result()];
+        for (const alternatives of parts) {
+            if (alternatives.length === 0)
+                return [];
+            const next = [];
+            for (const a of acc)
+                for (const b of alternatives)
+                    next.push(a.then(b));
+            acc = this._prune(next);
+        }
+        return acc;
+    }
+    _prune(results) {
+        if (results.length <= this.maxAccepts)
+            return results;
+        const ranked = results.map((r, i) => ({ r, i }))
+            .sort((a, b) => betterRank(a.r, b.r) ? -1 : betterRank(b.r, a.r) ? 1 : a.i - b.i)
+            .slice(0, this.maxAccepts)
+            .sort((a, b) => a.i - b.i);
+        this._dropped += results.length - ranked.length;
+        return ranked.map(x => x.r);
+    }
+    /** an emitted triple with its provenance: the constraint and where its object came from */
     _triple(tc, subject, object, src) {
         const q = tc.inverse
             ? { s: object, p: tc.predicate, o: subject }
@@ -2344,210 +2628,183 @@ class ThreadedMaterializer {
     _expandPrefix(prefix, local) {
         return prefix in this.prefixes ? this.prefixes[prefix] + local : prefix + ":" + local;
     }
-    _resolveShapeExpr(shapeExpr) {
-        for (let hops = 0; typeof shapeExpr === "string"; ++hops) {
-            if (hops > 100)
-                runtimeError("shape reference loop at " + shapeExpr);
-            const decl = this.index.shapeExprs[shapeExpr];
-            if (!decl)
-                runtimeError("shape " + shapeExpr + " not found in schema");
-            shapeExpr = "shapeExpr" in decl ? decl.shapeExpr : decl;
+    /** update - materialize into `store`, replacing what the output schema currently holds
+     * at `createRoot`: `rebind(root, shape)` (a function the caller supplies, e.g. from a
+     * validator over the store) returns the validation result of the store at that root, or
+     * null when the root holds nothing on the schema's predicates; what it matched and is
+     * no longer produced is removed, the new quads are added, and everything else is left
+     * alone.  Returns {added, removed} as RdfJs quads. */
+    update(store, bindingTree, createRoot, shapeLabel, rebind) {
+        const quads = this.materialize(bindingTree, createRoot, shapeLabel);
+        const key = (q) => [q.subject.value, q.predicate.value, q.object.termType, q.object.value,
+            q.object.termType === "Literal" ? (q.object.language || q.object.datatype.value) : ""].join("\u0000");
+        const produced = new Map(quads.map((q) => [key(q), q]));
+        const val = rebind(createRoot, shapeLabel);
+        const current = [];
+        if (val !== null && val !== undefined) {
+            if (val.type === "Failure" || "errors" in val)
+                runtimeError(n3ify(createRoot) + " holds something that does not conform to the output schema, so what to replace cannot be told");
+            const { matchedTriples } = __webpack_require__(324);
+            for (const t of matchedTriples(val))
+                current.push(n3idQuad2RdfJs(t.subject, t.predicate, n3ify(t.object)));
         }
-        return shapeExpr;
-    }
-    /** _alwaysSynthesizable - can this TripleConstraint's instance be emitted
-     * whatever the cursor position?  True for singleton-value constants without
-     * Map semActs and for Map semActs whose variables are all staticVars
-     * (always readable, never consumed). */
-    _alwaysSynthesizable(tc) {
-        const mapExts = (tc.semActs || []).filter((ext) => ext.name === MapExt);
-        if (mapExts.length > 0)
-            return mapExts.every((ext) => {
-                const m = ext.code.match(variablePattern);
-                if (!m)
-                    return false; // function codes may consume frame bindings
-                const varName = m[1] ? m[1] : this._expandPrefix(m[2], m[3]);
-                return varName in this.globals;
-            });
-        const valueExpr = tc.valueExpr === undefined ? undefined : this._resolveShapeExpr(tc.valueExpr);
-        return !!(valueExpr && valueExpr.type === "NodeConstraint"
-            && valueExpr.values && valueExpr.values.length === 1);
-    }
-    /** _compileShapeExprNFA - compile any shapeExpr to an NFA (cached per
-     * resolved shapeExpr object):
-     * - Shape: its tripleExpr's NFA;
-     * - ShapeAnd: conjuncts' NFAs concatenated against the same subject
-     *   (NodeConstraint conjuncts restrict the focus node, not its arcs, so
-     *   they contribute no emissions and are skipped);
-     * - ShapeOr: prioritized Split over the disjuncts' NFAs;
-     * - NodeConstraint: the empty NFA (nothing to synthesize).
-     */
-    _compileShapeExprNFA(shapeExpr) {
-        const se = this._resolveShapeExpr(shapeExpr);
-        if (this._nfaCache.has(se))
-            return this._nfaCache.get(se);
-        // An And/Or that reaches itself through its references (<A> @<B> OR
-        // ..., <B> @<A> OR ...) would compile forever: the cache is written
-        // only once a compilation is through.  Say which loop, and stop.
-        const label = typeof shapeExpr === "string" ? shapeExpr : "(inline " + se.type + ")";
-        const already = this._compiling.findIndex(c => c.se === se);
-        if (already !== -1)
-            runtimeError("cycle in shape expressions: ", this._compiling.slice(already).map(c => c.label).concat(label).join(" -> "));
-        this._compiling.push({ se, label });
-        let nfa;
-        try {
-            if (se.type === "Shape") {
-                nfa = this._nfaFor(se);
-            }
-            else if (se.type === "ShapeAnd" || se.type === "ShapeOr") {
-                const parts = se.shapeExprs
-                    .filter((nested) => this._resolveShapeExpr(nested).type !== "NodeConstraint")
-                    .map((nested) => this._compileShapeExprNFA(nested)); // by reference, so a cycle can be named
-                nfa = se.type === "ShapeAnd" ? concatNFAs(parts) : splitNFAs(parts);
-            }
-            else if (se.type === "NodeConstraint") {
-                nfa = { states: [{ type: "Match" }], start: 0 };
-            }
-            else {
-                runtimeError(se.type + " synthesis not supported by this prototype");
-            }
-        }
-        finally {
-            this._compiling.pop();
-        }
-        this._nfaCache.set(se, nfa);
-        return nfa;
-    }
-    /** _nfaFor - compile a Shape's tripleExpr to an NFA (cached per Shape).
-     * States: TC (consume/emit one constraint instance), Split (OneOf),
-     * Rept (counted repetition: outs[0]=loop body, outs[1]=exit), Match.
-     * The Match state is always state 0.
-     */
-    _nfaFor(shape) {
-        if (this._nfaCache.has(shape))
-            return this._nfaCache.get(shape);
-        const states = [];
-        const mkState = (s) => states.push(s) - 1;
-        const patch = (tail, target) => tail.forEach((t) => states[t].outs.push(target));
-        const walkExpr = (expr) => {
-            let pair;
-            switch (expr.type) {
-                case "TripleConstraint": {
-                    const s = mkState({ type: "TC", tc: expr, outs: [] });
-                    pair = { start: s, tail: [s] };
-                    break;
-                }
-                case "OneOf": {
-                    const starts = [], tails = [];
-                    expr.expressions.forEach((nested) => {
-                        const p = walkExpr(nested);
-                        starts.push(p.start);
-                        tails.push.apply(tails, p.tail);
-                    });
-                    pair = { start: mkState({ type: "Split", outs: starts }), tail: tails };
-                    break;
-                }
-                case "EachOf": {
-                    let start = null, tail = null;
-                    expr.expressions.forEach((nested, ord) => {
-                        const p = walkExpr(nested);
-                        if (ord === 0)
-                            start = p.start;
-                        else
-                            patch(tail, p.start);
-                        tail = p.tail;
-                    });
-                    pair = { start, tail };
-                    break;
-                }
-                default:
-                    runtimeError("unexpected tripleExpr type " + expr.type);
-            }
-            const min = "min" in expr ? expr.min : 1;
-            const max = "max" in expr ? (expr.max === UNBOUNDED ? Infinity : expr.max) : 1;
-            if (min === 0 && max === 1 && expr.type === "TripleConstraint"
-                && this._alwaysSynthesizable(expr))
-                return pair; // skipping a constant/static gains nothing: emit greedily
-            // and spare the search the 2^optionals variant space
-            if (min === 0 && expr.type === "TripleConstraint")
-                states[pair.start].skippable = true; // enables the vacuous-descend rule
-            if (min === 1 && max === 1)
-                return pair;
-            const rept = mkState({ type: "Rept", min, max, outs: [pair.start] }); // parent patch appends outs[1]=exit
-            patch(pair.tail, rept);
-            return { start: rept, tail: [rept] };
-        };
-        const matchState = mkState({ type: "Match" });
-        let start = matchState;
-        if (shape.expression) {
-            const pair = walkExpr(shape.expression);
-            patch(pair.tail, matchState);
-            start = pair.start;
-        }
-        const nfa = { states, start };
-        this._nfaCache.set(shape, nfa);
-        return nfa;
+        const removed = current.filter((q) => !produced.has(key(q)));
+        const added = quads.filter((q) => store.countQuads(q.subject, q.predicate, q.object, q.graph) === 0);
+        for (const q of removed)
+            store.removeQuad(q);
+        for (const q of quads)
+            store.addQuad(q);
+        return { added, removed };
     }
 }
-/** cloneInto - append a copy of an NFA's states (outs re-based) to combined,
- * returning the offset at which they landed.
- */
-function cloneInto(combined, nfa) {
-    const offset = combined.length;
-    nfa.states.forEach((s) => combined.push(Object.assign({}, s, s.outs ? { outs: s.outs.map((o) => o + offset) } : {})));
-    return offset;
-}
-/** concatNFAs - one NFA that runs each part in sequence against the same
- * subject: every part's Match (state 0 by construction) except the last's
- * becomes a Split to the next part's start.
- */
-function concatNFAs(parts) {
-    if (parts.length === 0)
-        return { states: [{ type: "Match" }], start: 0 };
-    const states = [];
-    const offsets = parts.map((part) => cloneInto(states, part));
-    for (let i = 0; i < parts.length - 1; ++i)
-        states[offsets[i]] = { type: "Split", outs: [offsets[i + 1] + parts[i + 1].start] };
-    return { states, start: offsets[0] + parts[0].start };
-}
-/** splitNFAs - one NFA that forks over the parts (each keeps its own Match;
- * the stepper treats any Match as end-of-shape).  Part order is priority
- * order.
- */
-function splitNFAs(parts) {
-    if (parts.length === 0)
-        return { states: [{ type: "Match" }], start: 0 };
-    const states = [];
-    const outs = parts.map((part) => cloneInto(states, part) + part.start);
-    const split = states.push({ type: "Split", outs }) - 1;
-    return { states, start: split };
-}
-/** threadView - the inspectable snapshot of a thread shipped in debugger
- * step events. */
-function threadView(th) {
-    let emitted = 0;
-    for (let node = th.quads; node !== null; node = node.prev)
-        ++emitted;
-    return {
-        subject: th.subject,
-        depth: stackDepth(th.callStack),
-        frame: th.cursor.idx,
-        consumed: th.cursor.n,
-        skipped: th.cursor.sk || 0,
-        emitted,
+// -- helpers -----------------------------------------------------------------------------
+function readMark(tree) {
+    const byPath = new Map(tree.scopes.map(s => [(0, scopes_1.pathKey)(s.path), s.index]));
+    return (r) => {
+        const [path, v] = r.split("|");
+        return byPath.get(path) + " " + v;
     };
 }
-/** quadSignature - order-insensitive identity of a thread's emissions, for
- * deduplicating accepting threads that produce the same graph. */
-function quadSignature(quadList) {
-    const keys = [];
-    for (let node = quadList; node !== null; node = node.prev)
-        keys.push(node.q.s + " " + node.q.p + " " + node.q.o);
-    return keys.sort().join("\n");
+function expressionOf(decl) {
+    return decl && decl.type === "ShapeDecl" ? decl.shapeExpr : decl;
 }
-/** MaterializerDebugger - step-through control over a materialization (see
- * doc/debugger-design.md).  Drives ThreadedMaterializer.run() one event at a
- * time; entirely synchronous, so UIs can wrap it however they like.
+function idOf(se) {
+    if (!idOf.ids.has(se))
+        idOf.ids.set(se, String(idOf.ids.size));
+    return idOf.ids.get(se);
+}
+idOf.ids = new WeakMap();
+function shapesIn(se, m) {
+    if (!se)
+        return [];
+    se = m.resolve(se);
+    if (se.type === "Shape")
+        return [se];
+    if (se.type === "ShapeAnd")
+        return se.shapeExprs.reduce((acc, p) => acc.concat(shapesIn(p, m)), []);
+    return [];
+}
+function isNodeConstraintish(se, m) {
+    if (!se)
+        return false;
+    if (se.type === "NodeConstraint")
+        return true;
+    if (se.type === "ShapeAnd" || se.type === "ShapeOr")
+        return se.shapeExprs.some((p) => isNodeConstraintish(m.resolve(p), m));
+    if (se.type === "ShapeNot")
+        return isNodeConstraintish(m.resolve(se.shapeExpr), m);
+    return false;
+}
+function variablesOf(code, prefixes) {
+    const m = code.match(variablePattern);
+    if (m)
+        return [m[1] ? m[1] : (m[2] in prefixes ? prefixes[m[2]] + m[3] : m[2] + ":" + m[3])];
+    if ((0, keys_1.isKeyCode)(code))
+        return (0, keys_1.keyArguments)(code, prefixes).filter(a => a !== keys_1.NODE_ARGUMENT);
+    if (functionPattern.test(code))
+        return extensionVariables(code, prefixes);
+    return [];
+}
+/** the variables a regex() or hashmap() code reads */
+function extensionVariables(code, prefixes) {
+    const call = /^\s*([a-zA-Z0-9]+)\s*\((.*)\)\s*$/s.exec(code);
+    if (!call)
+        return [];
+    if (call[1] === "hashmap") {
+        const first = call[2].split(",")[0].trim();
+        try {
+            return [(0, keys_1.expandVariable)(first, prefixes)];
+        }
+        catch (e) {
+            return [];
+        }
+    }
+    if (call[1] === "regex") {
+        const out = [];
+        for (const g of (0, keys_1.allMatches)(/\(\?<([^>]+)>/g, call[2])) {
+            try {
+                out.push((0, keys_1.expandVariable)(g[1].replace(/\\([\/^$])/g, "$1"), prefixes));
+            }
+            catch (e) { /* not a variable */ }
+        }
+        return out;
+    }
+    return [];
+}
+function firstConstraint(expr) {
+    const stack = [expr];
+    while (stack.length) {
+        const e = stack.shift();
+        if (!e || typeof e === "string")
+            continue;
+        if (e.type === "TripleConstraint")
+            return e;
+        if (e.expressions)
+            stack.unshift(...e.expressions);
+    }
+    return null;
+}
+function predicatesOf(expr) {
+    const found = [];
+    const stack = [expr];
+    while (stack.length && found.length < 2) {
+        const e = stack.shift();
+        if (!e || typeof e === "string")
+            continue;
+        if (e.type === "TripleConstraint")
+            found.push(e.predicate);
+        else if (e.expressions)
+            stack.unshift(...e.expressions);
+    }
+    return found.join(", ") || "(no predicate)";
+}
+/** A stable, 16-hex-digit digest for minting blank node ids: this only needs
+ * distinct strings to land on distinct keys, not cryptographic strength, so
+ * it avoids `crypto` -- this package ships a browser bundle (see
+ * webpack.config.js) that can't resolve Node's `crypto` module. cyrb53-style:
+ * two 32-bit mixes over the string's UTF-16 code units. */
+function digest(s) {
+    let h1 = 0xdeadbeef ^ s.length, h2 = 0x41c6ce57 ^ s.length;
+    for (let i = 0; i < s.length; ++i) {
+        const ch = s.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (h1 >>> 0).toString(16).padStart(8, "0") + (h2 >>> 0).toString(16).padStart(8, "0");
+}
+function quadSignature(quads) {
+    return quads.map((q) => q.subject.value + " " + q.predicate.value + " " + q.object.termType + q.object.value).sort().join("\n");
+}
+/** a result's emissions as RdfJs quads, without repeats, with a parallel provenance array */
+function collectQuadsAndProvenance(quadList) {
+    const seen = {};
+    const kept = quadList.filter((t) => {
+        const key = t.s + " " + t.p + " " + t.o;
+        return key in seen ? false : (seen[key] = true);
+    });
+    const quads = kept.map((t) => n3idQuad2RdfJs(t.s, t.p, t.o));
+    return {
+        quads,
+        provenance: kept.map((t, i) => ({ quad: quads[i], tc: t.tc, predicate: t.p, src: t.src })),
+    };
+}
+function n3ify(ldterm) {
+    if (typeof ldterm !== "object" || ldterm === null)
+        return ldterm;
+    const ret = "\"" + ldterm.value + "\"";
+    if ("language" in ldterm)
+        return ret + "@" + ldterm.language;
+    if ("type" in ldterm)
+        return ret + "^^" + ldterm.type;
+    return ret;
+}
+function runtimeError(...args) {
+    throw new MaterializationError(args.join(""));
+}
+/** MaterializerDebugger - step-through control over a materialization: drives
+ * ThreadedMaterializer.run() one event at a time; synchronous.
  *
  *   const dbg = new MaterializerDebugger(materializer, bindings, "tag:root");
  *   dbg.addBreakpoint({predicate: "http://a.example/p"});
@@ -2557,20 +2814,18 @@ function quadSignature(quadList) {
  *   at = dbg.stepOut();             // next event above the current depth
  *   ... dbg.done, dbg.quads, dbg.error
  *
- * Breakpoints: {tc} a schema TripleConstraint object (e.g. from
- * locate.exprAt(offset) under an editor gutter click), {predicate} its IRI
- * (survives structured clone), or {subject} the lexical (N3id)
- * representation of a subject node being synthesized.
+ * Breakpoints: {tc} a schema TripleConstraint object, {predicate} its IRI, or {subject}
+ * the lexical (N3id) representation of a subject node being synthesized.
  */
 class MaterializerDebugger {
     constructor(materializer, bindingTree, createRoot, shapeLabel) {
         this.materializer = materializer;
         this.generator = materializer.run(bindingTree, createRoot, shapeLabel);
         this.breakpoints = { tcs: new Set(), predicates: new Set(), subjects: new Set() };
-        this.current = null; // last step event
+        this.current = null;
         this.done = false;
-        this.quads = null; // set when done without error
-        this.error = null; // set when materialization failed
+        this.quads = null;
+        this.error = null;
     }
     addBreakpoint({ tc, predicate, subject }) {
         if (tc)
@@ -2620,88 +2875,30 @@ class MaterializerDebugger {
                 return this.current = step.value;
         }
     }
-    /** pause at the very next event (descending into subshape calls) */
     stepInto() { return this._advance(() => true); }
-    /** pause at the next event at the current call depth or above (skipping
-     * the interior of subshape calls) */
     stepOver() {
         const depth = this.current && this.current.thread ? this.current.thread.depth : 0;
         return this._advance((event) => event.thread && event.thread.depth <= depth);
     }
-    /** pause when the current subshape call completes (or anything shallower,
-     * e.g. backtracking into a sibling branch) */
     stepOut() {
         const depth = this.current && this.current.thread ? this.current.thread.depth : 0;
         return this._advance((event) => event.thread && event.thread.depth < depth);
     }
-    /** run to the next breakpoint, or to completion */
     continue() { return this._advance(() => false); }
-    /** snapshot of the pending threads (exploration order), each with its
-     * partial emissions as quads; accepted threads live in this.accepts */
+    /** the open shape calls (outermost first), each with its own partial emissions */
     threads() { return this.materializer.liveThreads(); }
+    /** the graph as it is built so far -- every open call's emissions, aggregated */
+    currentThread() { return this.materializer.currentThread(); }
 }
-function collectQuads(quadList) {
-    return collectQuadsAndProvenance(quadList).quads;
-}
-/** collectQuadsAndProvenance - a thread's emissions as RdfJs quads, with a
- * parallel provenance array: for each quad, the TripleConstraint that
- * synthesized it and where its object came from (see _triple).  Editor UIs
- * use it to tie a materialized triple back to the output schema and the
- * bindings that fed it. */
-function collectQuadsAndProvenance(quadList) {
-    const triples = [];
-    for (let node = quadList; node !== null; node = node.prev)
-        triples.unshift(node.q);
-    const seen = {};
-    const kept = triples.filter((t) => {
-        const key = t.s + " " + t.p + " " + t.o;
-        return key in seen ? false : (seen[key] = true);
-    });
-    // each entry names its quad: the provenance array is *about* quads, and a
-    // consumer handed the two separately has to trust that they are parallel.
-    // mapMaterialization skips an entry with no quad, which is how a stepping
-    // thread's emissions came to have no anchors at all.
-    const quads = kept.map((t) => n3idQuad2RdfJs(t.s, t.p, t.o));
-    return {
-        quads,
-        provenance: kept.map((t, i) => ({ quad: quads[i], tc: t.tc, predicate: t.p, src: t.src })),
-    };
-}
-function stackDepth(callStack) {
-    let depth = 0;
-    for (let frame = callStack; frame !== null; frame = frame.parent)
-        ++depth;
-    return depth;
-}
-function n3ify(ldterm) {
-    if (typeof ldterm !== "object")
-        return ldterm;
-    const ret = "\"" + ldterm.value + "\"";
-    if ("language" in ldterm)
-        return ret + "@" + ldterm.language;
-    if ("type" in ldterm)
-        return ret + "^^" + ldterm.type;
-    return ret;
-}
-function runtimeError(...args) {
-    throw new MaterializationError(args.join(""));
-}
-/** tripleConstraints - every TripleConstraint of a schema in a deterministic
- * order: shapes as declared, each expression tree depth-first, descending
- * into a constraint's inline valueExpr but never following a reference (the
- * referent is reached through its own declaration).
- *
- * Structured clone breaks object identity, so a materialization running in a
- * worker cannot ship its provenance's TripleConstraints.  Both sides hold
- * copies of the same schema, though, so an index into this ordering names
- * the same constraint on either side.
- */
+/** tripleConstraints - every TripleConstraint of a schema in a deterministic order (see
+ * the worker: an index into this ordering names the same constraint on either side of a
+ * structured clone) */
 function tripleConstraints(schema) {
     const found = [];
     const seen = new Set();
     const shapeExpr = (expr) => {
         if (!expr || typeof expr !== "object" || seen.has(expr))
-            return; // a string is a reference: reached through its declaration
+            return;
         seen.add(expr);
         switch (expr.type) {
             case "ShapeDecl": return shapeExpr(expr.shapeExpr);
@@ -2713,7 +2910,7 @@ function tripleConstraints(schema) {
     };
     const tripleExpr = (expr) => {
         if (!expr || typeof expr !== "object" || seen.has(expr))
-            return; // a string is an Inclusion
+            return;
         seen.add(expr);
         switch (expr.type) {
             case "EachOf":
@@ -2728,8 +2925,574 @@ function tripleConstraints(schema) {
 }
 module.exports = { BS: ThreadedMaterializer, fW: MaterializerDebugger,
     ...void (normalizeBindingTree), ...void (normalizeBindingTreeWithOrigins),
-    k: MaterializationError, Fl: tripleConstraints };
+    k: MaterializationError, Fl: tripleConstraints, ...void (bindingTree_1.NODE_KEY) };
 //# sourceMappingURL=ThreadedMaterializer.js.map
+
+/***/ },
+
+/***/ 459
+(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+var __webpack_unused_export__;
+/** analysis - static checks of a ShExMap schema pair, before any data.
+ *
+ * `analyse(inputSchema, outputSchema)` says whether every output repetition has a
+ * well-formed iteration scope, whether every variable the output reads is bound in the
+ * input where it can be read from, and which bindings go unused -- the questions
+ * materialization would otherwise answer at run time, one graph at a time.
+ *
+ * A variable's SITE is the chain of repeated constraints and groups of the input schema
+ * that enclose its %Map code: it is bound once per iteration of the innermost one, or
+ * once for the whole tree when the chain is empty.  An output repetition's ITERATION
+ * SCOPE is the deepest site among the variables its body reads, nested repetitions
+ * counting through their parent site; it is ill-formed when two of those sites lie in
+ * unrelated lists.  A constraint may read a variable whose site is an ancestor of (or
+ * equal to) the scope it is evaluated at; a deeper site means "which one?", and an
+ * unrelated one means the value is not in scope.
+ */
+
+__webpack_unused_export__ = ({ value: true });
+exports.pl = void 0;
+exports.KH = analyse;
+const keys_1 = __webpack_require__(525);
+const MapExt = "http://shex.io/extensions/Map/#";
+const variablePattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
+const functionPattern = /^\s*[a-zA-Z0-9]+\(.*\)\s*$/;
+class Report {
+    constructor(prefixes) {
+        this.errors = [];
+        this.warnings = [];
+        this.bound = new Map(); // input variable -> site
+        this.read = new Set(); // variables the output reads
+        this.prefixes = prefixes;
+    }
+    get ok() { return this.errors.length === 0; }
+    where(site) {
+        return site.length === 0 ? "the root" : "each " + site.map(e => label(e)).join(" / ");
+    }
+    /** `text` with every namespace the schemas declare written as its prefix */
+    short(text) {
+        for (const [prefix, ns] of Object.entries(this.prefixes).sort((a, b) => b[1].length - a[1].length))
+            if (ns)
+                text = text.split(ns).join(prefix + ":");
+        return text;
+    }
+    error(message) { this.errors.push(this.short(message)); }
+    warn(message) { this.warnings.push(this.short(message)); }
+    toString() {
+        const lines = this.errors.map(e => "error: " + e).concat(this.warnings.map(w => "warning: " + w));
+        return lines.length ? lines.join("\n") : "ok: the schemas map coherently";
+    }
+}
+exports.pl = Report;
+/** check that `outputSchema` can be materialized coherently from what `inputSchema` binds;
+ * schemas are parsed ShExJ (with _index and _prefixes), `options.staticVars` the IRIs of
+ * static variables, `options.inputStart`/`outputStart` shape labels (default: start) */
+function analyse(inputSchema, outputSchema, options = {}) {
+    const prefixes = Object.assign({}, outputSchema._prefixes || outputSchema.prefixes || {}, inputSchema._prefixes || inputSchema.prefixes || {});
+    const report = new Report(prefixes);
+    const statics = options.staticVars || [];
+    new Input(inputSchema, prefixes, report).run(start(inputSchema, options.inputStart));
+    new Output(outputSchema, prefixes, report, new Set(statics)).run(start(outputSchema, options.outputStart));
+    for (const [v, site] of report.bound)
+        if (!report.read.has(v))
+            report.warn(`${v} is bound (at ${report.where(site)}) but the output never reads it`);
+    for (const v of statics.filter(s => !report.read.has(s)).sort())
+        report.warn(`static variable ${v} is never read`);
+    return report;
+}
+function start(schema, given) {
+    if (given)
+        return given;
+    if (!schema.start)
+        throw Error("the schema has no start shape; name one");
+    return schema.start;
+}
+function isRepetition(expr) {
+    return !((expr.min === undefined || expr.min === 1) && (expr.max === undefined || expr.max === 1));
+}
+function isRepeated(expr) {
+    return expr.max !== undefined && expr.max !== 1;
+}
+function label(expr) {
+    const found = [];
+    const stack = [expr];
+    while (stack.length && found.length < 2) {
+        const e = stack.shift();
+        if (!e || typeof e === "string")
+            continue;
+        if (e.type === "TripleConstraint")
+            found.push((e.inverse ? "^" : "") + e.predicate);
+        else if (e.expressions)
+            stack.unshift(...e.expressions);
+    }
+    return found.length > 1 ? "(" + found.join(", ") + ")" : found.length ? found[0] : "(group)";
+}
+/** (variables bound or read by a constraint's Map codes, id() arguments) */
+function variables(tc, prefixes) {
+    const plain = [];
+    const keys = [];
+    let hasKey = false;
+    for (const act of (tc.semActs || []).filter((a) => a.name === MapExt)) {
+        const code = act.code || "";
+        try {
+            if ((0, keys_1.isKeyCode)(code)) {
+                hasKey = true;
+                keys.push(...(0, keys_1.keyArguments)(code, prefixes).filter(a => a !== keys_1.NODE_ARGUMENT));
+            }
+            else if (code.match(variablePattern)) {
+                const m = code.match(variablePattern);
+                plain.push(m[1] ? m[1] : (m[2] in prefixes ? prefixes[m[2]] + m[3] : m[2] + ":" + m[3]));
+            }
+            else if (functionPattern.test(code)) {
+                plain.push(...functionVariables(code, prefixes));
+            }
+        }
+        catch (e) {
+            // an unparsable code is reported when it runs
+        }
+    }
+    return { plain, keys, hasKey };
+}
+function functionVariables(code, prefixes) {
+    const call = /^\s*([a-zA-Z0-9]+)\s*\((.*)\)\s*$/s.exec(code);
+    if (!call)
+        return [];
+    if (call[1] === "hashmap")
+        return [(0, keys_1.expandVariable)(call[2].split(",")[0].trim(), prefixes)];
+    if (call[1] === "regex") {
+        const out = [];
+        for (const g of (0, keys_1.allMatches)(/\(\?<([^>]+)>/g, call[2]))
+            out.push((0, keys_1.expandVariable)(g[1].replace(/\\([\/^$])/g, "$1"), prefixes));
+        return out;
+    }
+    return [];
+}
+class Walker {
+    constructor(schema, prefixes, report) {
+        this.schema = schema;
+        this.prefixes = prefixes;
+        this.report = report;
+        this.index = schema._index || (__webpack_require__(747).ShExIndexVisitor).index(schema);
+    }
+    decl(ref) { return this.index.shapeExprs[ref]; }
+    candidates(decl) {
+        const found = [];
+        if (!decl.abstract)
+            found.push(decl);
+        const queue = [decl.id];
+        const seen = new Set();
+        while (queue.length) {
+            const base = queue.shift();
+            for (const other of this.schema.shapes || []) {
+                const shape = other.type === "ShapeDecl" ? other.shapeExpr : other;
+                if (shape && shape.extends && shape.extends.indexOf(base) !== -1 && !seen.has(other.id)) {
+                    seen.add(other.id);
+                    if (!other.abstract)
+                        found.push(other);
+                    queue.push(other.id);
+                }
+            }
+        }
+        return found;
+    }
+    parts(shape, seen = new Set()) {
+        const out = [];
+        for (const base of shape.extends || []) {
+            if (seen.has(base))
+                continue;
+            seen.add(base);
+            const d = this.decl(base);
+            const se = d ? (d.type === "ShapeDecl" ? d.shapeExpr : d) : null;
+            if (se && se.type === "Shape")
+                out.push(...this.parts(se, seen));
+        }
+        out.push(shape);
+        return out;
+    }
+    resolveExpr(e) { return typeof e === "string" ? this.index.tripleExprs[e] : e; }
+}
+/** where the input schema binds each variable */
+class Input extends Walker {
+    constructor() {
+        super(...arguments);
+        this.seen = new Set();
+    }
+    run(se) { this.shapeExpr(se, []); }
+    shapeExpr(se, site) {
+        if (typeof se === "string") {
+            const d = this.decl(se);
+            if (d)
+                for (const o of this.candidates(d))
+                    this.shapeExpr(o.type === "ShapeDecl" ? o.shapeExpr : o, site);
+            return;
+        }
+        if (!se || this.seen.has(se))
+            return;
+        this.seen.add(se);
+        if (se.type === "ShapeDecl")
+            this.shapeExpr(se.shapeExpr, site);
+        else if (se.type === "Shape")
+            for (const p of this.parts(se))
+                if (p.expression)
+                    this.expression(p.expression, site);
+                else if (se.type === "ShapeAnd" || se.type === "ShapeOr")
+                    for (const p of se.shapeExprs)
+                        this.shapeExpr(p, site);
+    }
+    expression(expr, site) {
+        expr = this.resolveExpr(expr);
+        if (!expr)
+            return;
+        if (isRepeated(expr))
+            site = site.concat([expr]);
+        if (expr.type === "TripleConstraint") {
+            for (const v of variables(expr, this.prefixes).plain) {
+                const at = this.report.bound.get(v);
+                if (at === undefined)
+                    this.report.bound.set(v, site);
+                else if (!sameSite(at, site))
+                    this.report.error(`${v} is bound at two places of the input schema, ${this.report.where(at)} and ` +
+                        `${this.report.where(site)}; a variable must have one binding site`);
+            }
+            if (expr.valueExpr !== undefined && typeof expr.valueExpr !== "object" || (expr.valueExpr && expr.valueExpr.type !== "NodeConstraint"))
+                this.shapeExpr(expr.valueExpr, site);
+        }
+        else if (expr.type === "EachOf" || expr.type === "OneOf") {
+            for (const e of expr.expressions)
+                this.expression(e, site);
+        }
+    }
+}
+function sameSite(a, b) {
+    return a.length === b.length && a.every((x, i) => x === b[i]);
+}
+function isPrefixSite(a, b) {
+    return a.length <= b.length && a.every((x, i) => x === b[i]);
+}
+/** where the output schema reads each variable, and what each repetition iterates */
+class Output extends Walker {
+    constructor(schema, prefixes, report, statics) {
+        super(schema, prefixes, report);
+        this.statics = statics;
+        this.scopes = new Map();
+        this.illFormed = new Set();
+        this.active = new Set();
+    }
+    run(se) { this.shapeExpr(se, []); }
+    shapeExpr(se, scope) {
+        if (typeof se === "string") {
+            const d = this.decl(se);
+            if (!d) {
+                this.report.error(`the output schema references ${se}, which it does not define`);
+                return;
+            }
+            const options = this.candidates(d);
+            if (options.length === 0)
+                this.report.error(`${se} is abstract and nothing extends it`);
+            for (const o of options)
+                this.shapeExpr(o.type === "ShapeDecl" ? o.shapeExpr : o, scope);
+            return;
+        }
+        if (!se || this.active.has(se))
+            return;
+        this.active.add(se);
+        try {
+            if (se.type === "ShapeDecl")
+                this.shapeExpr(se.shapeExpr, scope);
+            else if (se.type === "Shape")
+                for (const p of this.parts(se))
+                    if (p.expression)
+                        this.expression(p.expression, scope);
+                    else if (se.type === "ShapeAnd" || se.type === "ShapeOr")
+                        for (const p of se.shapeExprs)
+                            if (!(p && p.type === "NodeConstraint"))
+                                this.shapeExpr(p, scope);
+                            else if (se.type !== "NodeConstraint")
+                                this.report.error(`${se.type} cannot be materialized`);
+        }
+        finally {
+            this.active.delete(se);
+        }
+    }
+    expression(expr, scope) {
+        expr = this.resolveExpr(expr);
+        if (!expr)
+            return;
+        let bodyScope = scope;
+        if (isRepetition(expr)) {
+            const iterates = this.iterationScope(expr);
+            if (this.illFormed.has(expr))
+                return; // its structure is the error; its reads would only repeat it
+            bodyScope = iterates !== null && iterates.length > scope.length ? iterates : scope;
+        }
+        if (expr.type === "TripleConstraint")
+            this.constraint(expr, bodyScope);
+        else if (expr.type === "EachOf" || expr.type === "OneOf")
+            for (const e of expr.expressions)
+                this.expression(e, bodyScope);
+    }
+    constraint(tc, scope) {
+        const { plain, keys, hasKey } = variables(tc, this.prefixes);
+        const acts = (tc.semActs || []).filter((a) => a.name === MapExt);
+        if (hasKey) {
+            if (acts.length > 1)
+                this.report.error(`id() must be the only Map code on ${tc.predicate}`);
+            if (!(tc.valueExpr !== undefined && (typeof tc.valueExpr === "string" || tc.valueExpr.type !== "NodeConstraint")))
+                this.report.error(`id() on ${tc.predicate} needs a shape-valued constraint`);
+            if (acts.some((a) => (0, keys_1.isKeyCode)(a.code || "") && (0, keys_1.keyArguments)(a.code, this.prefixes).indexOf(keys_1.NODE_ARGUMENT) !== -1) && scope.length === 0)
+                this.report.error(`id(@node) on ${tc.predicate} is read at the root, where no input iteration provides a node`);
+        }
+        for (const v of plain.concat(keys))
+            this.readVariable(v, tc, scope);
+        if (tc.valueExpr !== undefined && (typeof tc.valueExpr === "string" || tc.valueExpr.type !== "NodeConstraint"))
+            this.shapeExpr(tc.valueExpr, scope);
+    }
+    readVariable(v, tc, scope) {
+        this.report.read.add(v);
+        if (this.statics.has(v))
+            return;
+        const site = this.report.bound.get(v);
+        if (site === undefined) {
+            this.report.error(`${tc.predicate} reads ${v}, which the input schema never binds`);
+            return;
+        }
+        if (isPrefixSite(site, scope))
+            return; // bound here or above: readable
+        if (isPrefixSite(scope, site))
+            this.report.error(`${tc.predicate} reads ${v}, bound once per ${this.report.where(site)}, from ` +
+                `${this.report.where(scope)}: which one?  A repetition over it is needed`);
+        else
+            this.report.error(`${tc.predicate} reads ${v}, bound at ${this.report.where(site)}, from ` +
+                `${this.report.where(scope)}, which is not below it`);
+    }
+    iterationScope(expr) {
+        if (this.scopes.has(expr))
+            return this.scopes.get(expr);
+        this.scopes.set(expr, null);
+        const direct = new Set();
+        const nested = [];
+        this.collect(expr, direct, nested, new Set(), true);
+        const candidates = [];
+        const add = (site, why) => {
+            if (!candidates.some(c => sameSite(c.site, site)))
+                candidates.push({ site, why });
+        };
+        for (const v of direct)
+            if (this.report.bound.has(v))
+                add(this.report.bound.get(v), v);
+        for (const r of nested) {
+            const sub = this.iterationScope(r);
+            if (sub && sub.length)
+                add(sub.slice(0, -1), "the repetition over " + label(r));
+        }
+        let result = null;
+        if (candidates.length) {
+            const deepest = candidates.reduce((a, b) => b.site.length > a.site.length ? b : a);
+            result = deepest.site;
+            for (const c of candidates)
+                if (!isPrefixSite(c.site, deepest.site)) {
+                    this.report.error(`the repetition over ${label(expr)} reads from unrelated lists: ${c.why} is bound at ` +
+                        `${this.report.where(c.site)} and ${deepest.why} at ${this.report.where(deepest.site)}`);
+                    this.illFormed.add(expr);
+                    direct.forEach(v => this.report.read.add(v));
+                    break;
+                }
+        }
+        this.scopes.set(expr, result);
+        return result;
+    }
+    collect(expr, direct, nested, seen, top) {
+        expr = this.resolveExpr(expr);
+        if (!expr || seen.has(expr))
+            return;
+        seen.add(expr);
+        if (!top && isRepetition(expr)) {
+            nested.push(expr);
+            return;
+        }
+        if (expr.type === "TripleConstraint") {
+            const { plain, keys } = variables(expr, this.prefixes);
+            plain.concat(keys).forEach(v => direct.add(v));
+            if (expr.valueExpr !== undefined && (typeof expr.valueExpr === "string" || expr.valueExpr.type !== "NodeConstraint"))
+                this.collectShape(expr.valueExpr, direct, nested, seen);
+        }
+        else if (expr.type === "EachOf" || expr.type === "OneOf") {
+            for (const e of expr.expressions)
+                this.collect(e, direct, nested, seen, false);
+        }
+    }
+    collectShape(se, direct, nested, seen) {
+        if (typeof se === "string") {
+            const d = this.decl(se);
+            if (d)
+                for (const o of this.candidates(d))
+                    this.collectShape(o.type === "ShapeDecl" ? o.shapeExpr : o, direct, nested, seen);
+            return;
+        }
+        if (!se || seen.has(se))
+            return;
+        seen.add(se);
+        if (se.type === "ShapeDecl")
+            this.collectShape(se.shapeExpr, direct, nested, seen);
+        else if (se.type === "Shape")
+            for (const p of this.parts(se))
+                if (p.expression)
+                    this.collect(p.expression, direct, nested, seen, false);
+                else if (se.type === "ShapeAnd" || se.type === "ShapeOr")
+                    for (const p of se.shapeExprs)
+                        this.collectShape(p, direct, nested, seen);
+    }
+}
+//# sourceMappingURL=analysis.js.map
+
+/***/ },
+
+/***/ 324
+(__unused_webpack_module, exports) {
+
+"use strict";
+var __webpack_unused_export__;
+/** bindingTree - the ShExMap binding tree of a validation result, read structurally.
+ *
+ * A validation result is a tree of shape tests; each `TestedTriple` carries the
+ * `%Map:{ … %}` bindings its constraint made under `extensions`.  This walks it into
+ * the binding-tree grammar both implementations exchange (see ../doc/iteration-scopes.md):
+ *
+ *   Scope      ::= Object                    -- own bindings, no repeated parts
+ *                | [ Object, List* ]         -- own bindings (maybe {}), then one list per
+ *                                            --   repeated constraint or group, in schema order
+ *   List       ::= [ Object* ] | [ ScopeArray* ]   -- iterations, all objects or all arrays
+ *
+ * A repeated constraint or group (max other than 1) makes one list, an iteration per
+ * match, EMPTY when nothing matched, so a list's position says which expression it came
+ * from whatever the data.  A non-repeated nested shape merges into the scope that
+ * matched it.  An iteration of a repeated shape-valued constraint records the node the
+ * nested shape matched as "@node" (the subject for an inverse constraint) -- a reserved
+ * key, never a variable.  EXTENDS results (`ExtendedResults`) merge the extended shapes'
+ * bindings and the local ones into one scope, which `ShExUtil.valToExtension` never did.
+ *
+ * `ShExUtil.valToExtension` remains for the legacy materializers; ThreadedMaterializer
+ * reads both layouts.
+ */
+
+__webpack_unused_export__ = ({ value: true });
+exports.NODE_KEY = void 0;
+exports.Y = bindingTree;
+exports.matchedTriples = matchedTriples;
+const MapExt = "http://shex.io/extensions/Map/#";
+exports.NODE_KEY = "@node";
+const EMPTY = () => ({ vars: {}, lists: [] });
+function merge(a, b) {
+    return { vars: Object.assign({}, a.vars, b.vars), lists: a.lists.concat(b.lists) };
+}
+function isRepeated(sol) {
+    return "max" in sol && sol.max !== undefined && sol.max !== 1;
+}
+function hasBindings(rec) {
+    return Object.keys(rec.vars).some(k => k !== exports.NODE_KEY) || rec.lists.some(l => l.some(hasBindings));
+}
+/** the binding tree of a shapeExprTest (as `resultMapToShapeExprTest` gives it) */
+function bindingTree(val, extensionUrl = MapExt) {
+    return toJson(scopeOf(val, extensionUrl));
+}
+function toJson(rec) {
+    if (rec.lists.length === 0)
+        return rec.vars;
+    const lists = rec.lists.map(list => {
+        const iterations = list.map(toJson);
+        return iterations.some(Array.isArray) ? iterations.map(it => Array.isArray(it) ? it : [it]) : iterations;
+    });
+    return [rec.vars].concat(lists);
+}
+function scopeOf(val, ext, focus) {
+    if (val === null || val === undefined || typeof val === "string")
+        return EMPTY();
+    switch (val.type) {
+        case "ShapeTest":
+            return "solution" in val && val.solution ? solutionRec(val.solution, ext, val.node) : EMPTY();
+        case "ShapeAndResults":
+        case "ExtensionResults":
+        case "SolutionList":
+            return (val.solutions || []).reduce((acc, s) => merge(acc, scopeOf(s, ext, focus)), EMPTY());
+        case "ExtendedResults": // the extended shapes' results, and the shape's own solutions
+            return merge(scopeOf(val.extensions, ext, focus), solutionRec(val.local, ext, focus));
+        case "ShapeOrResults":
+            return scopeOf(val.solution, ext, focus);
+        case "TripleConstraintSolutions":
+        case "EachOfSolutions":
+        case "OneOfSolutions":
+            return solutionRec(val, ext, focus);
+        default: // NodeConstraintTest, ShapeNot*, Failure, Recursion: bind nothing
+            return EMPTY();
+    }
+}
+function solutionRec(sol, ext, focus) {
+    switch (sol.type) {
+        case "TripleConstraintSolutions": {
+            const solutions = sol.solutions || [];
+            if (isRepeated(sol)) {
+                const iterations = solutions.map((t) => iteration(t, focus, ext)).filter(hasBindings);
+                return { vars: {}, lists: [iterations] };
+            }
+            return solutions.reduce((acc, t) => merge(acc, bindingsOf(t, ext)), EMPTY());
+        }
+        case "EachOfSolutions":
+        case "OneOfSolutions": {
+            const groups = (sol.solutions || []).map((g) => (g.expressions || []).reduce((acc, e) => merge(acc, solutionRec(e, ext, focus)), EMPTY()));
+            if (isRepeated(sol))
+                return { vars: {}, lists: [groups.filter(hasBindings)] };
+            return groups.reduce((acc, g) => merge(acc, g), EMPTY());
+        }
+        case "ExtendedResults": // a shape test's solution, when the shape EXTENDS others
+        case "ShapeAndResults":
+        case "ExtensionResults":
+            return scopeOf(sol, ext, focus);
+        default:
+            return EMPTY();
+    }
+}
+/** the bindings one tested triple made: its constraint's Map codes, and the nested shape's */
+function bindingsOf(t, ext) {
+    const own = t.extensions && t.extensions[ext] ? Object.assign({}, t.extensions[ext]) : {};
+    const nested = "referenced" in t ? scopeOf(t.referenced, ext) : EMPTY();
+    return { vars: Object.assign(own, nested.vars), lists: nested.lists };
+}
+/** one iteration of a repeated shape-valued constraint: its node first.  An inverse
+ * constraint's tested triple has the focus as its object; the node is then its subject. */
+function iteration(t, focus, ext) {
+    const rec = bindingsOf(t, ext);
+    const node = sameTerm(t.subject, focus) ? t.object : t.subject;
+    const referencesShape = "referenced" in t && t.referenced && t.referenced.type !== "NodeConstraintTest";
+    return referencesShape ? { vars: Object.assign({ [exports.NODE_KEY]: node }, rec.vars), lists: rec.lists } : rec;
+}
+function sameTerm(a, b) {
+    return JSON.stringify(a) === JSON.stringify(b);
+}
+/** every triple the validation matched, as N3id `{subject, predicate, object}` */
+function matchedTriples(val) {
+    const out = [];
+    const seen = new Set();
+    (function walk(v) {
+        if (v === null || v === undefined || typeof v !== "object")
+            return;
+        if (Array.isArray(v))
+            return v.forEach(walk);
+        if (v.type === "TestedTriple") {
+            const key = JSON.stringify([v.subject, v.predicate, v.object]);
+            if (!seen.has(key)) {
+                seen.add(key);
+                out.push({ subject: v.subject, predicate: v.predicate, object: v.object });
+            }
+        }
+        for (const k of Object.keys(v))
+            if (k !== "valueExpr" && k !== "shapeExpr" && k !== "semActs")
+                walk(v[k]);
+    })(val);
+    return out;
+}
+//# sourceMappingURL=bindingTree.js.map
 
 /***/ },
 
@@ -3245,6 +4008,8 @@ function lift(mapDirective, input, prefixes) {
             return regex_extension.lift(mapDirective, input, prefixes, extDef.args);
         case 'test':
             return mapDirective;
+        case 'id': // names an output node; validating input it binds nothing
+            return {};
         default:
             throw Error('Unknown extension: ' + mapDirective + '!');
     }
@@ -3258,6 +4023,8 @@ function lower(mapDirective, bindings, prefixes) {
             return regex_extension.lower(mapDirective, bindings, prefixes, extDef.args);
         case 'test':
             return mapDirective;
+        case 'id':
+            throw Error(mapDirective.trim() + ' names a node; it belongs on a shape-valued constraint, not a value');
         default:
             throw Error('Unknown extension: ' + mapDirective + '!');
     }
@@ -3391,6 +4158,125 @@ module.exports = {
 
 /***/ },
 
+/***/ 525
+(__unused_webpack_module, exports) {
+
+"use strict";
+var __webpack_unused_export__;
+/** keys - `%Map:{ id(arg, ...) %}` on a shape-valued output constraint names the node its
+ * nested shape is built on.  Arguments are variables, `@node` (the input node the enclosing
+ * iteration matched) or IRI templates `<http://a.example/person/{v:mrn}>`, whose
+ * placeholders are replaced by the values' lexical forms, IRI-safe (everything but letters,
+ * digits and -._~ percent-encoded, as R2RML does).  On the input side id() binds nothing,
+ * so one schema serves both directions.
+ */
+
+__webpack_unused_export__ = ({ value: true });
+exports.Template = exports.NODE_ARGUMENT = void 0;
+exports.allMatches = allMatches;
+exports.isKeyCode = isKeyCode;
+exports.expandVariable = expandVariable;
+__webpack_unused_export__ = lexical;
+exports.keyTerms = keyTerms;
+exports.keyArguments = keyArguments;
+exports.NODE_ARGUMENT = "@node";
+const CALL = /^\s*([A-Za-z][A-Za-z0-9]*)\s*\((.*)\)\s*$/s;
+const VARIABLE = /^ *(?:<([^>]*)>|([^:<>\s]*):(\S*)) *$/;
+const PLACEHOLDER = /\{([^{}]*)\}/g;
+/** every match of a global regex, in order (String.prototype.matchAll is outside this package's lib) */
+function allMatches(re, text) {
+    const out = [];
+    const r = new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g");
+    let m;
+    while ((m = r.exec(text)) !== null) {
+        out.push(m);
+        if (m[0].length === 0)
+            r.lastIndex++;
+    }
+    return out;
+}
+function isKeyCode(code) {
+    const m = CALL.exec(code);
+    return m !== null && m[1] === "id";
+}
+function expandVariable(name, prefixes) {
+    const m = VARIABLE.exec(name);
+    if (!m)
+        throw Error(`"${name}" is not a ShExMap variable (prefix:name or <iri>)`);
+    if (m[1] !== undefined)
+        return m[1];
+    if (!(m[2] in prefixes))
+        throw Error(`Unknown prefix "${m[2]}:" in ShExMap variable "${name}"`);
+    return prefixes[m[2]] + m[3];
+}
+class Template {
+    constructor(text, prefixes) {
+        this.segments = [];
+        this.text = text;
+        let pos = 0;
+        for (const m of allMatches(PLACEHOLDER, text)) {
+            if (m.index > pos)
+                this.segments.push(text.slice(pos, m.index));
+            this.segments.push({ variable: expandVariable(m[1], prefixes) });
+            pos = m.index + m[0].length;
+        }
+        if (pos < text.length)
+            this.segments.push(text.slice(pos));
+    }
+    variables() {
+        return this.segments.filter(s => typeof s !== "string").map((s) => s.variable);
+    }
+    /** the IRI (as an N3id string), or null when a variable is unbound */
+    expand(get) {
+        let out = "";
+        for (const seg of this.segments) {
+            if (typeof seg === "string") {
+                out += seg;
+            }
+            else {
+                const value = get(seg.variable);
+                if (value === null || value === undefined)
+                    return null;
+                out += iriSafe(lexical(value));
+            }
+        }
+        return out;
+    }
+}
+exports.Template = Template;
+/** the lexical form of a JSON term (an IRI string, a _:label, or {value, ...}) */
+function lexical(term) {
+    return typeof term === "object" && term !== null && "value" in term ? term.value : String(term);
+}
+function iriSafe(s) {
+    return encodeURIComponent(s).replace(/[!'()*]/g, c => "%" + c.charCodeAt(0).toString(16).toUpperCase());
+}
+/** the arguments of an id() code: variable IRIs, NODE_ARGUMENT, and Templates */
+function keyTerms(code, prefixes) {
+    const m = CALL.exec(code);
+    if (!m || m[1] !== "id")
+        throw Error(`${code.trim()} is not an id() code`);
+    const parts = m[2].trim() ? m[2].split(",").map(a => a.trim()) : [];
+    if (parts.length === 0)
+        throw Error(`id() needs at least one variable, template or ${exports.NODE_ARGUMENT}: ${code.trim()}`);
+    return parts.map(a => a === exports.NODE_ARGUMENT ? a
+        : a.startsWith("<") && a.endsWith(">") && a.includes("{") ? new Template(a.slice(1, -1), prefixes)
+            : expandVariable(a, prefixes));
+}
+/** the variables an id() code reads (templates' placeholders included), and NODE_ARGUMENT where it appears */
+function keyArguments(code, prefixes) {
+    const out = [];
+    for (const term of keyTerms(code, prefixes))
+        if (term instanceof Template)
+            out.push(...term.variables());
+        else
+            out.push(term);
+    return out;
+}
+//# sourceMappingURL=keys.js.map
+
+/***/ },
+
 /***/ 696
 (module, __unused_webpack_exports, __webpack_require__) {
 
@@ -3518,6 +4404,179 @@ module.exports = {
     lower: lower
 };
 //# sourceMappingURL=regex_extension.js.map
+
+/***/ },
+
+/***/ 680
+(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+var __webpack_unused_export__;
+/** scopes - the binding tree read as a scope tree, for materialization by iteration scopes.
+ *
+ * A binding tree (see ./bindingTree.ts) is a *scope*: an object of own bindings, or an
+ * array whose first element is that object and whose other elements are *lists*, each
+ * list holding one *iteration* (a scope) per match of a repeated constraint or group.
+ * `parseScope` builds Scope objects from a tree, accepting the two older layouts shex.js
+ * wrote (L1: a root written as its one list; L2: a nested scope written as a sibling of
+ * the constraint's own binding), and `ScopeTree` answers what materialization asks: at
+ * what list a variable is bound, and which scopes under a given one belong to a list.
+ *
+ * A *list path* names a list by position: the list indices from the root, so [] is the
+ * root scope itself, [0] the root's first list, [0, 1] the second list of an iteration
+ * of that list.  Every iteration of a list shares the list's path.
+ */
+
+__webpack_unused_export__ = ({ value: true });
+exports.ScopeTree = __webpack_unused_export__ = exports.BindingTreeError = void 0;
+exports.isPrefix = isPrefix;
+__webpack_unused_export__ = sameList;
+exports.pathKey = pathKey;
+__webpack_unused_export__ = parseScope;
+const bindingTree_1 = __webpack_require__(324);
+class BindingTreeError extends Error {
+}
+exports.BindingTreeError = BindingTreeError;
+class Scope {
+    constructor(own, node, parent, listPath, path, jsonPath) {
+        this.lists = [];
+        this.index = 0; // position in walk order (the UI's "frame" number)
+        this.own = own;
+        this.node = node;
+        this.parent = parent;
+        this.listPath = listPath;
+        this.path = path;
+        this.jsonPath = jsonPath;
+    }
+    get depth() { return this.listPath.length; }
+    /** {value, scope} for `v` from here or the nearest ancestor binding it, else null */
+    lookup(v) {
+        for (let s = this; s !== null; s = s.parent)
+            if (v in s.own)
+                return { value: s.own[v], scope: s };
+        return null;
+    }
+    /** the node of this scope or of the nearest ancestor that recorded one */
+    nearestNode() {
+        for (let s = this; s !== null; s = s.parent)
+            if (s.node !== undefined && s.node !== null)
+                return s.node;
+        return null;
+    }
+    /** the scopes below this one that are iterations of `listPath`, in document order */
+    descendantsAt(listPath) {
+        if (!isPrefix(this.listPath, listPath) || sameList(listPath, this.listPath))
+            return [];
+        const out = [];
+        for (const list of this.lists)
+            for (const it of list) {
+                if (sameList(it.listPath, listPath))
+                    out.push(it);
+                else if (isPrefix(it.listPath, listPath))
+                    out.push(...it.descendantsAt(listPath));
+            }
+        return out;
+    }
+    *walk() {
+        yield this;
+        for (const list of this.lists)
+            for (const it of list)
+                yield* it.walk();
+    }
+}
+__webpack_unused_export__ = Scope;
+function isPrefix(a, b) {
+    return a.length <= b.length && a.every((x, i) => b[i] === x);
+}
+function sameList(a, b) {
+    return a.length === b.length && isPrefix(a, b);
+}
+function pathKey(p) { return p.join("."); }
+function isObject(x) { return x !== null && typeof x === "object" && !Array.isArray(x); }
+function isScopeArray(a) {
+    return Array.isArray(a) && a.length >= 1 && isObject(a[0]) && a.slice(1).every(Array.isArray);
+}
+/** the scope tree of a binding tree */
+function parseScope(tree) {
+    if (isObject(tree) || isScopeArray(tree))
+        return scope(tree, null, [], [], []);
+    if (Array.isArray(tree)) {
+        // L1: a root without own bindings, written without its object
+        if (tree.every(isObject)) // shex.js: the root's one list
+            return scope([{}, tree], null, [], [], [], true);
+        if (tree.every(Array.isArray)) {
+            if (tree.every(isScopeArray)) // shex.js: one list of scope iterations
+                return scope([{}, tree], null, [], [], [], true);
+            if (tree.every((e) => e.every(isObject))) // PyShEx before 2026-09-27: the lists
+                return scope([{}].concat(tree), null, [], [], [], true);
+        }
+    }
+    throw new BindingTreeError("not a scope: " + short(tree));
+}
+function scope(node, parent, listPath, path, jsonPath, synthetic = false) {
+    const own = isObject(node) ? node : node[0];
+    const lists = isObject(node) ? [] : node.slice(1);
+    const vars = {};
+    for (const k of Object.keys(own))
+        if (!k.startsWith("@"))
+            vars[k] = own[k];
+    const ownPath = synthetic ? null : (isObject(node) ? jsonPath : jsonPath.concat([0]));
+    const s = new Scope(vars, own[bindingTree_1.NODE_KEY], parent, listPath, path, ownPath);
+    lists.forEach((list, i) => {
+        if (!Array.isArray(list))
+            throw new BindingTreeError("a scope's lists must be arrays: " + short(list));
+        // a synthetic root's lists sit at the tree's own indices
+        const listJson = synthetic ? (jsonPath.length === 0 && lists.length === 1 ? [] : [i]) : jsonPath.concat([i + 1]);
+        s.lists.push(list.map((e, j) => iteration(e, s, listPath.concat([i]), path.concat([i, j]), listJson.concat([j]))));
+    });
+    return s;
+}
+function iteration(elt, parent, listPath, path, jsonPath) {
+    if (isObject(elt) || isScopeArray(elt)) // a scope; also L2 (a nested scope written as a sibling)
+        return scope(elt, parent, listPath, path, jsonPath);
+    if (Array.isArray(elt) && elt.every(isObject)) // shex.js: a nested scope with no own bindings, its one list unwrapped
+        return scope([{}, elt], parent, listPath, path, jsonPath, true);
+    throw new BindingTreeError("not an iteration: " + short(elt));
+}
+function short(x) {
+    const s = JSON.stringify(x);
+    return s === undefined ? String(x) : s.length < 120 ? s : s.slice(0, 117) + "...";
+}
+/** a parsed tree plus the indexes materialization needs */
+class ScopeTree {
+    constructor(tree) {
+        this.boundAt = {}; // variable -> the list it is bound at
+        this.bindings = 0;
+        this.scopes = []; // walk order; scope.index indexes this
+        this.root = parseScope(tree);
+        for (const s of this.root.walk()) {
+            s.index = this.scopes.length;
+            this.scopes.push(s);
+            for (const v of Object.keys(s.own)) {
+                ++this.bindings;
+                if (!(v in this.boundAt))
+                    this.boundAt[v] = s.listPath;
+                else if (!sameList(this.boundAt[v], s.listPath))
+                    throw new BindingTreeError(`variable ${v} is bound at two lists, [${this.boundAt[v]}] and [${s.listPath}]`);
+            }
+        }
+    }
+    variables() { return Object.keys(this.boundAt); }
+    /** the UI's view: own bindings per scope, in walk order, and where each was written */
+    frames() {
+        return {
+            frames: this.scopes.map(s => Object.assign({}, s.own)),
+            origins: this.scopes.map(s => {
+                const o = {};
+                for (const v of Object.keys(s.own))
+                    o[v] = s.jsonPath === null ? null : s.jsonPath.concat([v]);
+                return o;
+            }),
+        };
+    }
+}
+exports.ScopeTree = ScopeTree;
+//# sourceMappingURL=scopes.js.map
 
 /***/ },
 
@@ -3898,6 +4957,14 @@ const ShExMapCjsModule = function (config) {
         MaterializerDebugger: (__webpack_require__(245)/* .MaterializerDebugger */ .fW),
         MaterializationError: (__webpack_require__(245)/* .MaterializationError */ .k),
         tripleConstraints: (__webpack_require__(245)/* .tripleConstraints */ .Fl),
+        // the binding tree of a validation result, in the layout ThreadedMaterializer reads
+        // (see doc/iteration-scopes.md); valToExtension remains for the legacy materializers
+        bindingTree: (__webpack_require__(324)/* .bindingTree */ .Y),
+        matchedTriples: (__webpack_require__(324).matchedTriples),
+        NODE_KEY: (__webpack_require__(324).NODE_KEY),
+        // static checks of a schema pair
+        analyse: (__webpack_require__(459)/* .analyse */ .KH),
+        Report: (__webpack_require__(459)/* .Report */ .pl),
         // binder: binder,
         url: MapExt,
         // visitTripleConstraint: myvisitTripleConstraint
@@ -4638,6 +5705,14 @@ module.exports = ShExWebApp.Modules["@shexjs/term"];
 
 "use strict";
 module.exports = ShExWebApp.Modules["@shexjs/util"];
+
+/***/ },
+
+/***/ 179
+(module) {
+
+"use strict";
+module.exports = ShExWebApp.Modules["@shexjs/validator"];
 
 /***/ },
 

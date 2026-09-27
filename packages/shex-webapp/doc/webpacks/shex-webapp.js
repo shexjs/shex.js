@@ -75466,7 +75466,7 @@ class EditorState {
         if (typeof text == "string")
             text = this.toText(text);
         return this.changeByRange(range => ({ changes: { from: range.from, to: range.to, insert: text },
-            range: EditorSelection.cursor(range.from + text.length) }));
+            range: EditorSelection.cursor(range.from + text.length, -1) }));
     }
     /**
     Create a set of changes and a new selection by running the given
@@ -78082,10 +78082,12 @@ let movedOver = "";
 // This implementation moves strictly visually, without concern for a
 // traversal visiting every logical position in the string. It will
 // still do so for simple input, but situations like multiple isolates
-// with the same level next to each other, or text going against the
-// main dir at the end of the line, will make some positions
+// with the same level next to each other will make some positions
 // unreachable with this motion. Each visible cursor position will
-// correspond to the lower-level bidi span that touches it.
+// correspond to the lower-level bidi span that touches it, except
+// positions at start/end of line, when the text there isn't in the
+// dominant direction, which will use a cursor at the start/end with
+// an an assoc pointing out of the line instead.
 //
 // The alternative would be to solve an order globally for a given
 // line, making sure that it includes every position, but that would
@@ -78094,8 +78096,22 @@ let movedOver = "";
 // people. (And would generally be a lot more complicated.)
 function moveVisually(line, order, dir, start, forward) {
     var _a;
-    let startIndex = start.head - line.from;
-    let spanI = BidiSpan.find(order, startIndex, (_a = start.bidiLevel) !== null && _a !== void 0 ? _a : -1, start.assoc);
+    if (!line.length)
+        return null;
+    let startIndex = start.head - line.from, spanI;
+    if (start.head == line.from && start.assoc < 0) { // Start of line.
+        if (!forward)
+            return null;
+        startIndex = order[spanI = 0].side(false, dir);
+    }
+    else if (start.head == line.to && start.assoc > 0) { // End of line
+        if (forward)
+            return null;
+        startIndex = order[spanI = order.length - 1].side(true, dir);
+    }
+    else {
+        spanI = BidiSpan.find(order, startIndex, (_a = start.bidiLevel) !== null && _a !== void 0 ? _a : -1, start.assoc);
+    }
     let span = order[spanI], spanEnd = span.side(forward, dir);
     // End of span
     if (startIndex == spanEnd) {
@@ -78111,8 +78127,13 @@ function moveVisually(line, order, dir, start, forward) {
         nextIndex = spanEnd;
     movedOver = line.text.slice(Math.min(startIndex, nextIndex), Math.max(startIndex, nextIndex));
     let nextSpan = spanI == (forward ? order.length - 1 : 0) ? null : order[spanI + (forward ? 1 : -1)];
-    if (nextSpan && nextIndex == spanEnd && nextSpan.level + (forward ? 0 : 1) < span.level)
-        return state.EditorSelection.cursor(nextSpan.side(!forward, dir) + line.from, nextSpan.forward(forward, dir) ? 1 : -1, nextSpan.level);
+    if (nextIndex == spanEnd) {
+        // End of line
+        if (!nextSpan)
+            return forward ? state.EditorSelection.cursor(line.to, 1) : state.EditorSelection.cursor(line.from, -1);
+        if (nextSpan.level + (forward ? 0 : 1) < span.level)
+            return state.EditorSelection.cursor(nextSpan.side(!forward, dir) + line.from, nextSpan.forward(forward, dir) ? 1 : -1, nextSpan.level);
+    }
     return state.EditorSelection.cursor(nextIndex + line.from, span.forward(forward, dir) ? -1 : 1, span.level);
 }
 function autoDirection(text, from, to) {
@@ -80487,9 +80508,6 @@ function moveToLineBoundary(view, start, forward, includeWrap) {
         if (pos != null)
             return state.EditorSelection.cursor(pos, forward ? -1 : 1);
     }
-    let line = view.state.doc.lineAt(start.head);
-    if (forward ? line.to == block.to : line.from == block.from)
-        return view.visualLineSide(line, forward);
     return state.EditorSelection.cursor(forward ? block.to : block.from, forward ? -1 : 1);
 }
 function moveByChar(view, start, forward, by) {
@@ -80503,7 +80521,7 @@ function moveByChar(view, start, forward, by) {
             char = "\n";
             line = view.state.doc.line(line.number + (forward ? 1 : -1));
             spans = view.bidiSpans(line);
-            next = view.visualLineSide(line, !forward);
+            next = forward ? state.EditorSelection.cursor(line.from, -1) : state.EditorSelection.cursor(line.to, 1);
         }
         if (!check) {
             if (!by)
@@ -81291,7 +81309,9 @@ function selectionFromPoints(points, base) {
     if (points.length == 0)
         return null;
     let anchor = points[0].pos, head = points.length == 2 ? points[1].pos : anchor;
-    return anchor > -1 && head > -1 ? state.EditorSelection.single(anchor + base, head + base) : null;
+    return anchor < 0 || head < 0 ? null
+        : anchor == head ? state.EditorSelection.create([state.EditorSelection.cursor(head + base, -1)])
+            : state.EditorSelection.single(anchor + base, head + base);
 }
 function sameSelPos(selection, range) {
     return range.head == selection.main.head && range.anchor == selection.main.anchor;
@@ -81443,8 +81463,9 @@ class InputState {
             if (mods.shiftKey && browser.ios && !/^(off|none)$/.test(this.view.contentDOM.autocapitalize) &&
                 iosVirtualKeyboardOpen(this.view.win))
                 mods.shiftKey = false;
-            this.pendingIOSKey = { key: event.key, keyCode: event.keyCode, mods };
-            setTimeout(() => this.flushIOSKey(), 50);
+            let pending = this.pendingIOSKey = { key: event.key, keyCode: event.keyCode, mods };
+            setTimeout(() => { if (this.pendingIOSKey == pending)
+                this.flushIOSKey(); }, 50);
             return true;
         }
         if (event.keyCode != 229)
@@ -81733,14 +81754,14 @@ function doPaste(view, input) {
             lastLine = line.from;
             let insert = state$1.toText((byLine ? text.line(i++).text : input) + state$1.lineBreak);
             return { changes: { from: line.from, insert },
-                range: state.EditorSelection.cursor(range.from + insert.length) };
+                range: state.EditorSelection.cursor(range.from + insert.length, -1) };
         });
     }
     else if (byLine) {
         changes = state$1.changeByRange(range => {
             let line = text.line(i++);
             return { changes: { from: range.from, to: range.to, insert: line.text },
-                range: state.EditorSelection.cursor(range.from + line.length) };
+                range: state.EditorSelection.cursor(range.from + line.length, -1) };
         });
     }
     else {
@@ -82437,13 +82458,13 @@ class HeightMap {
                     after += next.size;
             }
         }
-        let brk = 0;
+        let brk = false;
         if (nodes[i - 1] == null) {
-            brk = 1;
+            brk = true;
             i--;
         }
         else if (nodes[i] == null) {
-            brk = 1;
+            brk = true;
             j++;
         }
         return new HeightMapBranch(HeightMap.of(nodes.slice(0, i)), brk, HeightMap.of(nodes.slice(j)));
@@ -82672,12 +82693,14 @@ class HeightMapGap extends HeightMap {
 }
 class HeightMapBranch extends HeightMap {
     constructor(left, brk, right) {
-        super(left.length + brk + right.length, left.height + right.height, brk | (left.outdated || right.outdated ? 2 /* Flag.Outdated */ : 0));
+        super(left.length + (brk ? 1 : 0) + right.length, left.height + right.height, (brk ? 1 /* Flag.Break */ : 0) | (left.outdated || right.outdated ? 2 /* Flag.Outdated */ : 0));
         this.left = left;
         this.right = right;
         this.size = left.size + right.size;
     }
-    get break() { return this.flags & 1 /* Flag.Break */; }
+    // Returns 1 if there is a line break between this.left and
+    // this.right, 0 otherwise.
+    get break() { return (this.flags & 1 /* Flag.Break */); }
     blockAt(height, oracle, top, offset) {
         let mid = top + this.left.height;
         return height < mid ? this.left.blockAt(height, oracle, top, offset)
@@ -82707,11 +82730,11 @@ class HeightMapBranch extends HeightMap {
         else {
             let mid = this.lineAt(rightOffset, QueryType.ByPos, oracle, top, offset);
             if (from < mid.from)
-                this.left.forEachLine(from, mid.from - 1, oracle, top, offset, f);
+                this.left.forEachLine(from, Math.min(to, mid.from - 1), oracle, top, offset, f);
             if (mid.to >= from && mid.from <= to)
                 f(mid);
             if (to > mid.to)
-                this.right.forEachLine(mid.to + 1, to, oracle, rightTop, rightOffset, f);
+                this.right.forEachLine(Math.max(from, mid.to + 1), to, oracle, rightTop, rightOffset, f);
         }
     }
     replace(from, to, nodes) {
@@ -85280,15 +85303,11 @@ class EditorView {
         return skipAtoms(this, start, moveByChar(this, start, forward, initial => byGroup(this, start.head, initial)));
     }
     /**
-    Get the cursor position visually at the start or end of a line.
-    Note that this may differ from the _logical_ position at its
-    start or end (which is simply at `line.from`/`line.to`) if text
-    at the start or end goes against the line's base text direction.
+    **\[DEPRECATED]** Get the cursor position visually at the start
+    or end of a line.
     */
     visualLineSide(line, end) {
-        let order = this.bidiSpans(line), dir = this.textDirectionAt(line.from);
-        let span = order[end ? order.length - 1 : 0];
-        return state.EditorSelection.cursor(span.side(end, dir) + line.from, span.forward(!end, dir) ? 1 : -1);
+        return end ? state.EditorSelection.cursor(line.to, 1) : state.EditorSelection.cursor(line.from, -1);
     }
     /**
     Move to the next line boundary in the given direction. If
@@ -85357,6 +85376,20 @@ class EditorView {
         this.readMeasured();
         let line = this.state.doc.lineAt(pos), order = this.bidiSpans(line);
         let span = order[BidiSpan.find(order, pos - line.from, -1, side)];
+        // For positions at start/end of line, if the side points out of
+        // the line and the text there isn't in the dominant dir, return
+        // the position of the outermost character on the line.
+        if (line.length && (pos == line.from && side < 0 || pos == line.to && side > 0) &&
+            span.dir != this.textDirectionAt(line.from)) {
+            if (pos == line.to) {
+                pos = line.from + span.from;
+                side = 1;
+            }
+            else {
+                pos = line.from + span.to;
+                side = -1;
+            }
+        }
         return this.docView.coordsAt(pos, side, span.dir == exports.Direction.RTL);
     }
     /**

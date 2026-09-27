@@ -410,6 +410,14 @@ return {
   MaterializerDebugger: require("./ThreadedMaterializer").MaterializerDebugger,
   MaterializationError: require("./ThreadedMaterializer").MaterializationError,
   tripleConstraints: require("./ThreadedMaterializer").tripleConstraints,
+  // the binding tree of a validation result, in the layout ThreadedMaterializer reads
+  // (see doc/iteration-scopes.md); valToExtension remains for the legacy materializers
+  bindingTree: require("./bindingTree").bindingTree,
+  matchedTriples: require("./bindingTree").matchedTriples,
+  NODE_KEY: require("./bindingTree").NODE_KEY,
+  // static checks of a schema pair
+  analyse: require("./analysis").analyse,
+  Report: require("./analysis").Report,
   // binder: binder,
   url: MapExt,
   // visitTripleConstraint: myvisitTripleConstraint

@@ -12,11 +12,14 @@ extension registers as `http://shex.io/extensions/Map/#`.
 npm install @shexjs/extension-map
 ```
 
-- `shexmap-materialize -t target.shex [-j vars.json] [-r root]` reads the
-  bindings `shex-validate --extension @shexjs/extension-map` printed and
-  builds the target graph (`doc/threaded-materializer.md` says how: a
-  threaded search over the target schema, alternatives offered where the
-  bindings could fit more than one way).
+- `shexmap-materialize -t target.shex [-j vars.json] [-r root] [--into graph.ttl]` reads the
+  validation result `shex-validate --extension @shexjs/extension-map` printed and
+  builds the target graph (`doc/iteration-scopes.md` says how: each output repetition
+  iterates the input list its variables are bound at; alternatives are offered where the
+  bindings could fit more than one way); `--into` updates a graph in place, `--bindings`
+  prints the binding tree.
+- `shexmap-check -s input.shex -t output.shex` says, before any data, whether the two
+  schemas map coherently.
 - `shexmap-debug` steps that materialization from a terminal.
 - In the web app, `shex-simple.html?plugin=…/doc/ShExMapPlugin.js` (or
   `shexmap-simple.html`) adds the bindings, output-schema and materialization
@@ -25,8 +28,9 @@ npm install @shexjs/extension-map
 
 The library (`require("@shexjs/extension-map")`) is a factory taking the
 ShEx modules it works with and answering the extension -- `register(validator, {ShExTerm})`,
-the `ThreadedMaterializer` and its debugger; see the repository for the
-ShExMap specification and `examples/` for worked pairs.
+`bindingTree(validationResult)`, the `ThreadedMaterializer` and its debugger, and
+`analyse(inputSchema, outputSchema)`; see the repository for the ShExMap specification
+and `examples/` for worked pairs.
 
 ---
 
