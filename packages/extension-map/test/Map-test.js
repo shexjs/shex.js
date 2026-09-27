@@ -59,23 +59,37 @@ async function run (srcSchema, targetSchema, inputDataP, smapP, createRoot, expe
   var res = resultMapToShapeExprTest(validator.validateShapeMap(smap));
   expect(res.errors || []).to.deep.equal([]); // Trick chai into displaying errors.
 
-  // var resultBindings = validator.semActHandler.results["http://shex.io/extensions/Map/#"];
-  const resultBindings = ShExUtil.valToExtension(res, Mapper.url);
+  // the binding tree in the layout ThreadedMaterializer reads (doc/iteration-scopes.md);
+  // the legacy materializers below still take valToExtension's
+  const resultBindings = Mapper.bindingTree(res);
+  const legacyBindings = ShExUtil.valToExtension(res, Mapper.url);
 
-  // test against expected.
+  // test against expected, blank-node labels aside (the parser numbers them per process)
   if (expectedBindings) {
     if (resultBindings instanceof Array !== expectedBindings instanceof Array)
-      expect([resultBindings]).to.deep.equal(expectedBindings);
+      expect(withoutBnodeLabels([resultBindings])).to.deep.equal(withoutBnodeLabels(expectedBindings));
     else
-      expect(resultBindings).to.deep.equal(expectedBindings);
+      expect(withoutBnodeLabels(resultBindings)).to.deep.equal(withoutBnodeLabels(expectedBindings));
   }
 
   if (bindingsOnly) // the legacy materializers below can't split threads
     return
 
   if (testTrivial)
-    testGraph(trivial(registered, targetSchema, resultBindings, createRoot), expectedRdf.graph, mapstr)
-  testGraph(materialize(registered, targetSchema, resultBindings, createRoot), expectedRdf.graph, mapstr)
+    testGraph(trivial(registered, targetSchema, legacyBindings, createRoot), expectedRdf.graph, mapstr)
+  testGraph(materialize(registered, targetSchema, legacyBindings, createRoot), expectedRdf.graph, mapstr)
+}
+
+function withoutBnodeLabels (tree) {
+  if (Array.isArray(tree))
+    return tree.map(withoutBnodeLabels);
+  if (tree && typeof tree === "object" && !("value" in tree)) {
+    const out = {};
+    for (const k of Object.keys(tree))
+      out[k] = typeof tree[k] === "string" && tree[k].startsWith("_:") ? "_:" : tree[k];
+    return out;
+  }
+  return tree;
 }
 
 function testGraph (got, expected, mapstr) {

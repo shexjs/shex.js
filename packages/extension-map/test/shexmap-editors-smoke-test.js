@@ -512,7 +512,7 @@ if (!TEST_browser) {
       expect($("#results").text()).to.include("thread");
       // ... including the thread's private view of the binding tree
       expect($("#results").text()).to.include("binding tree");
-      expect($("#results").text()).to.match(/frame 0:.*:name ✓/);
+      expect($("#results").text()).to.match(/scope 0:.*:name ✓/);
 
       $("#dbgContinue").trigger("click"); // to completion
       // the panel is put away on completion; the "viable" tally is the
@@ -704,12 +704,17 @@ if (!TEST_browser) {
     });
     /* Which binding a triple came from, said exactly.
      *
-     * The materializer flattens the binding tree into frames, and the two do
-     * not line up: a binding written once beside a list of repeated groups
-     * is distributed into every frame those groups produce.  So counting
-     * occurrences of a variable in the text and calling the nth one "frame
-     * n" is wrong wherever it matters -- which is exactly the tree this
-     * entry has, one bp:name over four readings. */
+     * The materializer reads the binding tree as a scope tree rather than
+     * flattening it: each scope's own writes are recorded once, at the
+     * scope that made them -- never copied down into scopes that only
+     * *read* them by inheritance from an ancestor.  So a naive count of a
+     * variable's occurrences in the text, read off against a scope's
+     * position in walk order, does not line up with where that scope's own
+     * write actually is -- which is exactly the tree this entry has: one
+     * bp:name written at the root and read by four scopes it was never
+     * written at, and bp:reportNo written at two scopes with the root
+     * sitting between them in walk order, shifting the naive count out of
+     * step. */
     it("should point at the binding a triple actually read, not the nth one", async function () {
       this.timeout(60000);
       // its own setup: this asserts about a materialization, and depending on
@@ -736,56 +741,57 @@ if (!TEST_browser) {
 
       expect(app.bindingOrigins, "the materializer said where each binding was written")
         .to.be.an("array");
-      const frames = app.bindingOrigins.length;
-      expect(frames, "several frames").to.be.above(1);
+      const scopes = app.bindingOrigins.length;
+      expect(scopes, "several scopes").to.be.above(1);
 
-      // a variable in every frame, written once: the distributed case
-      const distributed = Object.keys(app.bindingOrigins[0]).find(v =>
-        app.bindingOrigins.every(o => o && o[v]) &&
-        new Set(app.bindingOrigins.map(o => o[v].join(" "))).size === 1);
-      expect(distributed, "a binding shared by every frame").to.exist;
+      // where each variable is written: the scope indices that own it (own
+      // bindings only -- a scope reading an ancestor's write gets no entry
+      // of its own for it)
+      const writtenAt = new Map();
+      app.bindingOrigins.forEach((o, i) => Object.keys(o || {}).forEach(v => {
+        if (!writtenAt.has(v))
+          writtenAt.set(v, []);
+        writtenAt.get(v).push(i);
+      }));
 
-      // it is one place in the text, whichever frame asks
-      const perFrame = app.bindingOrigins.map((_, f) =>
-        app.bindingRanges(bindingsText, distributed, f).map(at).join("|"));
-      expect(new Set(perFrame).size, "one written binding, one answer").to.equal(1);
-      expect(perFrame[0], "the variable and the value under it")
+      // a variable written at exactly one scope, read by several others
+      // through ancestor lookup: bp:name, written at the root
+      const distributed = [...writtenAt.keys()].find(v => writtenAt.get(v).length === 1);
+      expect(distributed, "a binding written at exactly one scope").to.exist;
+      const [distributedAt] = writtenAt.get(distributed);
+
+      const exactDist = app.bindingRanges(bindingsText, distributed, distributedAt);
+      expect(exactDist.length, "the name and the value, not just the key").to.equal(2);
+      expect(exactDist.map(at).join("|"), "the variable and the value under it")
         .to.include(distributed.replace(/^.*[/#]/, ""));
-      expect(app.bindingRanges(bindingsText, distributed, 0).length,
-             "the name and the value, not just the key").to.equal(2);
 
-      // The case that makes this more than tidying: a binding written fewer
-      // times than there are frames, but more than once -- bp:reports here,
-      // one per report, read by the systolic frame and the diastolic frame
-      // alike.  Counting occurrences sends frame 1 to the *second* report.
-      const shared_ = Object.keys(app.bindingOrigins[0]).find(v => {
-        const places = new Set();
-        app.bindingOrigins.forEach(o => { if (o && o[v]) places.add(o[v].join(" ")); });
-        return places.size > 1 && places.size < frames;
-      });
-      expect(shared_, "a binding read by more frames than it is written").to.exist;
+      // The case that makes this more than tidying: a binding written at
+      // two scopes, each read by more scopes below it -- bp:reportNo here,
+      // one per report.  The root scope sits between them in walk order, so
+      // counting occurrences and reading off the second scope's position
+      // picks the *second* report's text, not the first's.
+      const shared_ = [...writtenAt.keys()].find(v => writtenAt.get(v).length > 1);
+      expect(shared_, "a binding written at more than one scope").to.exist;
+      const [firstAt, secondAt] = writtenAt.get(shared_);
 
-      const exact0 = app.bindingRanges(bindingsText, shared_, 0).map(r => r.from);
-      const exact1 = app.bindingRanges(bindingsText, shared_, 1).map(r => r.from);
-      expect(exact1, "frames 0 and 1 read the same written binding").to.deep.equal(exact0);
+      const exactFirst = app.bindingRanges(bindingsText, shared_, firstAt).map(r => r.from);
+      const exactSecond = app.bindingRanges(bindingsText, shared_, secondAt).map(r => r.from);
+      expect(exactSecond, "the two writes are at different places")
+        .to.not.deep.equal(exactFirst);
 
-      const guess1 = app.variableRanges(bindingsText, shared_, 1).map(r => r.from);
-      expect(guess1, "which counting occurrences got wrong").to.not.deep.equal(exact1);
+      const guessFirst = app.variableRanges(bindingsText, shared_, firstAt).map(r => r.from);
+      expect(guessFirst, "which counting occurrences got wrong").to.not.deep.equal(exactFirst);
       // ...and the exact one is really where that binding is written
-      expect(at(app.bindingRanges(bindingsText, shared_, 1)[0]))
+      expect(at(app.bindingRanges(bindingsText, shared_, firstAt)[0]))
         .to.equal(JSON.stringify(shared_));
 
-      // and a variable that really is written once per frame gets a
-      // different place for each
-      const perFrameVar = Object.keys(app.bindingOrigins[0]).find(v =>
-        app.bindingOrigins.every(o => o && o[v]) &&
-        new Set(app.bindingOrigins.map(o => o[v].join(" "))).size === frames);
-      if (perFrameVar) {
-        const spots = app.bindingOrigins.map((_, f) =>
-          app.bindingRanges(bindingsText, perFrameVar, f).map(r => r.from).join(","));
-        expect(new Set(spots).size, perFrameVar + " is written once per frame")
-          .to.equal(frames);
-      }
+      // and the variable written at the most scopes -- one per leaf -- gets
+      // a different place for each of them
+      const [perLeafVar, leafAt] = [...writtenAt.entries()].reduce(
+        (best, entry) => entry[1].length > best[1].length ? entry : best);
+      expect(leafAt.length, perLeafVar + " written at several scopes").to.be.above(2);
+      const spots = leafAt.map(f => app.bindingRanges(bindingsText, perLeafVar, f).map(r => r.from).join(","));
+      expect(new Set(spots).size, perLeafVar + " is written once per scope").to.equal(spots.length);
     });
 
     /* Triples exist from the moment each is emitted -- the arc into a nested
@@ -826,7 +832,7 @@ if (!TEST_browser) {
         // so a debugger paused inside it used to find no thread at all --
         // which is why nothing was drawn and no button appeared for the one
         // thread the reader was watching
-        const [current] = app.debugSession.dbg.threads();
+        const current = app.debugSession.dbg.currentThread();
         expect(current, "the thread this step was about").to.exist;
         expect(current.current, "and it says so").to.equal(true);
         expect(current.emitted, "with the triples it has emitted so far").to.be.above(0);
@@ -933,7 +939,7 @@ if (!TEST_browser) {
         resultPanes.forEach(({pane}, i) => watch(pane, "data" + i));
 
         // re-arm to catch what it paints by default
-        const th0 = app.debugSession.dbg.threads()[0];
+        const th0 = app.debugSession.dbg.currentThread();
         const last = th0.quads.slice(-1)[0];
         // every emitted triple has an anchor: provenance entries name their
         // quad, without which mapMaterialization skips them and a stepping
@@ -1133,7 +1139,7 @@ if (!TEST_browser) {
         expect(consumed.length, "at least one binding consumed").to.be.above(0);
         consumed.forEach(m => {
           expect(m.to, "inside the document").to.be.at.most(bindingsText.length);
-          expect(m.title, "says which frame consumed it").to.include("frame");
+          expect(m.title, "says which scope consumed it").to.include("scope");
         });
         // the marks land on bindings, not on arbitrary text
         const names = marks.map(m => bindingsText.substring(m.from, m.to));

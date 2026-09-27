@@ -1,0 +1,47 @@
+#!/usr/bin/env node
+
+/** shexmap-check -- do two ShExMap schemas map coherently?  Before any data:
+ *
+ *   shexmap-check -s input.shex -t output.shex [-j vars.json]
+ *
+ * Every output repetition must have an input list to iterate; every variable the output
+ * reads must be bound in the input where it can be read from (a variable bound once per
+ * item cannot be read outside a repetition over the items: "which one?"); a body reading
+ * from two unrelated lists is refused.  Unused bindings and static variables are warnings.
+ * Exit status 1 on errors.  See doc/iteration-scopes.md.
+ */
+
+const FS = require("fs");
+const N3 = require("n3");
+const ShExNode = require("@shexjs/node")({rdfjs: N3});
+const Mapper = require("..")({rdfjs: N3, Validator: {}});
+
+const CommandLineOptions = [
+  { name: "help", alias: "h", type: Boolean },
+  { name: "source", alias: "s", type: String, typeLabel: "file", description: "input (source) shex file" },
+  { name: "target", alias: "t", type: String, typeLabel: "file", description: "output (target) shex file" },
+  { name: "jsonvars", alias: "j", type: String, typeLabel: "file", description: "json vars file: the static variables materialization will get" },
+  { name: "source-shape", type: String, typeLabel: "IRI", description: "input shape label (default: the input schema's start)" },
+  { name: "target-shape", type: String, typeLabel: "IRI", description: "output shape label (default: the output schema's start)" },
+];
+const cmds = require("command-line-args")(CommandLineOptions);
+
+if (cmds.help || !cmds.source || !cmds.target) {
+  console.error(require("command-line-usage")([
+    {header: "shexmap-check", content: "checks that an output ShExMap schema can be materialized coherently from what an input schema binds"},
+    {header: "Synopsis", content: ["shexmap-check -s <input schema> -t <output schema> [-j <JSON vars file>]"]},
+    {header: "Options", optionList: CommandLineOptions},
+  ]));
+  process.exit(cmds.help ? 0 : 1);
+}
+
+Promise.all([ShExNode.load({shexc: [cmds.source]}, null, {index: true}),
+             ShExNode.load({shexc: [cmds.target]}, null, {index: true})])
+  .then(([input, output]) => {
+    const statics = cmds.jsonvars ? Object.keys(JSON.parse(FS.readFileSync(cmds.jsonvars, "utf8"))) : [];
+    const report = Mapper.analyse(input.schema, output.schema, {
+      staticVars: statics, inputStart: cmds["source-shape"], outputStart: cmds["target-shape"]});
+    console.log(report.toString());
+    process.exit(report.ok ? 0 : 1);
+  })
+  .catch(e => { console.error(e.message || e); process.exit(2); });

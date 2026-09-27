@@ -6,6 +6,7 @@
   },
   [
     {
+      "@node": "_:n3-22",
       "http://contact.example/use": {
         "value": "work"
       },
@@ -14,6 +15,7 @@
       }
     },
     {
+      "@node": "_:n3-23",
       "http://contact.example/use": {
         "value": "home"
       },
@@ -22,6 +24,7 @@
       }
     },
     {
+      "@node": "_:n3-24",
       "http://contact.example/use": {
         "value": "home"
       },

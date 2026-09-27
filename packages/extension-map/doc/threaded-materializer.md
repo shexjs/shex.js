@@ -1,5 +1,16 @@
 # ThreadedMaterializer — NFA-thread materialization for ShExMap
 
+> **Superseded (2026-09).**  `ThreadedMaterializer` now materializes by *iteration scopes*;
+> see [iteration-scopes.md](iteration-scopes.md).  This document describes the frame-cursor
+> design it replaced.  That design flattened the binding tree into frames and read them
+> with a forward-only cursor, which could not preserve the input's structure once
+> cardinality went above one: a nested schema did not map to itself (a parent's binding,
+> copied into every leaf frame, counted once per copy), a list of pairs could not be
+> transposed into two lists (the cursor never moved back), and a second read of a parent's
+> binding inside an item stepped the cursor and mixed items.  The class name, `run()`'s
+> event stream and the accepts list are kept; `advance` events became `enter`, `skipped` is
+> always 0, and `maxSteps`/`exploreSteps` have nothing left to bound.
+
 Prototype: [`lib/ThreadedMaterializer.js`](../lib/ThreadedMaterializer.js),
 tests: [`test/ThreadedMaterializer-test.js`](../test/ThreadedMaterializer-test.js).
 

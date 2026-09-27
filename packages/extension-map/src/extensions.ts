@@ -44,6 +44,9 @@ function lift(mapDirective: string, input: any, prefixes: { [prefix: string]: st
         case 'test':
           return mapDirective;
 
+        case 'id':      // names an output node; validating input it binds nothing
+          return {};
+
         default:
           throw Error('Unknown extension: '+ mapDirective+'!');
     }
@@ -60,6 +63,9 @@ function lower(mapDirective: string, bindings: any, prefixes: { [prefix: string]
 
         case 'test':
           return mapDirective;
+
+        case 'id':
+          throw Error(mapDirective.trim() + ' names a node; it belongs on a shape-valued constraint, not a value');
 
         default:
           throw Error('Unknown extension: ' + mapDirective+'!');

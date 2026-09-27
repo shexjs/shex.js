@@ -96,11 +96,17 @@ describe("MaterializerDebugger", function () {
   });
 
   it("should pause on the lexical representation of a synthesized node", function () {
+    // the bnode minted for :item's <I> is the same every run: read it off one
+    const schema = parse(schemaText);
+    const first = new ThreadedMaterializer(schema);
+    first.materialize(bindings, "tag:root");
+    const link = first.provenance.find(p => p.src.structural);
+    const minted = "_:" + link.quad.object.value;
     const {dbg} = makeDebugger();
-    dbg.addBreakpoint({subject: "_:tm0"}); // the bnode invented for :item's <I>
+    dbg.addBreakpoint({subject: minted});
     const at = dbg.continue();
     expect(at.type).to.equal("tripleConstraint");
-    expect(at.thread.subject).to.equal("_:tm0");
+    expect(at.thread.subject).to.equal(minted);
   });
 
   it("should surface branch death as fail events", function () {

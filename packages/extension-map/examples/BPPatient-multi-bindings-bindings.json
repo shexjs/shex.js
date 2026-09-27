@@ -1,9 +1,12 @@
 [
   {
-    "http://shex.io/extensions/Map/#BPDAM-name": { "value": "Sue" }
+    "http://shex.io/extensions/Map/#BPDAM-name": {
+      "value": "Sue"
+    }
   },
   [
     {
+      "@node": "tag:b0",
       "http://shex.io/extensions/Map/#BPDAM-XXX": "tag:b0",
       "http://shex.io/extensions/Map/#BPDAM-sysVal": {
         "value": "110",
@@ -21,6 +24,7 @@
       }
     },
     {
+      "@node": "tag:b1",
       "http://shex.io/extensions/Map/#BPDAM-XXX": "tag:b1",
       "http://shex.io/extensions/Map/#BPDAM-sysVal": {
         "value": "111",

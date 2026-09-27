@@ -83,10 +83,10 @@ describe("ThreadedMaterializer", function () {
     });
   });
 
-  // A TC whose variable lookup advances the frame cursor is deferred so
-  // in-frame alternatives explore first; all accepting threads are collected
-  // and materialize() returns the most-consuming one.
-  describe("frame-advance splitting and acceptance", function () {
+  // A repetition iterates the input list its body's variables are bound at,
+  // one iteration at a time; a body that does not fit an item is skipped there,
+  // so no alternative ever pairs one item's binding with another's.
+  describe("iteration scopes and acceptance", function () {
     const prefixes = "PREFIX : <http://a.example/>\nPREFIX Map: <http://shex.io/extensions/Map/#>\n";
     // pessimal ordering: :tel (frame 2) is tried before :email (frame 0)
     const cardSchema = prefixes + [
@@ -103,32 +103,36 @@ describe("ThreadedMaterializer", function () {
        {"http://a.example/use": {value: "home"}, "http://a.example/tel": {value: "+1"}}],
     ];
 
-    it("should not let a cross-frame pairing beat in-frame consumption", function () {
+    it("should keep each contact's :use with its own value", function () {
       const m = new ThreadedMaterializer(parseSchema(cardSchema));
       const store = new RdfJs.Store();
       store.addQuads(m.materialize(tree, "tag:card"));
-      // the winner pairs each :use with ITS frame's value: 2 mbox + 1 phone
+      // each contact gets the disjunct its own bindings fit: 2 mbox + 1 phone
       const vals = store.match(null, RdfJs.DataFactory.namedNode("http://a.example/val"), null)
             .toArray().map(q => q.object.value).sort();
       expect(vals).to.deep.equal(["+1", "h@x", "w@x"]);
       expect(m.chosen.consumed).to.equal(7);
-      // the cross-frame mix (frame 0's :use with frame 2's :tel) is merely an
-      // alternative, penalized by the bindings it skipped over
-      const mix = m.accepts.find(a => a.skipped === 4);
-      expect(mix, "the demoted cross-frame accept").to.exist;
-      expect(mix.consumed).to.equal(3);
+      // no alternative pairs one contact's :use with another's number: there is
+      // one materialization, not a demoted mix
+      const pairs = new Set();
+      store.match(null, RdfJs.DataFactory.namedNode("http://a.example/use"), null).toArray().forEach(u => {
+        const val = store.match(u.subject, RdfJs.DataFactory.namedNode("http://a.example/val"), null).toArray()[0];
+        pairs.add(u.object.value + "=" + val.object.value);
+      });
+      expect([...pairs].sort()).to.deep.equal(["home=+1", "home=h@x", "work=w@x"]);
+      expect(m.accepts.length).to.equal(1);
     });
 
-    it("should yield advance events when a lookup moves the cursor", function () {
+    it("should yield enter events as a repetition takes up each iteration", function () {
       const m = new ThreadedMaterializer(parseSchema(cardSchema));
       const events = [];
       const it2 = m.run(tree, "tag:card");
       for (let step = it2.next(); !step.done; step = it2.next())
         events.push(step.value);
-      const advance = events.find(e => e.type === "advance");
-      expect(advance, "an advance event").to.exist;
-      expect(advance.toFrame).to.be.above(advance.thread.frame);
+      const enters = events.filter(e => e.type === "enter");
+      expect(enters.map(e => e.scope)).to.deep.equal([[0, 0], [0, 1], [0, 2]]);   // the three contacts, in order
       expect(events.filter(e => e.type === "accept").length).to.equal(m.accepts.length);
+      expect(events.some(e => e.type === "advance"), "no cursor to advance").to.equal(false);
     });
 
     it("should tag each emitted quad with its constraint and binding source", function () {
@@ -149,17 +153,21 @@ describe("ThreadedMaterializer", function () {
       const by = (predicate) => m.provenance[
         quads.findIndex(q => q.predicate.value === "http://a.example/" + predicate)];
       // the bnode link carries no binding: it's the structure of the schema
-      expect(by("sub").src).to.deep.equal({structural: true});
+      expect(by("sub").src).to.include({structural: true});
+      expect(by("sub").src.reads).to.deep.equal([]);
       expect(by("sub").tc, "the constraint that synthesized it").to.exist;
       expect(by("sub").tc.predicate).to.equal("http://a.example/sub");
-      // a bound variable, from its frame
-      expect(by("v").src).to.deep.equal(
-        {variables: ["http://a.example/v1"], frame: 0, statics: false});
-      // a static: always available, so no frame
-      expect(by("s").src).to.deep.equal(
-        {variables: ["http://a.example/konst"], frame: null, statics: true});
+      // a bound variable, read at the root scope
+      expect(by("v").src.variables).to.deep.equal(["http://a.example/v1"]);
+      expect(by("v").src.scope).to.deep.equal([]);
+      expect(by("v").src.reads).to.deep.equal([["", "http://a.example/v1"]]);    // (scope path, variable)
+      expect(by("v").src.statics).to.deep.equal([]);
+      // a static: always available, read from no scope
+      expect(by("s").src.variables).to.deep.equal(["http://a.example/konst"]);
+      expect(by("s").src.reads).to.deep.equal([]);
+      expect(by("s").src.statics).to.deep.equal(["http://a.example/konst"]);
       // a singleton value set needs no binding at all
-      expect(by("c").src).to.deep.equal({constant: true});
+      expect(by("c").src).to.include({constant: true});
       // TripleConstraints are recorded by identity, so editors can locate
       // them in the schema source
       const subTc = schema.shapes[0].shapeExpr.expression;
@@ -322,9 +330,9 @@ describe("ThreadedMaterializer", function () {
       expect(subjects).to.deep.equal(["tag:root", "tag:root"]);
     });
 
-    it("should limit repetition of subshapes that consume no frame bindings", function () {
-      // <I> is satisfiable forever from its constant; the progress guard
-      // stops the star after one binding-free iteration instead of maxRepeat.
+    it("should run a subshape with no variables once", function () {
+      // <I> reads nothing, so its repetition has no list to iterate: it runs
+      // once, at the current scope
       const store = new RdfJs.Store();
       store.addQuads(new ThreadedMaterializer(parseSchema(prefixes + [
         "start = @<S>",
