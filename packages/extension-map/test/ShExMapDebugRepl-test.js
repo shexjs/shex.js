@@ -58,12 +58,17 @@ describe("ShExMapDebugRepl", function () {
   });
 
   it("should honor predicate (pname) and node breakpoints", function () {
-    const {transcript} = session(["bp :leaf", "bn _:tm0", "info", "c", "c", "c"]);
+    // the bnode minted for :item's <I> is the same every run: read it off one
+    const {ThreadedMaterializer} = require("../lib/ThreadedMaterializer");
+    const m = new ThreadedMaterializer(ShExParser.construct("http://a.example/", {}, {index: true}).parse(schemaText));
+    m.materialize(bindings, "tag:root");
+    const minted = "_:" + m.provenance.find(p => p.src.structural).quad.object.value;
+    const {transcript} = session(["bp :leaf", "bn " + minted, "info", "c", "c", "c"]);
     expect(transcript).to.include("breakpoint on predicate :leaf");
-    expect(transcript).to.include("breakpoint on node _:tm0");
+    expect(transcript).to.include("breakpoint on node " + minted);
     expect(transcript).to.include("bp :leaf"); // info listing
-    // first stop: the node breakpoint fires when _:tm0 becomes the subject
-    expect(transcript).to.match(/at :leaf[\s\S]*subject _:tm0/);
+    // first stop: the node breakpoint fires when the minted node becomes the subject
+    expect(transcript).to.match(new RegExp("at :leaf[\\s\\S]*subject " + minted.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   });
 
   it("should quit on q", function () {
@@ -121,27 +126,33 @@ describe("ShExMapDebugRepl", function () {
     ],
   ];
 
-  it("should defer a frame-advancing thread with an advance event", function () {
-    // pessimal ordering: <Tel>'s :tel lookup at frame 0 must jump to frame 2
+  it("should enter each contact in turn, showing the branch it is on", function () {
+    // the repetition over the contacts takes them one at a time: the phone
+    // disjunct dies on a contact with no :tel, the mbox one takes it
     const {transcript} = session(["s", "s", "s", "s", "s", "t", "q"],
                                  {schemaText: cardSchema, bindings: cardBindings});
-    expect(transcript).to.match(/advance to frame 2 for card:val/);
-    expect(transcript).to.include("deferred so in-frame alternatives go first");
-    expect(transcript).to.match(/T\d+ pending:/); // the sibling mbox disjunct
+    expect(transcript).to.match(/entering scope 0\.0 for card:phone/);
+    expect(transcript).to.match(/T\d+ pending:/); // the shape being built
   });
 
-  it("should choose the most-consuming accept and list the alternatives", function () {
+  it("should accept the one materialization and list it", function () {
     const {code, transcript} = session(["c", "t", "t 1"],
                                        {schemaText: cardSchema, bindings: cardBindings});
     expect(code).to.equal(0);
-    expect(transcript).to.match(/accepted: 10 quads \(chose \d of \d+ viable materializations/);
-    expect(transcript).to.match(/consumed 7, skipped 1 {2}<- chosen/);
-    expect(transcript).to.match(/consumed 3, skipped 4/); // the cross-frame mix, demoted
+    expect(transcript).to.match(/accepted: 10 quads\n/);      // one way to build it: no alternatives
+    expect(transcript).to.match(/consumed 7 {2}<- chosen/);
     expect(transcript).to.match(/card:fullName "Ann"/);   // t 1 prints a graph
   });
 
-  it("should expose accepts through the done event and the debugger", function () {
-    const {transcript} = session([], {schemaText: cardSchema, bindings: cardBindings});
+  it("should expose alternative accepts through the done event and the debugger", function () {
+    // a flat record where both disjuncts fit: two viable materializations
+    const flat = prefixes + [
+      "start = @<Card>",
+      "<Card> { :name . %Map:{ :name %} ; ( :phone . %Map:{ :tel %} | :mbox . %Map:{ :email %} ) }",
+    ].join("\n");
+    const both = {"http://a.example/name": {value: "Bob"}, "http://a.example/tel": {value: "+1"},
+                  "http://a.example/email": {value: "b@x"}};
+    const {transcript} = session([], {schemaText: flat, bindings: both});
     expect(transcript).to.include("viable materializations");
   });
 });

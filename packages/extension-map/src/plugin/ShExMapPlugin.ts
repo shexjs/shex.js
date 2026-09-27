@@ -414,14 +414,15 @@ const ShExMapVerbs = {
       this.endDebugSession(false);
       return event;
     }
-    // Show what the thread has built so far.  Its triples exist from the
-    // moment each is emitted -- the arc into a nested shape before the
-    // shape is even entered -- but nothing drew them until the session
-    // ended or the reader thought to hover a thread button, so stepping
-    // through a shape showed no output until the shape was finished.
-    // the thread being stepped leads the list (liveThreads), which is the
-    // one this step was about
-    const [current] = session.dbg.threads();
+    // Show what has been built so far.  Its triples exist from the moment
+    // each is emitted -- the arc into a nested shape before the shape is
+    // even entered -- but nothing drew them until the session ended or the
+    // reader thought to hover a thread button, so stepping through a shape
+    // showed no output until the shape was finished.
+    // liveThreads() lists each open call separately; a nested one's quads
+    // fold into its caller's only once it returns, so none of those, alone,
+    // has everything emitted so far -- currentThread() is their sum
+    const current = session.dbg.currentThread();
     if (current)
       this.previewThread(current, false, this.stepLabel(event, current));
     return event;
@@ -433,7 +434,8 @@ const ShExMapVerbs = {
       return;
     const threadStr = event.thread
           ? " [" + event.thread.subject + " depth:" + event.thread.depth +
-            " frame:" + event.thread.frame + " consumed:" + event.thread.consumed +
+            " scope:" + (event.thread.scope && event.thread.scope.length ? event.thread.scope.join(".") : "root") +
+            " consumed:" + event.thread.consumed +
             (event.thread.skipped ? " skipped:" + event.thread.skipped : "") +
             " emitted:" + event.thread.emitted + "]"
           : "";
@@ -449,9 +451,9 @@ const ShExMapVerbs = {
         (event.failure && event.failure.variable ? ": no binding for <" + event.failure.variable + ">" : "") +
         threadStr);
       break;
-    case "advance":
-      $("#dbgStatus").text("advance to frame " + event.toFrame + " at <" + event.tc.predicate +
-                           "> -- deferred so in-frame alternatives go first" + threadStr);
+    case "enter":
+      $("#dbgStatus").text("entering scope " + event.scope.join(".") +
+                           (event.tc ? " for <" + event.tc.predicate + ">" : "") + threadStr);
       break;
     case "accept":
       $("#dbgStatus").text("thread accepted: " + event.quads.length + " quads" + threadStr);
@@ -482,24 +484,25 @@ const ShExMapVerbs = {
     const preview = (t, complete, label) => () => this.previewThread(t, complete, label);
     (session.materializer.accepts || []).forEach((a, i) => {
       const label = "accepted thread " + (i + 1) + ": " + a.quads.length + " quads, " +
-            a.consumed + " bindings consumed" + (a.skipped ? ", " + a.skipped + " skipped" : "");
+            a.consumed + " bindings read" + (a.skipped ? ", " + a.skipped + " skipped" : "");
       list.append($("<button/>", {class: "dbgThread", title: label + " -- click to render"})
                   .text("✓" + (i + 1) + " " + a.quads.length + "q")
                   .on("mouseenter click", preview({quads: a.quads, provenance: a.provenance,
                                                    used: a.used, frame: a.thread.frame}, true, label)));
     });
     session.dbg.threads().forEach((t, i) => {
-      const kind = t.deferred ? "deferred" : "pending";
-      const label = kind + " thread: subject " + t.subject + ", frame " + t.frame +
+      const where = t.scope && t.scope.length ? t.scope.join(".") : "root";
+      const label = "pending thread: subject " + t.subject + ", scope " + where +
             ", depth " + t.depth + ", " + t.emitted + " quads emitted";
       list.append($("<button/>", {class: "dbgThread", title: label + " -- click to render its partial graph"})
-                  .text((t.deferred ? "⏸" : "▶") + "f" + t.frame + " " + t.emitted + "q")
+                  .text("▶" + where + " " + t.emitted + "q")
                   .on("mouseenter click", preview(t, false, label)));
     });
   },
 
-  /** the aspects specific to a materialization thread: its private view of
-   * the binding tree (frame cursor and consumed marks) ... */
+  /** the aspects specific to a materialization thread: the binding tree by
+   * scope (materializer.frames lists each scope's own bindings, in walk order),
+   * with the bindings this branch has read marked and the scope it is in ... */
   bindingStateText (thread: any) {
     const session = this.debugSession;
     const frames = session && session.materializer.frames;
@@ -513,9 +516,9 @@ const ShExMapVerbs = {
           return prefix + ":" + iri.substring(ns.length);
       return "<" + iri + ">";
     };
-    return "binding tree (✓ = consumed by this thread; → = cursor):\n" +
+    return "binding tree (✓ = read by this branch; → = the scope it is in):\n" +
       frames.map((frame, i) =>
-        (i === thread.frame ? "→ " : "  ") + "frame " + i + ":  " +
+        (i === thread.frame ? "→ " : "  ") + "scope " + i + ":  " +
         Object.keys(frame).map(v => pname(v) + (usedSet.has(i + " " + v) ? " ✓" : "")).join("  ")
       ).join("\n");
   },
@@ -557,6 +560,8 @@ const ShExMapVerbs = {
     origins.forEach((frameOrigin, frame) => {
       Object.keys(frameOrigin || {}).forEach(variable => {
         const path = frameOrigin[variable];
+        if (!path)
+          return;                          // a scope the tree wrote without its object
         const key = path.join(" ");
         if (!byPath.has(key))
           byPath.set(key, {path, variable, consumed: [], frames: []});
@@ -573,8 +578,8 @@ const ShExMapVerbs = {
         return;
       const cls = consumed.length ? "shexjs-binding-consumed" : "shexjs-binding-cursor";
       const title = consumed.length
-            ? "consumed by this thread, in frame " + consumed.join(", ")
-            : "in frame " + thread.frame + ", where this thread's cursor is -- not consumed";
+            ? "read by this branch, in scope " + consumed.join(", ")
+            : "in scope " + thread.frame + ", where this branch is -- not read";
       this.bindingRangesAt(text, path).forEach(
         range => marks.push({from: range.from, to: range.to, cls, title}));
     });
@@ -1423,7 +1428,8 @@ ShExPlugins.register({
     async entry (entry: any) {
       await super.entry(entry);
       if (entry.status === "conformant") {
-        const resultBindings = ShExWebApp.Util.valToExtension(entry.appinfo, MAP_ID);
+        // the binding tree in the layout the materializer reads (doc/iteration-scopes.md)
+        const resultBindings = ShExWebApp.Map({rdfjs: RdfJs, Validator: ShExWebApp.Validator}).bindingTree(entry.appinfo);
         await this.caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
       } else {
         await this.caches.bindings.set("{}");

@@ -56,8 +56,9 @@ $(eval $(call package,shex-webapp,          shex-serve.js,               eval-si
                                                                          neighborhood-wikibase shape-map shex-editor-services \
                                                                          shex-loader shex-parser shex-term shex-util \
                                                                          shex-validator shex-visitor shex-writer))
-$(eval $(call package,extension-map,        shex-extension-map.js,       eval-simple-1err shex-editor-services shex-node \
-                                                                         shex-parser shex-term shex-util shex-visitor shex-webapp))
+$(eval $(call package,extension-map,        shex-extension-map.js,       eval-simple-1err neighborhood-rdfjs shex-editor-services \
+                                                                         shex-node shex-parser shex-term shex-util shex-validator \
+                                                                         shex-visitor shex-webapp))
 $(eval $(call package,extension-reduce,     shex-extension-reduce.js,))
 $(eval $(call package,extension-reduce-js,  shex-extension-reduce-js.js,))
 $(eval $(call package,extension-shacl-sparql,shex-extension-shacl-sparql.js,))
