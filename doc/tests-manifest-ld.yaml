@@ -1,0 +1,174 @@
+# A sketch, not a generated file: a hand-picked SUBSET of doc/tests-manifest.yaml
+# (one entry per attribute-shape worth showing), re-expressed as YAML-LD -- this
+# YAML parses into a JSON structure that is itself valid JSON-LD.
+#
+# The point of the exercise: doc/manifest-vocabulary.md surveyed the attributes
+# the examples manifests actually use across shex-webapp, every extension and
+# every neighborhood, and found them to be, in short, a dog's breakfast --
+# some are core and shared, some are one neighborhood's or one extension's own,
+# and (worst) some are shaped alike across two of those and mean different
+# things.  This file tries namespacing them properly: an unprefixed core
+# attribute (schema, schemaURL, data, dataURL, node, shape, status, comment,
+# schemaLabel, dataLabel, queryMap, plugins, overlay, neighborhood, dataBase,
+# slurp -- see doc/webapp-manifest-context.jsonld) stays exactly as it reads
+# today, for compatibility with tools/manifest-runner.js and everything built
+# on it; anything neighborhood- or extension-specific gets its own namespace
+# prefix, so e.g. map:outputSchemaURL can never be confused with a same-named
+# attribute another extension or neighborhood might one day want.
+#
+# `@context` stacks one contribution per source: the core, then one entry per
+# neighborhood or extension actually exercised below.  Each of those lives
+# beside the code it configures (packages/neighborhood-*/manifest-context.jsonld
+# in this repo; https://shexspec.github.io/extensions/*/manifest-context.jsonld
+# in shexSpec/extensions, alongside that extension's own spec) rather than all
+# in one place, so whoever maintains that neighborhood or extension owns its
+# vocabulary's definition too.
+#
+# neighborhood-rdfjs has no manifest-context.jsonld of its own: shex.js uses
+# it for two things at once -- the data LANGUAGE (the TriG family: Turtle,
+# TriG, N-Triples/N-Quads) and the specific PARSER (N3.js) -- and today that
+# pairing is simply what `schema`/`data`/`dataURL` mean by default, i.e. core.
+# If the language and the parser are ever decoupled (a different TriG parser,
+# say), that split will need its own attribute and its own namespace; for now
+# all of rdfjs's parameters are the core's.
+#
+# extension-reduce needs no namespace of its own: its one extra attribute,
+# overlay/overlayURL, is already core -- tools/manifest-runner.js's shared
+# loadEntry() applies @shexjs/semact-overlay whenever it sees one, regardless
+# of which extension's manifest uses it.  What THAT document contains is a
+# separately namespaced, separately documented vocabulary of its own
+# (packages/semact-overlay/README.md's sa: terms) -- a good example of the
+# "one level down" case doc/manifest-vocabulary.md called out.
+#
+# extension-eval, extension-test, extension-wasi and extension-wasi-test need
+# no namespace either: every entry in their real manifests uses only core
+# attributes (schema, data, queryMap, status, comment, plugins) plus the
+# semantic-action syntax inside the schema text itself -- same pattern as the
+# generics/graphs/triple-terms branches' features, which live in schema/data
+# syntax rather than manifest attributes.  extension-shacl-sparql is the same
+# today, but its manifest-context.jsonld reserves the shacl-sparql: prefix
+# regardless, so the day it needs an attribute of its own, it has somewhere
+# uncontested to put it.
+
+"@context":
+  - ./webapp-manifest-context.jsonld
+  - ../packages/neighborhood-sparql/manifest-context.jsonld
+  - ../packages/neighborhood-wikibase/manifest-context.jsonld
+  - https://shexspec.github.io/extensions/Map/manifest-context.jsonld
+  - https://shexspec.github.io/extensions/SHACL-SPARQL/manifest-context.jsonld
+
+entries:
+
+# --- core only (shex-webapp's own examples: packages/shex-webapp/examples/manifest.yaml)
+- schemaLabel: clinical observation
+  schemaURL: ../packages/shex-webapp/examples/ClinObs.shex
+  dataLabel: the least an Observation can be
+  data: |
+    PREFIX : <http://hl7.org/fhir/>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+    <Obs1> :subject <Patient2> .
+  queryMap: |
+    <Obs1>@START
+  status: conformant
+  comment: 'Everything core: no neighborhood, no extension, no plugin -- this is what an entry looks like when it needs nothing this sketch is about.'
+
+# --- neighborhood-sparql: sparql:endpoint, and slurp added to show it isn't sparql's alone
+- schemaLabel: Wikidata person
+  schemaURL: ../packages/shex-webapp/examples/wikidata-person.shex
+  dataLabel: Q42 from the query service
+  neighborhood: sparql
+  dataBase: http://www.wikidata.org/entity/
+  sparql:endpoint: https://query.wikidata.org/sparql
+  queryMap: |
+    <http://www.wikidata.org/entity/Q42>@START
+  status: conformant
+  slurp: true
+  comment: >-
+    Douglas Adams, validated by asking query.wikidata.org for each neighborhood
+    as the walk needs it.  `slurp` here is NOT in the current examples manifest
+    -- it is the webapp's cross-neighborhood "record what was fetched, as
+    replayable Turtle" checkbox (see doc/manifest-vocabulary.md), added here
+    to show it belongs in the CORE context, not sparql's, because...
+
+# --- neighborhood-wikibase: wikibase:base, wikibase:sitematrix, and the same slurp
+- schemaLabel: Wikidata person
+  schemaURL: ../packages/shex-webapp/examples/wikidata-person.shex
+  dataLabel: Q42 from a downloaded page
+  neighborhood: wikibase
+  dataBase: http://www.wikidata.org/entity/
+  dataURL: ../packages/shex-webapp/examples/wikidata-Q42.json
+  queryMap: |
+    <http://www.wikidata.org/entity/Q42>@START
+  status: conformant
+  slurp: true
+  wikibase:sitematrix: ../packages/shex-webapp/examples/wikidata-sitematrix.json
+  comment: >-
+    ...it means the same thing here, over an entirely different neighborhood:
+    a viewer of this manifest that doesn't understand `wikibase:*` at all can
+    still recognize `slurp` and `dataBase` as attributes it already knows from
+    the sparql entry above.  `wikibase:sitematrix` and `sparql:endpoint`, by
+    contrast, could not be swapped between these two entries -- which is
+    exactly why each is namespaced to the neighborhood it configures.
+
+# --- extension-map: map:outputSchemaURL, map:outputShapeMap, map:staticVars,
+#     map:expectedBindingsURL, map:expectedOutputDataURL
+- schemaLabel: BP
+  plugins:
+  - ../packages/extension-map/doc/ShExMapPlugin.js
+  schemaURL: ../packages/extension-map/examples/BPfhir-schema.shex
+  dataLabel: simple
+  dataURL: ../packages/extension-map/examples/BPfhir-instance.ttl
+  queryMap: "<tag:BPfhir123>@START"
+  map:outputSchemaURL: ../packages/extension-map/examples/BPdam-schema.shex
+  map:outputShapeMap: "<tag:b0>@<BPunitsDAM>"
+  map:staticVars:
+    http://abc.example/someConstant: '"123-456"'
+  status: conformant
+  map:expectedBindingsURL: ../packages/extension-map/examples/BP-simple-bindings.json
+  map:expectedOutputDataURL: ../packages/extension-map/examples/BP-simple-out.ttl
+
+# --- extension-map: map:threadedOnly, the extension's one boolean flag
+- schemaLabel: splits
+  plugins:
+  - ../packages/extension-map/doc/ShExMapPlugin.js
+  map:threadedOnly: true
+  schemaURL: ../packages/extension-map/examples/contact-schema.shex
+  dataLabel: Ann-phone-mbox
+  dataURL: ../packages/extension-map/examples/contact-Ann.ttl
+  queryMap: "<PersonX>@<Person>"
+  map:outputSchemaURL: ../packages/extension-map/examples/card-schema-phone-mbox.shex
+  map:outputShapeMap: "<tag:card1>@<Card>"
+  status: conformant
+  map:expectedBindingsURL: ../packages/extension-map/examples/splits-bindings.json
+  map:expectedOutputDataURL: ../packages/extension-map/examples/splits-out.ttl
+  comment: 'threadedOnly marks an entry ThreadedMaterializer-test alone exercises -- extension-map''s own concern, hence map:threadedOnly rather than a bare flag any extension might reuse unrelated.'
+
+# --- extension-reduce: overlay stays CORE (manifest-runner.js applies it generically)
+- schemaLabel: calc, actions in an overlay
+  schemaURL: ../packages/extension-reduce/examples/calc/calc.shex
+  dataLabel: (1 + 2) * 3
+  dataURL: ../packages/extension-reduce/examples/calc/expr1.ttl
+  queryMap: "<http://a.example/expr1#e1>@<http://a.example/calc#Expr>"
+  overlayURL: ../packages/extension-reduce/examples/calc/calc-actions.ttl
+  status: conformant
+  plugins:
+  - ../packages/extension-reduce/doc/ShExReducePlugin.js
+  comment: 'overlay/overlayURL is unprefixed on purpose: it is shared plumbing in manifest-runner.js''s loadEntry(), not a ShExReduce-specific attribute -- ShExReduce is just its only current user.'
+
+# --- extension-shacl-sparql: no attribute of its own exists yet; shown only to
+#     confirm the reserved prefix resolves and stays out of the way otherwise
+- schemaLabel: Events end after they start
+  schemaURL: ../packages/extension-shacl-sparql/examples/events.shex
+  dataLabel: a conference
+  data: |
+    PREFIX : <http://a.example/>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    :conf :name "ShEx Symposium" ;
+      :start "2026-10-05"^^xsd:date ; :end "2026-10-07"^^xsd:date .
+  queryMap: |
+    <http://a.example/conf>@<http://a.example/Event>
+  status: conformant
+  plugins:
+  - ../packages/extension-shacl-sparql/doc/ShExShaclSparqlPlugin.js
+  comment: 'Every attribute here is core; shacl-sparql: is reserved (see its manifest-context.jsonld) but unused -- nothing about this extension needs a manifest attribute of its own today.'

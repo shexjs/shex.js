@@ -1,0 +1,9 @@
+{
+  "_comment": "Manifest-entry attributes specific to @shexjs/neighborhood-wikibase, stacked onto ../../doc/webapp-manifest-context.jsonld's core. An entry that names this neighborhood (neighborhood: wikibase, a core attribute) writes this backend's own parameters under the wikibase: prefix -- wikibase:base, wikibase:sitematrix, wikibase:pages, wikibase:cacheDir -- rather than bare keys, so they can't collide with another backend's same-shaped attribute (compare neighborhood-sparql's own, differently-typed, sparql:endpoint). Tentative home, as with neighborhood-sparql: this reads Wikibase's own entity-page JSON, not anything ShEx-specific, so a wikidata- or Wikibase-tooling namespace may be a better long-term home for it.",
+
+  "@context": {
+    "wikibase": "http://shex.io/neighborhoods/wikibase#",
+    "wikibase:base": {"@id": "wikibase:base", "@type": "@id"},
+    "wikibase:sitematrix": {"@id": "wikibase:sitematrix", "@type": "@id"}
+  }
+}
