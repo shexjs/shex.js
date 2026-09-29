@@ -21,7 +21,7 @@ npm install @shexjs/extension-map
 - `shexmap-check -s input.shex -t output.shex` says, before any data, whether the two
   schemas map coherently.
 - `shexmap-debug` steps that materialization from a terminal.
-- In the web app, `shex-simple.html?plugin=…/doc/ShExMapPlugin.js` (or
+- In the web app, `shex.html?plugin=…/doc/ShExMapPlugin.js` (or
   `shexmap-simple.html`) adds the bindings, output-schema and materialization
   panes; the plugin is built from `src/plugin/ShExMapPlugin.ts` by
   `npm run build`, which also compiles the library into `lib/`.

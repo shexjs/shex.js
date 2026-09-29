@@ -30,9 +30,9 @@ if (!TEST_browser) {
   console.warn("Skipping editors-smoke-tests; to activate these tests, set environment variable TEST_browser=true");
 } else {
   Harness = require("./harness");
-  describe("shex-simple with ?editors=1 (the legacy spelling of the default)", function () {
+  describe("shex.html with ?editors=1 (the legacy spelling of the default)", function () {
     this.timeout(20000);
-    const page = "packages/shex-webapp/doc/shex-simple.html";
+    const page = "packages/shex-webapp/doc/shex.html";
 
     let dom, $, shared;
     before(async function () {
@@ -2581,7 +2581,7 @@ if (!TEST_browser) {
    * ?editors=textarea is the ask.  Both ends, from a cold boot. */
   describe("what a page boots with", function () {
     this.timeout(20000);
-    const page = "packages/shex-webapp/doc/shex-simple.html";
+    const page = "packages/shex-webapp/doc/shex.html";
     let dom;
 
     afterEach(function () {
@@ -2647,7 +2647,7 @@ if (!TEST_browser) {
    * (D5). */
   describe("the query map as an editor, and what the panes say", function () {
     this.timeout(30000);
-    const page = "packages/shex-webapp/doc/shex-simple.html";
+    const page = "packages/shex-webapp/doc/shex.html";
     let dom, $, shared, errors, es;
     const set = (selector, value) => {
       const elt = $(selector).first();

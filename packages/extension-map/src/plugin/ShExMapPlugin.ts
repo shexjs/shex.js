@@ -11,7 +11,7 @@
  * The verbs are mixed into the app rather than living on a subclass of it,
  * so `this` is the app and they call each other as they always did.  Which
  * is why shexmap-simple.html has no app class: it is a redirect to
- * shex-simple.html with this file named as a plugin.
+ * shex.html with this file named as a plugin.
  *
  * What is not here is the worker's half (rows 15 and 16,
  * ShExMapWorkerThread.js, beside the built file in doc/) and the module
@@ -1344,7 +1344,7 @@ ShExPlugins.register({
 
   // The step controls (\u25b6\u2935\u23ed\u2934\u23f9), status line and thread list are the
   // app's own *shared* debug strip (doc/debugger-design.md \u00a75, static in
-  // shex-simple.html -- every ShExMap page redirects there).  The
+  // shex.html -- every ShExMap page redirects there).  The
   // materializer drives it through startDebugSession/debugStep below, the
   // same strip the validation debugger uses: one panel, one engine at a time
   // (a validation finishes before its materialization starts).  So this

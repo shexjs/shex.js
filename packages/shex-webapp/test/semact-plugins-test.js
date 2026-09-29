@@ -19,7 +19,7 @@ const [[GitRootServer]] = require("../../../tools/testServer")
         ]
       );
 
-const PAGE = "packages/shex-webapp/doc/shex-simple.html";
+const PAGE = "packages/shex-webapp/doc/shex.html";
 
 if (!TEST_browser) {
   console.warn("Skipping semact-plugins-tests; to activate these tests, set environment variable TEST_browser=true");
@@ -45,10 +45,10 @@ if (!TEST_browser) {
     passes: "Events end after they start", fails: "Events end after they start",
     inAppinfo: []},
   ].forEach(({ext, label, plugin, passes, fails, inAppinfo}) =>
-   [{app: "shex-simple", search: "?editors=1", options: undefined},
+   [{app: "shex.html", search: "?editors=1", options: undefined},
     // the worker flavour: the handler registers over there, and the worker
     // thread awaits every plugin's `ready` before serving any request
-    {app: "shex-worker", search: "?editors=1&worker=1", options: {worker: true}},
+    {app: "shex.html?worker=1", search: "?editors=1&worker=1", options: {worker: true}},
    ].forEach(({app, search, options}) =>
     describe(`${app} with the ${label} extension's manifest`, function () {
       this.timeout(20000);

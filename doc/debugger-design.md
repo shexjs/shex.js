@@ -27,7 +27,7 @@ node**.
 > debugging — has since shipped; only the E12 polish item (a steppable
 > eval-threaded-nerr) stays deferred in [plan.md](plan.md) §E.
 > Browser validation debugging shipped as **capture + replay** (see §1):
-> the validate-side 🐞 in shex-simple/shexmap-simple reruns the
+> the validate-side 🐞 in shex.html/shexmap-simple reruns the
 > validation with `capturingRegexModule` recording every
 > `regexEngine.match()` invocation, then replays any recorded
 > node@shape match through eval-simple-1err's `runMatch()` generator /
@@ -171,7 +171,7 @@ the recorded matches are on offer.
   CI); the browser `debugValidate` handler and the panel over it are E10.
 - The **main-thread app** can reuse the identical UI against the worker
   validator (`shex-worker.html` already validates there); for
-  `shex-simple.html`'s in-thread validator, debugging redirects validation
+  `shex.html`'s in-thread validator, debugging redirects validation
   through a transient worker (schemas/data already marshal — that path
   exists).
 
@@ -251,7 +251,7 @@ starts from the same base.
      for the mechanism and a real isolated browser for the glue;
    - ✅ one unified panel over both engines: the validation debugger and the
      ShExMap materializer share a single control strip, status line and
-     thread list (core, in `shex-simple.html`), dispatched to the app's
+     thread list (core, in `shex.html`), dispatched to the app's
      `activeDebugSession` -- they never step at once (a validation finishes
      before its materialization starts), so the plugin keeps only its
      `#debugMaterialize` trigger and drives the shared strip.

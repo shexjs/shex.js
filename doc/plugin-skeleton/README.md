@@ -18,7 +18,7 @@ then `npm run serve` in a checkout of shex.js, and add
 `?plugin=http://localhost:8080/hello-plugin.js` to the validator URL it
 prints.  The app asks before it runs a plugin from another site; say yes.
 (The published app at
-<https://shex.io/webapps/packages/shex-webapp/doc/shex-simple.html> is
+<https://shex.io/webapps/packages/shex-webapp/doc/shex.html> is
 https, and a browser will not let it load a plugin from an http host.)
 
 Then validate

@@ -114,7 +114,7 @@ queries go to the endpoint.
 [`examples/manifest.yaml`](examples/manifest.yaml) loads it:
 
 ```
-packages/shex-webapp/doc/shex-simple.html?manifestURL=../../extension-shacl-sparql/examples/manifest.yaml
+packages/shex-webapp/doc/shex.html?manifestURL=../../extension-shacl-sparql/examples/manifest.yaml
 ```
 
 The plugin's bundle (`doc/webpacks/shexshaclsparql-webapp.js`, built with
