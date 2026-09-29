@@ -2,7 +2,7 @@
  * second extension, and the one that says whether the contract
  * is a contract or just ShExMap's shape written out.
  *
- * shex-simple.html has never heard of folding actions over a parse.  Told
+ * shex.html has never heard of folding actions over a parse.  Told
  * where ShExReduce is, it grows the panes, the verb and the handler -- and
  * one thing ShExMap never wanted: a say in the schema, for actions that
  * arrive in a document of their own.
@@ -24,8 +24,8 @@ const [[GitRootServer]] = require("../../../tools/testServer")
         ]
       );
 
-const PAGE = "packages/shex-webapp/doc/shex-simple.html";
-const WORKER_PAGE = "packages/shex-webapp/doc/shex-simple.html";   // with ?worker=1
+const PAGE = "packages/shex-webapp/doc/shex.html";
+const WORKER_PAGE = "packages/shex-webapp/doc/shex.html";   // with ?worker=1
 const PLUGIN = "../../extension-reduce/doc/ShExReducePlugin.js";
 const MANIFEST = "../../extension-reduce/examples/manifest.yaml";
 const REDUCE_ID = "http://shex.io/extensions/Reduce/";
@@ -35,7 +35,7 @@ if (!TEST_browser) {
 } else {
   Harness = require("../../shex-webapp/test/harness");
 
-  describe("shex-simple, told where ShExReduce is", function () {
+  describe("shex.html, told where ShExReduce is", function () {
     this.timeout(20000);
     let dom, $, shared;
 

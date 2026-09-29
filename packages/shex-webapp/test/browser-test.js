@@ -1,4 +1,4 @@
-// Test shex-simple browser interface.
+// Test the shex.html browser interface.
 
 "use strict";
 const TEST_browser = require("../../shex-cli/test/testGate.js")("TEST_browser");
@@ -8,8 +8,8 @@ const SHEX_IO_TESTS = "https://shex.io/shexTest/main/";
 
 const STARTUP_TIMEOUT = 10000
 const SCRIPT_CALLBACK_TIMEOUT = 40000
-const SHEX_SIMPLE = 'packages/shex-webapp/doc/shex-simple.html'
-const SHEX_WORKER = 'packages/shex-webapp/doc/shex-simple.html?worker=1'
+const SHEX_SIMPLE = 'packages/shex-webapp/doc/shex.html'
+const SHEX_WORKER = 'packages/shex-webapp/doc/shex.html?worker=1'
 // ShExMap is an extension of those pages now, and shexmap-simple.html is a
 // redirect that opens one with these -- so this is what it opens (§5 phase 2)
 const SHEXMAP_PARMS = "?plugin=" + encodeURIComponent("../../extension-map/doc/ShExMapPlugin.js")
@@ -29,7 +29,7 @@ let expect = require("chai").expect
 // other suites still run wherever the packages themselves do
 let jsdom, JSDOM, StaticResourceConfig
 const ShExParser = require('@shexjs/parser')
-let SharedForTests = null // gets set by shex-simple.js
+let SharedForTests = null // gets set by the app page's scripts
 
 const {testPort} = require('../../../tools/testPorts')
 const [[GitRootServer]] = require('../../../tools/testServer')
@@ -104,7 +104,7 @@ if (!TEST_browser) {
         let dom, $, loaded
         before(async () => {
           ({ dom, $, loaded } = await loadPage(page, parms))
-          expect(loaded.manifest).to.have.property('fromUrl') // shex-simple.js defaults to some URL
+          expect(loaded.manifest).to.have.property('fromUrl') // the app defaults to some URL
         })
 
         describe('validation output', function () {
@@ -643,8 +643,8 @@ if (!TEST_browser) {
 
       const md = patchedBody.files['-EJP-RD-LOVD ShEx Validation Manifest.md'].content
       expect(md).to.include('(https://gist.github.com/tester/abc123#file-manifest-yaml)')
-      expect(md).to.include('* ShEx.JS [shex-simple interface](https://shex.js.org'
-                            + '/packages/shex-webapp/doc/shex-simple.html'
+      expect(md).to.include('* ShEx.JS [validator](https://shex.js.org'
+                            + '/packages/shex-webapp/doc/shex.html'
                             + `?manifestURL=${GistBase}.manifest.yaml)`)
       expect(md).not.to.include('rawlink')
 

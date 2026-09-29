@@ -5,7 +5,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1213693.svg)](https://doi.org/10.5281/zenodo.1213693)
 
 # shex.js
-shex.js javascript implementation of Shape Expressions ([try online](https://shex.io/webapps/packages/shex-webapp/doc/shex-simple.html))
+shex.js javascript implementation of Shape Expressions ([try online](https://shex.io/webapps/packages/shex-webapp/doc/shex.html))
 
 
 ## install
@@ -229,7 +229,7 @@ See [`doc/threaded-materializer.md`](packages/extension-map/doc/threaded-materia
 
 ## ShEx IMPORT Demo (with relative IRIs):
 
-1. open a browser window (we'll call **validator**) with https://shex.io/webapps/packages/shex-webapp/doc/shex-simple.html
+1. open a browser window (we'll call **validator**) with https://shex.io/webapps/packages/shex-webapp/doc/shex.html
 2. open another browser window (we'll call **viewer**) with https://shex.io/shexTest/main/viewer?validation
 3. wait 'till *viewer* loads and look for "3circRefS1-IS2-IS3-IS3" (near the bottom)
 4. drag the "#3circRefS1-IS2-IS3-IS3" cell (or the ✓ to the left of it) to the right of the QueryMap area of *validator*
@@ -255,7 +255,7 @@ This repo uses [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces)
 - [`@shexjs/loader`](packages/shex-loader#readme) -- an API for loading and using ShEx schemas
 - [`@shexjs/node`](packages/shex-node#readme) -- additional API functionality for a node environment
 - [`@shexjs/cli`](packages/shex-cli#readme) -- a set of command line tools for transforming and validating with schemas
-- [`@shexjs/webapp`](packages/shex-webapp#readme) -- the shex-simple WEBApp
+- [`@shexjs/webapp`](packages/shex-webapp#readme) -- the shex.html web app
 - [`@shexjs/shape-path-query`](packages/shex-shape-path-query#readme) -- traverse ShEx schemas with a path language
 - [`@shexjs/extension-test`](packages/extension-test#readme) -- a small language for testing semantic actions in ShEx implementations ([more](http://shex.io/extensions/Test/))
 - [`@shexjs/extension-wasi-test`](packages/extension-wasi-test#readme) -- the Test extension reimplemented in hand-written WebAssembly, printing via WASI fd_write
@@ -297,7 +297,7 @@ Apache pointed at the checkout works; so does the zero-dependency server that
 ships in `@shexjs/webapp`:
 
 ``` shell
-npm run serve           # prints the shex-simple / shexmap-simple URLs
+npm run serve           # prints the shex.html / shexmap-simple URLs
                         # (npx shex-serve [--port N] [--root DIR] [--coi] outside the repo)
 ```
 

@@ -6,7 +6,7 @@
 
 # shex
 
-`shex` is the meta-package for the [shex.js](https://github.com/shexjs/shex.js) javascript implementation of [Shape Expressions](http://shex.io/) ([try online](https://shex.io/webapps/packages/shex-webapp/doc/shex-simple.html)).
+`shex` is the meta-package for the [shex.js](https://github.com/shexjs/shex.js) javascript implementation of [Shape Expressions](http://shex.io/) ([try online](https://shex.io/webapps/packages/shex-webapp/doc/shex.html)).
 Installing it gives you the whole toolkit in one dependency: the parser/validator library, the command-line tools, the [ShExMap](http://shex.io/extensions/Map/) data-mapping extension and the web app.
 If you only need one piece, each is published separately as an [`@shexjs/` package](#the-shexjs-packages).
 
@@ -89,7 +89,7 @@ validator.validateShapeMapAsync([{node: "http://a.example/conf", shape: "http://
 ```
 
 On the command line, name it with `--extension` once it's installed (`npx shex-validate … --extension @shexjs/extension-shacl-sparql`).
-In the web app it's a plugin: its [examples](https://shex.io/webapps/packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-shacl-sparql%2Fexamples%2Fmanifest.yaml) load it.
+In the web app it's a plugin: its [examples](https://shex.io/webapps/packages/shex-webapp/doc/shex.html?manifestURL=..%2F..%2Fextension-shacl-sparql%2Fexamples%2Fmanifest.yaml) load it.
 
 ## command line tools
 
@@ -162,7 +162,7 @@ The RDF root IRI (`-r`, default `tag:eric@w3.org/2016/root`) names the node from
 - [`@shexjs/loader`](https://github.com/shexjs/shex.js/tree/main/packages/shex-loader#readme) -- an API for loading and using ShEx schemas
 - [`@shexjs/node`](https://github.com/shexjs/shex.js/tree/main/packages/shex-node#readme) -- additional API functionality for a node environment
 - [`@shexjs/cli`](https://github.com/shexjs/shex.js/tree/main/packages/shex-cli#readme) -- command line tools for transforming and validating with schemas
-- [`@shexjs/webapp`](https://github.com/shexjs/shex.js/tree/main/packages/shex-webapp#readme) -- the shex-simple web app
+- [`@shexjs/webapp`](https://github.com/shexjs/shex.js/tree/main/packages/shex-webapp#readme) -- the shex.html web app
 - [`@shexjs/term`](https://github.com/shexjs/shex.js/tree/main/packages/shex-term#readme) -- RDF terms, as ShExJ and RDF/JS write them
 - [`@shexjs/util`](https://github.com/shexjs/shex.js/tree/main/packages/shex-util#readme) -- schema and result transformations, the human-readable error writer
 - [`@shexjs/visitor`](https://github.com/shexjs/shex.js/tree/main/packages/shex-visitor#readme) -- walk and index a schema

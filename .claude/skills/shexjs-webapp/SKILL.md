@@ -1,11 +1,11 @@
 ---
 name: shexjs-webapp
-description: Work on the shex.js web apps and their browser bundles — shex-simple.html and the ShExMap/reduce/WASI plugins, the page scripts under packages/*/doc/, the webpack bundles in doc/webpacks/, TEST_browser, serving the pages locally, and the gh-pages site publish. Use when editing webapp TypeScript (src/app, src/plugin) or hand-written page/worker scripts, when a library change has to show up in the browser, when TEST_browser fails with ReferenceErrors, or when touching webpack configs or the webapps-site workflow.
+description: Work on the shex.js web apps and their browser bundles — shex.html and the ShExMap/reduce/WASI plugins, the page scripts under packages/*/doc/, the webpack bundles in doc/webpacks/, TEST_browser, serving the pages locally, and the gh-pages site publish. Use when editing webapp TypeScript (src/app, src/plugin) or hand-written page/worker scripts, when a library change has to show up in the browser, when TEST_browser fails with ReferenceErrors, or when touching webpack configs or the webapps-site workflow.
 ---
 
 # shex.js web apps and bundles
 
-The web app is **one page**, `packages/shex-webapp/doc/shex-simple.html`.
+The web app is **one page**, `packages/shex-webapp/doc/shex.html`.
 ShExMap, reduce and WASI are **plugins** it loads by URL (`?plugin=<url>`,
 see the repo-root `doc/plugins.md`). The page is a stack of classic `<script>`s, in order:
 
@@ -22,7 +22,7 @@ the `shexjs-build-and-test` skill.
 
 | Package | Page scripts (`doc/`) | Bundle entry → output |
 |---|---|---|
-| `shex-webapp` | `shex-simple.html`, `shex-worker.html` (redirect), `ShEx*.js`, `ShExWorkerThread.js`, `shex-app.css` | `shex-webapp.js` → `doc/webpacks/shex-webapp{,.min}.js`; `doc/n3-components.js` → `doc/webpacks/n3js{,.min}.js` |
+| `shex-webapp` | `shex.html`, `shex-worker.html` (redirect), `ShEx*.js`, `ShExWorkerThread.js`, `shex-app.css` | `shex-webapp.js` → `doc/webpacks/shex-webapp{,.min}.js`; `doc/n3-components.js` → `doc/webpacks/n3js{,.min}.js` |
 | `extension-map` | `shexmap-simple.html`, `shexmap-worker.html` (both redirects), `redirect-to-plugin.js`, `ShExMapPlugin.js`, `ShExMapWorkerThread.js` | `shexmap-webapp.js` → `doc/webpacks/shexmap-webapp{,.min}.js` |
 | `extension-reduce` | `ShExReducePlugin.js`, `ShExReduceWorkerThread.js` | `shexreduce-webapp.js` → `doc/webpacks/shexreduce-webapp{,.min}.js` |
 | `extension-wasi` | `ShExWasiPlugin.js` | `shexwasi-webapp.js` → `doc/webpacks/shexwasi-webapp{,.min}.js` |
@@ -77,7 +77,7 @@ an editor's DOM out from under it shows up later, on its next update, as
 `CodeMirror plugin crashed: … reading 'nextSibling'`.
 
 A new `src/app/Foo.ts` also needs a `<script src="./Foo.js">` in
-`shex-simple.html`, in dependency order. If the app boots it, add it to
+`shex.html`, in dependency order. If the app boots it, add it to
 `APP_FILES` in `packages/shex-webapp/test/pages-test.js` too.
 
 ## Bundles
@@ -161,16 +161,18 @@ from disk.
 
 ## Redirect pages
 
-These are published URLs, kept as redirects to `shex-simple.html`:
+These are published URLs, kept as redirects to `shex.html`:
 - `extension-map/doc/shexmap-simple.html` and `shexmap-worker.html` call
   `redirectToPlugin(...)` (`redirect-to-plugin.js`). It adds
   `plugin=<absolute ShExMapPlugin.js>` and a default `manifestURL`, makes
   `plugin`/`*URL` params absolute, and sets `worker=1` for the worker page.
-- `shex-webapp/doc/shex-worker.html` → `shex-simple.html?worker=1`.
-- The repo-root `doc/shex-simple.html` is a legacy "has moved" page.
+- `shex-webapp/doc/shex-simple.html` → `shex.html` (same query string and
+  hash), and `shex-worker.html` → `shex.html?worker=1`. The page was
+  `shex-simple.html` until 2026-09; both old names are published URLs.
+- The repo-root `doc/shex.html` is a legacy "has moved" page.
 
 `pages-test.js` checks that the redirects still work. Don't put app UI into
-the map pages. It belongs in `shex-simple.html` or in the plugin.
+the map pages. It belongs in `shex.html` or in the plugin.
 
 ## Trying it locally
 

@@ -161,7 +161,7 @@ function build () {
 # they name moved to where this file can find them.
 #
 # Open it in the validator:
-#   packages/shex-webapp/doc/shex-simple.html?manifestURL=../../../${OUT}
+#   packages/shex-webapp/doc/shex.html?manifestURL=../../../${OUT}
 # ...where picking an entry loads whatever plugin that entry needs, so the
 # suite ends with the plugins loaded that its last entries asked for.
 `];

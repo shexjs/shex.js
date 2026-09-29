@@ -229,7 +229,7 @@ mixin(ShExBaseApp, {
         return null;
     },
     /** Menu → "Create Gist": publish the inputs this app registered with a
-     * manifest descriptor in its QueryParams (shex-simple: schema, data,
+     * manifest descriptor in its QueryParams (shex.html: schema, data,
      * queryMap; shexmap adds staticVars, outputSchema, outputShapeMap) as a
      * github gist (modeled on
      * <https://gist.github.com/ericprud/4c2b0a7eac60e3b8eade6fd35215d715>)
@@ -256,9 +256,9 @@ mixin(ShExBaseApp, {
             // blob-sha raw_urls don't serve sibling files)
             const gistBase = `https://gist.githubusercontent.com/${created.owner.login}/${created.id}/raw/`;
             const simplePath = (location.pathname.match(/\/packages\/.*$/)
-                || ["/packages/shex-webapp/doc/shex-simple.html"])[0];
+                || ["/packages/shex-webapp/doc/shex.html"])[0];
             const md = `the [manifest](${created.html_url}#file-manifest-yaml) can be used in:\n`
-                + `* ShEx.JS [shex-simple interface](https://shex.js.org${simplePath}`
+                + `* ShEx.JS [validator](https://shex.js.org${simplePath}`
                 + `?manifestURL=${gistBase}.manifest.yaml)\n`;
             const mdName = `-${title ? title.replace(/[\/\\]/g, "-") + " " : ""}ShEx Validation Manifest.md`;
             const patched = await ghApi(created.url, "PATCH", { files: { [mdName]: { content: md } } });

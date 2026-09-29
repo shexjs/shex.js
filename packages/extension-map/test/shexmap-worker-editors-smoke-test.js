@@ -31,7 +31,7 @@ if (!TEST_browser) {
     this.timeout(20000);
     // ShExMap is a plugin of this page now; shexmap-worker.html is a
     // redirect that opens it with exactly these parameters (§5 phase 2)
-    const page = "packages/shex-webapp/doc/shex-simple.html";
+    const page = "packages/shex-webapp/doc/shex.html";
     const asShExMap = "&plugin=" + encodeURIComponent("../../extension-map/doc/ShExMapPlugin.js")
           + "&manifestURL=" + encodeURIComponent("../../extension-map/examples/manifest.json");
 

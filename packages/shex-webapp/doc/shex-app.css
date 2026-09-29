@@ -1,4 +1,4 @@
-/* Styles for the ShEx web apps -- shex-simple and shex-worker.  The map
+/* Styles for the ShEx web app -- shex.html, and the pages that redirect to it.  The map
  * pages in @shexjs/extension-map are redirects to these now, and ShExMap's
  * own rules (the bindings pane) ride in its plugin descriptor's css.  Four
  * copies is how the shape map lost its left padding on three pages: the

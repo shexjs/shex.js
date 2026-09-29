@@ -1,10 +1,11 @@
-/** The apps were four pages -- shex-simple, shex-worker and the two map
- * pages -- and they used to carry four copies of the same stylesheet.  That
+/** The apps were four pages -- shex-simple (shex.html now), shex-worker and
+ * the two map pages -- and they used to carry four copies of the same stylesheet.  That
  * is how the shape map lost its left padding on three of them: the fix was
  * made once, in the page whose author noticed.
  *
- * They are two now: ShExMap is a plugin, and the map pages are the
- * redirects that open a page with it (doc/plugins.md).
+ * They are one now: ShExMap is a plugin, the map pages are the redirects
+ * that open the page with it (doc/plugins.md), and shex-simple.html and
+ * shex-worker.html are the redirects that keep the page's old URLs.
  * This checks that the two share the stylesheet, that a page's own <style>
  * holds only what is actually its own, and that the redirects still answer
  * for the URLs they published.
@@ -21,13 +22,13 @@ const expect = require("chai").expect;
 
 const shared = "shex-app.css";
 const pages = [
-  {file: "../doc/shex-simple.html", href: shared},
+  {file: "../doc/shex.html", href: shared},
 ];
 // the map pages, redirecting to the app page with ShExMap; the worker one
 // says worker=1, as the app's own old worker page does
 const redirects = [
-  {file: "../../extension-map/doc/shexmap-simple.html", to: "shex-simple.html"},
-  {file: "../../extension-map/doc/shexmap-worker.html", to: "shex-simple.html", worker: true},
+  {file: "../../extension-map/doc/shexmap-simple.html", to: "shex.html"},
+  {file: "../../extension-map/doc/shexmap-worker.html", to: "shex.html", worker: true},
 ];
 const read = f => Fs.readFileSync(Path.join(__dirname, f), "utf8");
 
@@ -107,19 +108,33 @@ describe("the app pages", () => {
 
   /* shex-worker.html is a published URL too; the worker app is the one
    * page with ?worker=1, and whatever the old page was asked for carries. */
-  it("should redirect the old worker page to the app page with worker=1", () => {
-    const from = "http://x.example/packages/shex-webapp/doc/shex-worker.html";
-    const search = "?editors=1&manifestURL=..%2Fexamples%2Fmanifest.yaml";
+  /** where one of the app's own old pages sends a reader who arrived with `search` */
+  function oldPage (page, search, hash = "") {
+    const from = "http://x.example/packages/shex-webapp/doc/" + page;
     const sandbox = {URL, URLSearchParams,
-                     location: {href: from + search, search, replace (to) { sandbox.went = to; }}};
+                     location: {href: from + search + hash, search, hash, replace (to) { sandbox.went = to; }}};
     vm.createContext(sandbox);
-    const script = read("../doc/shex-worker.html").match(/<script>([\s\S]*?)<\/script>/)[1];
+    const script = read("../doc/" + page).match(/<script>([\s\S]*?)<\/script>/)[1];
     vm.runInContext(script, sandbox);
-    const to = new URL(sandbox.went);
-    expect(to.pathname).to.equal("/packages/shex-webapp/doc/shex-simple.html");
+    return new URL(sandbox.went);
+  }
+
+  it("should redirect the old worker page to the app page with worker=1", () => {
+    const to = oldPage("shex-worker.html", "?editors=1&manifestURL=..%2Fexamples%2Fmanifest.yaml");
+    expect(to.pathname).to.equal("/packages/shex-webapp/doc/shex.html");
     expect(to.searchParams.get("worker")).to.equal("1");
     expect(to.searchParams.get("editors"), "carried").to.equal("1");
     expect(to.searchParams.get("manifestURL"), "as written: same directory").to.equal("../examples/manifest.yaml");
+  });
+
+  /* shex-simple.html was the page's name for years, so every link to it
+   * still works: the same directory, the same parameters, the same hash. */
+  it("should redirect the old page name to the app page, as asked", () => {
+    const to = oldPage("shex-simple.html", "?worker=1&manifestURL=..%2Fexamples%2Fmanifest.yaml", "#results");
+    expect(to.pathname).to.equal("/packages/shex-webapp/doc/shex.html");
+    expect(to.search).to.equal("?worker=1&manifestURL=..%2Fexamples%2Fmanifest.yaml");
+    expect(to.hash).to.equal("#results");
+    expect(oldPage("shex-simple.html", "").href).to.equal("http://x.example/packages/shex-webapp/doc/shex.html");
   });
 
   /** where shexmap-simple.html sends a reader who arrived with `search` */
@@ -131,14 +146,14 @@ describe("the app pages", () => {
     };
     vm.createContext(sandbox);
     vm.runInContext(read("../../extension-map/doc/redirect-to-plugin.js") +
-                    "\nredirectToPlugin('../../shex-webapp/doc/shex-simple.html'," +
+                    "\nredirectToPlugin('../../shex-webapp/doc/shex.html'," +
                     " './ShExMapPlugin.js', '../examples/manifest.json');", sandbox);
     return new URL(sandbox.went);
   }
 
   it("should open the app page with ShExMap and the manifest it always had", () => {
     const to = redirected("");
-    expect(to.pathname).to.equal("/packages/shex-webapp/doc/shex-simple.html");
+    expect(to.pathname).to.equal("/packages/shex-webapp/doc/shex.html");
     expect(to.searchParams.get("plugin")).to.equal(
       "http://x.example/packages/extension-map/doc/ShExMapPlugin.js");
     expect(to.searchParams.get("manifestURL")).to.equal(

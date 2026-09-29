@@ -29,13 +29,13 @@ describe("shex-serve", function () {
                                       accept ? {headers: {accept}} : {});
 
   it("should serve files with content types", async function () {
-    const resp = await get("/packages/shex-webapp/doc/shex-simple.html");
+    const resp = await get("/packages/shex-webapp/doc/shex.html");
     expect(resp.status).to.equal(200);
     expect(resp.headers.get("content-type")).to.include("text/html");
   });
 
-  it("should serve shex-simple without the .html", async function () {
-    const resp = await get("/packages/shex-webapp/doc/shex-simple",
+  it("should serve shex without the .html", async function () {
+    const resp = await get("/packages/shex-webapp/doc/shex",
                            "text/html,application/xhtml+xml,*/*;q=0.8"); // browser-ish
     expect(resp.status).to.equal(200);
     expect(resp.headers.get("content-type")).to.include("text/html");
@@ -79,7 +79,7 @@ describe("shex-serve", function () {
   });
 
   it("should not send isolation headers by default", async function () {
-    const resp = await get("/packages/shex-webapp/doc/shex-simple.html");
+    const resp = await get("/packages/shex-webapp/doc/shex.html");
     expect(resp.headers.get("cross-origin-opener-policy")).to.be.null;
     expect(resp.headers.get("cross-origin-embedder-policy")).to.be.null;
   });
@@ -103,7 +103,7 @@ describe("shex-serve --coi", function () {
   const get = (path) => fetch(`http://localhost:${port}${path}`);
 
   it("should send COOP/COEP on files and on errors", async function () {
-    for (const path of ["/packages/shex-webapp/doc/shex-simple.html", "/no-such"]) {
+    for (const path of ["/packages/shex-webapp/doc/shex.html", "/no-such"]) {
       const resp = await get(path);
       expect(resp.headers.get("cross-origin-opener-policy"), path).to.equal("same-origin");
       expect(resp.headers.get("cross-origin-embedder-policy"), path).to.equal("require-corp");

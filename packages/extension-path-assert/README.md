@@ -124,7 +124,7 @@ It is bundled in [`shex`](../shex#readme) as `ShEx.Extensions.PathAssert`.
 [`examples/manifest.yaml`](examples/manifest.yaml) loads it:
 
 ```
-packages/shex-webapp/doc/shex-simple.html?manifestURL=../../extension-path-assert/examples/manifest.yaml
+packages/shex-webapp/doc/shex.html?manifestURL=../../extension-path-assert/examples/manifest.yaml
 ```
 
 The bundle (`doc/webpacks/shexpathassert-webapp.min.js`, built with
