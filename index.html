@@ -20,6 +20,15 @@
       a { color: #1a4fb0; }
       code { font-size: .92em; }
       pre { margin: 0; font-size: .8em; line-height: 1.35; white-space: pre; overflow-x: auto; }
+      /* ShExC, highlighted by the script at the bottom */
+      pre.shexc .c { color: #6a737d; font-style: italic; }
+      pre.shexc .s { color: #0a7f3b; }
+      pre.shexc .i { color: #1a4fb0; }
+      pre.shexc .p { color: #23537a; }
+      pre.shexc .k { color: #7a3e9d; font-weight: 600; }
+      pre.shexc .v { color: #b35c00; }
+      pre.shexc .a { color: #b3261e; font-weight: 600; }
+      pre.shexc .ab { background: rgba(179, 38, 30, .06); border-radius: .2em; }
       .variant { font-size: .85em; color: #666; }
       .pending { font-size: .8em; color: #a66; }
       /* cards */
@@ -189,7 +198,7 @@
           <tbody>
             <tr><td class="name"><a href="packages/extension-test/README.md">Test</a>
                   <span>minimal test suite coverage of side-effects (<code>print(…)</code>) and validation control (<code>fail(…)</code>)</span></td>
-                <td class="example"><pre>&lt;S&gt; {
+                <td class="example"><pre class="shexc">&lt;S&gt; {
   :p1 . %Test:{ print(o) %} ;
   :p2 . %Test:{ fail("unwelcome p2: ", o) %} ?
 }</pre></td>
@@ -201,7 +210,7 @@
                 </ul></td></tr>
             <tr><td class="name"><a href="packages/extension-eval/README.md">Eval</a>
                   <span>runs the action's code as JavaScript where <code>this</code> is bound to the matched triples</span></td>
-                <td class="example"><pre>&lt;S&gt; {
+                <td class="example"><pre class="shexc">&lt;S&gt; {
   :p . %Eval:{
     extensionStorage.object = this.triples[0].object.value;
     return true;
@@ -215,7 +224,7 @@
                 </ul></td></tr>
             <tr><td class="name"><a href="packages/extension-wasi/README.md">WASI</a>
                   <span>WebAssembly Text, compiled in the page and run as a WASI command per invocation</span></td>
-                <td class="example"><pre>&lt;S&gt; {
+                <td class="example"><pre class="shexc">&lt;S&gt; {
   :p . %Wasi:{
     (func $main (call $put_o) (call $nl))
   %}
@@ -228,7 +237,7 @@
                 </ul></td></tr>
             <tr><td class="name"><a href="packages/extension-wasi-test/README.md">Test in wasm</a>
                   <span>the Test extension again, as hand-written WebAssembly: the same IRI and the same schemas, so register one or the other</span></td>
-                <td class="example"><pre>&lt;S&gt; {
+                <td class="example"><pre class="shexc">&lt;S&gt; {
   :p . %Test:{
     print(o)   # handled by wasm
   %}
@@ -241,7 +250,7 @@
                 </ul></td></tr>
             <tr><td class="name"><a href="packages/extension-map/README.md">ShExMap</a>
                   <span>binds values as it validates for later materialization conformant to another schema</span></td>
-                <td class="example"><pre>&lt;Patient&gt; {
+                <td class="example"><pre class="shexc">&lt;Patient&gt; {
   fhir:givenName  xsd:string %Map:{ bp:given %} ;
   fhir:familyName xsd:string %Map:{ bp:family %}
 }</pre></td>
@@ -253,7 +262,7 @@
                 </ul></td></tr>
             <tr><td class="name"><a href="packages/extension-reduce/README.md">ShExReduce</a>
                   <span>yacc-like conventions to validate data and construct ASTs. JavaScript evaluation by <span class="tag src">src</span><a href="https://github.com/shexjs/shex.js/tree/main/packages/extension-reduce-js"><code>extension-reduce-js</code></a></span></td>
-                <td class="example"><pre>&lt;#BinOp&gt; {
+                <td class="example"><pre class="shexc">&lt;#BinOp&gt; {
   a      [:Add :Sub :Mul :Div] %Reduce:{ $$ = {op: local($1)} %} ;
   :left  @&lt;#Expr&gt; %Reduce:{ $$ = {left: $1} %} ;
   :right @&lt;#Expr&gt; %Reduce:{ $$ = {right: $1} %}
@@ -266,7 +275,7 @@
                 </ul></td></tr>
             <tr><td class="name"><a href="packages/extension-shacl-sparql/README.md">SHACL-SPARQL</a>
                   <span><code>sh:sparql</code> queries as actions: a <code>SELECT</code> fails on each row, an <code>ASK</code> passes when true, <code>$this</code> and <code>$value</code> pre-bound; removed from the <code>shex</code> npm package due to size</span></td>
-                <td class="example"><pre>:Event {
+                <td class="example"><pre class="shexc">:Event {
   :start xsd:date ;
   :end xsd:date ;
   :part @:Event *
@@ -282,7 +291,7 @@
                 </ul></td></tr>
             <tr><td class="name"><a href="packages/extension-path-assert/README.md">PathAssert</a>
                   <span>XPath-style steps from the focus node, <code>[filters]</code>, closures, SPARQL's functions, <code>some</code>/<code>every</code>, <code>implies</code>; read through whatever data source the validator has, and a failure says what each part evaluated to</span></td>
-                <td class="example"><pre>:Event {
+                <td class="example"><pre class="shexc">:Event {
   :start xsd:date ;
   :end xsd:date ;
   :part @:Event *
@@ -362,6 +371,7 @@
           var example = row.insertCell();
           example.className = "example";
           var pre = document.createElement("pre");
+          pre.className = "shexc";
           pre.textContent = e.example || "";
           example.appendChild(pre);
           var links = row.insertCell();
@@ -371,6 +381,60 @@
             + "<li>" + tag("src", "src") + '<a href="https://github.com/shexjs/shex.js/tree/' + e.branch + '">branch <code>' + e.branch + "</code></a></li>"
             + "</ul>";
           links.querySelector("li a").textContent = (e.examples || []).join(", ");
+        });
+
+        /* ShExC, lit up token by token: comments, strings, IRIs, prefixed
+         * names, keywords, variables, and a semantic action (%prefix:{ … %})
+         * as a tinted span whose own code gets the same treatment.  Regular
+         * expressions, not a grammar: enough for the fragments on this page. */
+        var esc = function (t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); };
+        var span = function (cls, t) { return cls ? '<span class="' + cls + '">' + esc(t) + "</span>" : esc(t); };
+        var shexc = [
+          [/#[^\n]*/y, "c"],
+          [/%[A-Za-z][\w-]*:\{/y, "a"],
+          [/"(?:[^"\\\n]|\\.)*"(?:@[A-Za-z][\w-]*|\^\^[^\s;,)}]+)?/y, "s"],
+          [/<<\(|\)>>|<<|>>/y, "k"],
+          [/<[^>\s]*>/y, "i"],
+          [/[?$][A-Za-z_]\w*/y, "v"],
+          [/\b(?:PREFIX|BASE|IMPORT|START|CLOSED|EXTRA|EXTENDS|ABSTRACT|OR|AND|NOT|IRI|BNODE|LITERAL|NONLITERAL|GRAPH|TERM|FRAGMENT|TRIPLE|true|false)\b/y, "k"],
+          [/\ba(?=\s)/y, "k"],
+          [/[A-Za-z_][\w.-]*:[\w.-]*|:[\w.-]+/y, "p"],
+          [/@(?=[<:A-Za-z])/y, "k"],
+          [/[^\S\n]+|\n|./y, null],
+        ];
+        var action = [
+          [/%\}/y, "a"],
+          [/#[^\n]*/y, "c"],
+          [/"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'/y, "s"],
+          [/<[^>\s]*>/y, "i"],
+          [/\$\$|\$\d+|\$:[\w.-]+|\$[A-Za-z_][\w:.-]*|\?[A-Za-z_]\w*/y, "v"],
+          [/\b(?:SELECT|ASK|WHERE|FILTER|NOT|EXISTS|AS|BIND|OPTIONAL|UNION|MINUS|some|every|in|satisfies|let|return|if|then|else|implies|and|or|func|call)\b/y, "k"],
+          [/[A-Za-z_][\w.-]*:[\w.-]+|(?<![\w"])\^?:[\w.-]+/y, "p"],
+          [/[^\S\n]+|\n|./y, null],
+        ];
+        var highlight = function (text) {
+          var out = "", i = 0, rules = shexc, inAction = false;
+          while (i < text.length) {
+            var matched = false;
+            for (var r = 0; r < rules.length; r++) {
+              var re = rules[r][0], cls = rules[r][1];
+              re.lastIndex = i;
+              var m = re.exec(text);
+              if (!m || m.index !== i) continue;
+              var tok = m[0];
+              if (rules === shexc && cls === "a") { out += '<span class="ab">' + span(cls, tok); rules = action; inAction = true; }
+              else if (rules === action && cls === "a") { out += span(cls, tok) + "</span>"; rules = shexc; inAction = false; }
+              else out += span(cls, tok);
+              i += tok.length || 1;
+              matched = true;
+              break;
+            }
+            if (!matched) { out += esc(text[i]); i++; }
+          }
+          return inAction ? out + "</span>" : out;
+        };
+        Array.prototype.forEach.call(document.querySelectorAll("pre.shexc"), function (pre) {
+          pre.innerHTML = highlight(pre.textContent);
         });
       })();
     </script>
