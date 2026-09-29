@@ -260,12 +260,12 @@ Larger, design conversation first:
   harness for the mechanism and a cross-origin-isolated browser for the glue.
   **Unified panel done (2026-09-04):** the validation debugger and the
   ShExMap materializer debugger now share one control strip, status line and
-  thread list (core, in `shex-simple.html`/`shex-app.css`) -- they never step
+  thread list (core, in `shex.html`/`shex-app.css`) -- they never step
   at once (a validation finishes before its materialization starts), so the
   app's `activeDebugSession` is whichever is live and the shared buttons
   route to it.  `ShExMapPlugin` stops generating its own strip and keeps only
   the `#debugMaterialize` trigger; every ShExMap page redirects to
-  `shex-simple.html`, so the static strip is always present.
+  `shex.html`, so the static strip is always present.
 - **E11 (done 2026-09-04)** Worker-app materializer debugging.  The step
   session's `MaterializerDebugger` runs in the page even when the app
   validates in a worker (`app.remote`): its inputs -- output schema,
@@ -450,5 +450,13 @@ The Makefile is hand-maintained; the generator it grew out of
 
 ## Decisions wanted
 
-(none open -- `shape-map` published `1.0.0` with alpha.30; `1.1.0` is staged
-for the next release.)
+- **ShExMap's IRI ends in `#`.** Every other extension is named
+  `http://shex.io/extensions/<Name>/`; Map's is
+  `http://shex.io/extensions/Map/#`, so its prefix declarations read
+  `PREFIX Map: <http://shex.io/extensions/Map/#>` and its plugin id, the
+  `screen=` value and `semActHandler.results` key all carry the `#`.
+  Either normalize it (a breaking change for every ShExMap schema, so with a
+  period of registering the handler under both IRIs) or document it as the
+  one exception. Surfaced while listing the extensions on index.html.
+- (`shape-map` published `1.0.0` with alpha.30; `1.1.0` is staged for the
+  next release.)

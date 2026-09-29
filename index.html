@@ -8,7 +8,7 @@
     <style>
       body {
         font-family: system-ui, sans-serif;
-        max-width: 46em;
+        max-width: 64em;
         margin: 3em auto;
         padding: 0 1em;
         color: #222;
@@ -17,26 +17,55 @@
       header img { height: 2.2em; }
       h1 { font-size: 1.6em; margin: 0; }
       p.blurb { color: #555; }
-      .apps { display: grid; grid-template-columns: 1fr 1fr; gap: 1em; margin-top: 1.5em; }
-      .app {
+      a { color: #1a4fb0; }
+      code { font-size: .92em; }
+      pre { margin: 0; font-size: .8em; line-height: 1.35; white-space: pre; overflow-x: auto; }
+      .variant { font-size: .85em; color: #666; }
+      .pending { font-size: .8em; color: #a66; }
+      /* cards */
+      .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1em; }
+      .card {
         border: 1px solid #ccc;
         border-radius: .5em;
         padding: 1em;
       }
-      .app.shex { background-color: #f4f4ff; border-color: #fc561c; }
-      .app.shexmap { background-color: #f4fff4; border-color: #f0a133; }
-      .app.shexreduce { background-color: #fff4f4; border-color: #fc561c; }
-      .app.yours { background-color: #fffff4; border-color: #56fc1c; }
-      .app.semacts { background-color: #f8f4ff; border-color: #8a56fc; }
-      .app.shacl-sparql { background-color: #f4fffc; border-color: #1cb0a0; }
-      .app.path-assert { background-color: #fff8f0; border-color: #e08a1c; }
-      .app.experiments { background-color: #f4f9ff; border-color: #5691fc; }
-      .app h2 { font-size: 1.1em; margin: 0 0 .3em; }
-      .app p { margin: .3em 0 .8em; font-size: .9em; color: #444; }
-      .app ul { list-style: none; margin: 0; padding: 0; }
-      .app li { margin: .3em 0; }
-      .app a { font-weight: bold; }
-      .variant { font-size: .85em; color: #666; }
+      .card.shex { background-color: #f4f4ff; border-color: #fc561c; }
+      .card.extensions { background-color: #f8f4ff; border-color: #8a56fc; }
+      .card.yours { background-color: #fffff4; border-color: #56fc1c; }
+      .card.beyond { background-color: #f6f6f6; border-color: #999; }
+      .card.experiments { background-color: #f4f9ff; border-color: #5691fc; }
+      .card h2 { margin: 0 0 .3em; font-size: 1.1em; }
+      .card p { margin: .3em 0 .8em; font-size: .9em; color: #444; }
+      .card ul { list-style: none; margin: 0; padding: 0; }
+      .card li { margin: .3em 0; }
+      .card a { font-weight: bold; }
+      .wide { grid-column: 1 / -1; }
+      /* tables */
+      .tablewrap { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; font-size: .9em; }
+      th, td { text-align: left; vertical-align: top; padding: .5em .6em; border-top: 1px solid #ddd; }
+      th { border-top: none; color: #555; font-weight: 600; font-size: .85em; }
+      td.name { width: 22%; }
+      td.name a { font-size: 1.05em; }
+      td.name > span { display: block; font-weight: normal; color: #444; margin-top: .2em; }
+      td.example { width: 52%; }
+      td.links { width: 26%; }
+      td.links ul { margin: 0; }
+      td.links li { margin: .15em 0; }
+      .params td:first-child { white-space: nowrap; font-family: ui-monospace, monospace; font-size: .9em; }
+      /* link kinds: what a link leads to, said once, the same way everywhere */
+      .tag {
+        display: inline-block; min-width: 2.6em; text-align: center;
+        font-size: .68em; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+        padding: .05em .4em; border-radius: .3em; margin-right: .4em; vertical-align: .1em;
+        color: #fff; background: #888;
+      }
+      .tag.try  { background: #2e8b57; }   /* opens the validator on it */
+      .tag.spec { background: #005a9c; }   /* the extension's or language's specification */
+      .tag.npm  { background: #cb3837; }   /* the package */
+      .tag.src  { background: #24292f; }   /* source, on GitHub */
+      .tag.doc  { background: #7a5cc4; }   /* documentation */
+      .tag.size { background: #999; }
       .local-dev {
         margin-top: 1.5em;
         padding: .8em 1em;
@@ -46,7 +75,15 @@
         font-size: .9em;
       }
       footer { margin-top: 2em; font-size: .85em; color: #666; }
-      @media (max-width: 34em) { .apps { grid-template-columns: 1fr; } }
+      @media (max-width: 40em) {
+        .cards { grid-template-columns: 1fr; }
+        /* the wide tables stack: one cell after another, the example first */
+        table.stacking, table.stacking tbody, table.stacking tr, table.stacking td { display: block; width: auto; }
+        table.stacking thead { display: none; }
+        table.stacking tr { border-top: 1px solid #ddd; padding: .4em 0; }
+        table.stacking td { border-top: none; padding: .2em .3em; }
+        table.stacking td.name, table.stacking td.example, table.stacking td.links { width: auto; }
+      }
     </style>
   </head>
   <body>
@@ -55,24 +92,25 @@
       <h1>ShEx.js WebApps</h1>
     </header>
     <p class="blurb">
-      In-browser demos of the <a href="https://github.com/shexSpec/shex.js">shex.js</a>
-      implementation of <a href="http://shex.io/">Shape Expressions</a>.
-      One validator, in two flavors: <em>simple</em> runs validation on the UI
-      thread; <em>worker</em> runs it in a Web Worker so the page stays
-      responsive (and validation can be interrupted).
-      Everything else is a <em>plugin</em> the validator loads by URL
-      (<code>?plugin=&lt;url&gt;</code>, or named by a manifest entry): a
-      module that may install
+      In-browser demos of the <a href="https://github.com/shexjs/shex.js">shex.js</a>
+      implementation of <a href="http://shex.io/">Shape Expressions</a>:
+      one validator page, and a set of <em>plugins</em> it loads by URL, each
+      installing one or more
       <a href="http://shex.io/extensions/">semantic-action extensions</a>
-      for schemas to dispatch, and may add a screen of panes and verbs of
-      its own beside the validator's.
+      for a schema to dispatch and some adding a screen of their own.
+      Links are marked by where they lead:
+      <span class="tag try">try</span> opens the validator on something,
+      <span class="tag spec">spec</span> is a specification,
+      <span class="tag doc">doc</span> documentation,
+      <span class="tag npm">npm</span> a package and
+      <span class="tag src">src</span> source on GitHub.
     </p>
 <!-- STRIP-FOR-PUBLICATION -->
     <div class="local-dev">
       <p><strong>Browsing a clone?</strong> The app pages need the webpack
-        bundles in (e.g. the <a href="packages/shex-webapp/doc/webpacks/shex-webapp.js">shex-webapp</a>, <a href="packages/extension-map/doc/webpacks/shexmap-webapp.js">shexmap</a>
-        and <a href="packages/extension-reduce/doc/webpacks/shexreduce-webapp.js">shexreduce</a> bundles, and the <a href="packages/extension-wasi/doc/webpacks/shexwasi-webapp.js">WASI</a> and <a href="packages/extension-shacl-sparql/doc/webpacks/shexshaclsparql-webapp.min.js">SHACL-SPARQL</a> and <a href="packages/extension-path-assert/doc/webpacks/shexpathassert-webapp.min.js">PathAssert</a> ones), which aren't checked
-        in on <code>main</code>. Build them with
+        bundles (the <a href="packages/shex-webapp/doc/webpacks/shex-webapp.js">shex-webapp</a> one and each plugin's, sized under
+        <a href="#extensions">Extensions</a>), which aren't checked in on
+        <code>main</code>. Build them with
         <code>npm ci &amp;&amp; npm run webpacks-all</code>, or fetch the
         last-published ones with <code>npm run webpacks-fetch</code>
         (<code>tools/sync-webpacks.sh</code>). This notice is stripped from the
@@ -86,126 +124,258 @@
      branch push publishes itself and where (webapps-site-branch.yml
      looks its branch up here).  To add an experiment: add its entry here
      on main (to preserve and list it) and on its branch (to publish it).
+     `example` is a schema fragment the card shows; `examples` names the
+     entries of that site's own examples manifest that show the strawman
+     (the card links the site's validator, which opens on that manifest).
      -->
     <script type="application/json" id="experiment-sites">
     [
       {"dir": "generics", "branch": "generics",
-       "description": "templates: parameterized shapes \u2014 <#List1Plus><<?T>>, applied with @<#List1Plus><< @<#ShapeDecl> >>"},
+       "description": "templates: parameterized shapes",
+       "example": "<#List1Plus><<?T>> CLOSED {\n  rdf:first ?T ;\n  rdf:rest  [rdf:nil] OR @<#List1Plus><<?T>>\n}\n<#PersonList> @<#List1Plus><< @<#Person> >>\n<#Team> { ex:members @<#PersonList> }",
+       "examples": ["templated list", "qualified statement"]},
       {"dir": "graphs", "branch": "graphs",
-       "description": "datasets: GRAPH <g> | TERM | FRAGMENT say which named graph a constraint speaks of"},
+       "description": "datasets: GRAPH <g> | TERM | FRAGMENT say which named graph a constraint speaks of",
+       "example": "<#S1> {\n  ^ex:manages GRAPH <CardCatalog> @<#catalogEntry> ;\n  ex:foo xsd:string\n}\n<#human-gene> {\n  gene:chromosome GRAPH TERM @<#chromosome>*\n}",
+       "examples": ["fixed metadata graph", "genes by graph", "WebID profiles"]},
       {"dir": "triple-terms", "branch": "triple-terms",
-       "description": "RDF 1.2 triple terms: <<( \u2026 )>> value atoms and the TRIPLE node kind"}
+       "description": "RDF 1.2 triple terms: <<( … )>> value atoms and the TRIPLE node kind",
+       "example": "<#Assertion> {\n  rdf:reifies <<( @<#Person> foaf:knows @<#Person> )>> ;\n  ex:assertedBy @<#Person> ;\n  ex:confidence xsd:decimal ?\n}",
+       "examples": ["triple terms"]}
     ]
     </script>
-    <div class="apps">
-      <div class="app shex">
-        <h2>ShEx validator</h2>
-        <p>Validate RDF data against a ShEx schema (ShExC, ShExJ or ShExR).</p>
+
+    <div class="cards">
+      <div class="card shex wide">
+        <h2>The validator</h2>
+        <p>Validate RDF data against a ShEx schema (ShExC, ShExJ or ShExR).
+          One page; the query string says how it runs and what it opens on.</p>
         <ul>
-          <li><a href="packages/shex-webapp/doc/shex-simple.html">shex-simple</a> <span class="variant">— single-threaded</span> (<a href="packages/shex-webapp/doc/shex-simple.html?editors=textarea">textareas</a>)</li>
-          <li><a href="packages/shex-webapp/doc/shex-simple.html?worker=1">shex-simple?worker=1</a> <span class="variant">— in a Web Worker</span> (<a href="packages/shex-webapp/doc/shex-worker.html?editors=textarea">textareas</a>)</li>
-          <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2F..%2Fdoc%2Ftests-manifest.yaml">every example at once</a> <span class="variant">— one manifest, and each entry brings the plugin it needs</span></li>
+          <li><span class="tag try">try</span><a href="packages/shex-webapp/doc/shex.html">open it</a> <span class="variant">— validation on the page's thread, language-aware editors</span></li>
+          <li><span class="tag try">try</span><a href="packages/shex-webapp/doc/shex.html?worker=1">in a Web Worker</a> <span class="variant">— the page stays responsive, and a validation can be interrupted</span></li>
+          <li><span class="tag try">try</span><a href="packages/shex-webapp/doc/shex.html?manifestURL=..%2F..%2F..%2Fdoc%2Ftests-manifest.yaml">every example at once</a> <span class="variant">— one manifest of all the examples below; each entry brings the plugin it needs</span></li>
         </ul>
+        <p style="margin-top: 1em"><strong>Calling convention.</strong> Parameters combine, so a link can say all of it: where to validate, which documents to open, what to load.</p>
+        <div class="tablewrap">
+        <table class="params">
+          <thead><tr><th>parameter</th><th>what it does</th><th>example</th></tr></thead>
+          <tbody>
+            <tr><td>worker=1</td><td>validate in a Web Worker instead of on the page's thread</td>
+                <td><a href="packages/shex-webapp/doc/shex.html?worker=1&amp;manifestURL=..%2F..%2Fextension-map%2Fexamples%2Fmanifest.yaml">?worker=1<br/>&amp;manifestURL=…</a></td></tr>
+            <tr><td>editors=textarea</td><td>plain textareas in place of the language-aware editors (the default; <code>editors=1</code> in an old link means the default)</td>
+                <td><a href="packages/shex-webapp/doc/shex.html?editors=textarea">?editors=textarea</a></td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p><span class="tag doc">doc</span><a href="https://github.com/shexjs/shex.js/blob/main/doc/webapp-parameters.md">webapp-parameters.md</a>
+          <span class="variant">— the rest: which documents or manifest to open on (<code>schemaURL</code>, <code>dataURL</code>, <code>shape-map</code>, <code>manifestURL</code>), what to load (<code>plugin</code>, <code>screen</code>), where the data comes from (<code>neighborhood</code>, <code>endpoint</code>), and how results are shown (<code>interface</code>, <code>explain</code>, <code>success</code>).</span></p>
+        <p class="variant">Older links keep working: <code>shex-simple.html</code> (the
+          page's name until 2026), <code>shex-worker.html</code>, <code>shexmap-simple.html</code>
+          and <code>shexmap-worker.html</code> redirect here with the parameters they stood for.</p>
       </div>
-      <div class="app shexmap">
-        <h2>ShExMap plugin</h2>
-        <p>Validate with the <a href="http://shex.io/extensions/Map/">Map extension</a>,
-          capture bindings, and materialize them into another RDF graph on a
-          screen of its own.  These URLs open the validator with the plugin
-          and its examples loaded.</p>
-        <ul>
-          <li><a href="packages/extension-map/doc/shexmap-simple.html">shexmap-simple</a> <span class="variant">— single-threaded</span> (<a href="packages/extension-map/doc/shexmap-simple.html?editors=textarea">textareas</a>)</li>
-          <li><a href="packages/extension-map/doc/shexmap-worker.html">shexmap-worker</a> <span class="variant">— in a Web Worker</span> (<a href="packages/extension-map/doc/shexmap-worker.html?editors=textarea">textareas</a>)</li>
-        </ul>
+
+      <div class="card extensions wide" id="extensions">
+        <h2>Extensions</h2>
+        <p>Each is a semantic-action handler a schema dispatches by IRI, written
+          <code>%prefix:{ … %}</code> on a triple constraint, a shape or the
+          schema's start, and delivered as a plugin the validator loads.
+          <span class="tag try">try</span> opens the validator on the
+          extension's examples; every entry names the plugin, so picking it
+          installs the handler. Size is the plugin's bundle, minified, on top
+          of the validator's.</p>
+        <div class="tablewrap">
+        <table class="stacking">
+          <thead><tr><th>extension</th><th>example</th><th></th></tr></thead>
+          <tbody>
+            <tr><td class="name"><a href="packages/extension-test/README.md">Test</a>
+                  <span>minimal test suite coverage of side-effects (<code>print(…)</code>) and validation control (<code>fail(…)</code>)</span></td>
+                <td class="example"><pre>&lt;S&gt; {
+  :p1 . %Test:{ print(o) %} ;
+  :p2 . %Test:{ fail("unwelcome p2: ", o) %} ?
+}</pre></td>
+                <td class="links"><ul>
+                  <li><span class="tag try">try</span><a href="packages/shex-webapp/doc/shex.html?manifestURL=..%2F..%2Fextension-test%2Fexamples%2Fmanifest.yaml">print, fail</a></li>
+                  <li><span class="tag spec">spec</span><a href="http://shex.io/extensions/Test/">Test</a></li>
+                  <li><span class="tag npm">npm</span><a href="https://www.npmjs.com/package/@shexjs/extension-test">@shexjs/extension-test</a></li>
+                  <li><span class="tag size">size</span>3 KB</li>
+                </ul></td></tr>
+            <tr><td class="name"><a href="packages/extension-eval/README.md">Eval</a>
+                  <span>runs the action's code as JavaScript where <code>this</code> is bound to the matched triples</span></td>
+                <td class="example"><pre>&lt;S&gt; {
+  :p . %Eval:{
+    extensionStorage.object = this.triples[0].object.value;
+    return true;
+  %}
+}</pre></td>
+                <td class="links"><ul>
+                  <li><span class="tag try">try</span><a href="packages/shex-webapp/doc/shex.html?manifestURL=..%2F..%2Fextension-eval%2Fexamples%2Fmanifest.yaml">note, refuse</a></li>
+                  <li><span class="tag spec">spec</span><a href="http://shex.io/extensions/Eval/">Eval</a></li>
+                  <li><span class="tag npm">npm</span><a href="https://www.npmjs.com/package/@shexjs/extension-eval">@shexjs/extension-eval</a></li>
+                  <li><span class="tag size">size</span>2 KB</li>
+                </ul></td></tr>
+            <tr><td class="name"><a href="packages/extension-wasi/README.md">WASI</a>
+                  <span>WebAssembly Text, compiled in the page and run as a WASI command per invocation</span></td>
+                <td class="example"><pre>&lt;S&gt; {
+  :p . %Wasi:{
+    (func $main (call $put_o) (call $nl))
+  %}
+}</pre></td>
+                <td class="links"><ul>
+                  <li><span class="tag try">try</span><a href="packages/shex-webapp/doc/shex.html?manifestURL=..%2F..%2Fextension-wasi%2Fexamples%2Fmanifest.yaml">prelude to standalone module</a></li>
+                  <li><span class="tag spec">spec</span><a href="http://shex.io/extensions/WASI/">WASI</a></li>
+                  <li><span class="tag npm">npm</span><a href="https://www.npmjs.com/package/@shexjs/extension-wasi">@shexjs/extension-wasi</a></li>
+                  <li><span class="tag size">size</span>782 KB</li>
+                </ul></td></tr>
+            <tr><td class="name"><a href="packages/extension-wasi-test/README.md">Test in wasm</a>
+                  <span>the Test extension again, as hand-written WebAssembly: the same IRI and the same schemas, so register one or the other</span></td>
+                <td class="example"><pre>&lt;S&gt; {
+  :p . %Test:{
+    print(o)   # handled by wasm
+  %}
+}</pre></td>
+                <td class="links"><ul>
+                  <li><span class="tag try">try</span><a href="packages/shex-webapp/doc/shex.html?manifestURL=..%2F..%2Fextension-wasi-test%2Fexamples%2Fmanifest.yaml">print, fail</a></li>
+                  <li><span class="tag spec">spec</span><a href="http://shex.io/extensions/Test/">Test</a></li>
+                  <li><span class="tag npm">npm</span><a href="https://www.npmjs.com/package/@shexjs/extension-wasi-test">@shexjs/extension-wasi-test</a></li>
+                  <li><span class="tag size">size</span>3 KB + WASI</li>
+                </ul></td></tr>
+            <tr><td class="name"><a href="packages/extension-map/README.md">ShExMap</a>
+                  <span>binds values as it validates for later materialization conformant to another schema</span></td>
+                <td class="example"><pre>&lt;Patient&gt; {
+  fhir:givenName  xsd:string %Map:{ bp:given %} ;
+  fhir:familyName xsd:string %Map:{ bp:family %}
+}</pre></td>
+                <td class="links"><ul>
+                  <li><span class="tag try">try</span><a href="packages/shex-webapp/doc/shex.html?plugin=..%2F..%2Fextension-map%2Fdoc%2FShExMapPlugin.js&amp;manifestURL=..%2F..%2Fextension-map%2Fexamples%2Fmanifest.yaml">FHIR ↔ DAM, BP units</a></li>
+                  <li><span class="tag spec">spec</span><a href="http://shex.io/extensions/Map/">Map</a></li>
+                  <li><span class="tag npm">npm</span><a href="https://www.npmjs.com/package/@shexjs/extension-map">@shexjs/extension-map</a></li>
+                  <li><span class="tag size">size</span>84 KB</li>
+                </ul></td></tr>
+            <tr><td class="name"><a href="packages/extension-reduce/README.md">ShExReduce</a>
+                  <span>yacc-like conventions to validate data and construct ASTs. JavaScript evaluation by <span class="tag src">src</span><a href="https://github.com/shexjs/shex.js/tree/main/packages/extension-reduce-js"><code>extension-reduce-js</code></a></span></td>
+                <td class="example"><pre>&lt;#BinOp&gt; {
+  a      [:Add :Sub :Mul :Div] %Reduce:{ $$ = {op: local($1)} %} ;
+  :left  @&lt;#Expr&gt; %Reduce:{ $$ = {left: $1} %} ;
+  :right @&lt;#Expr&gt; %Reduce:{ $$ = {right: $1} %}
+} %Reduce:{ $$ = Object.assign($rdf:type, $:left, $:right) %}</pre></td>
+                <td class="links"><ul>
+                  <li><span class="tag try">try</span><a href="packages/shex-webapp/doc/shex.html?plugin=..%2F..%2Fextension-reduce%2Fdoc%2FShExReducePlugin.js&amp;manifestURL=..%2F..%2Fextension-reduce%2Fexamples%2Fmanifest.yaml">calculator</a></li>
+                  <li><span class="tag spec">spec</span><a href="http://shex.io/extensions/Reduce/">Reduce</a> <span class="pending">(unpublished)</span></li>
+                  <li><span class="tag npm">npm</span><a href="https://www.npmjs.com/package/@shexjs/extension-reduce">@shexjs/extension-reduce</a>, <a href="https://www.npmjs.com/package/@shexjs/extension-reduce-js">-reduce-js</a></li>
+                  <li><span class="tag size">size</span>62 KB</li>
+                </ul></td></tr>
+            <tr><td class="name"><a href="packages/extension-shacl-sparql/README.md">SHACL-SPARQL</a>
+                  <span><code>sh:sparql</code> queries as actions: a <code>SELECT</code> fails on each row, an <code>ASK</code> passes when true, <code>$this</code> and <code>$value</code> pre-bound; removed from the <code>shex</code> npm package due to size</span></td>
+                <td class="example"><pre>:Event {
+  :start xsd:date ;
+  :end xsd:date ;
+  :part @:Event *
+} %shacl-sparql:{
+  SELECT $this ("the event ends before it starts" AS ?message)
+  WHERE { $this :start ?start ; :end ?end . FILTER (?end &lt; ?start) }
+%}</pre></td>
+                <td class="links"><ul>
+                  <li><span class="tag try">try</span><a href="packages/shex-webapp/doc/shex.html?manifestURL=..%2F..%2Fextension-shacl-sparql%2Fexamples%2Fmanifest.yaml">event dates, unique ISBNs, labels by language, a dataset-wide check</a></li>
+                  <li><span class="tag spec">spec</span><a href="http://shex.io/extensions/SHACL-SPARQL/">SHACL-SPARQL</a> <span class="pending">(unpublished)</span></li>
+                  <li><span class="tag npm">npm</span><a href="https://www.npmjs.com/package/@shexjs/extension-shacl-sparql">@shexjs/extension-shacl-sparql</a> <span class="pending">(unpublished)</span></li>
+                  <li><span class="tag size">size</span>3.0 MB</li>
+                </ul></td></tr>
+            <tr><td class="name"><a href="packages/extension-path-assert/README.md">PathAssert</a>
+                  <span>XPath-style steps from the focus node, <code>[filters]</code>, closures, SPARQL's functions, <code>some</code>/<code>every</code>, <code>implies</code>; read through whatever data source the validator has, and a failure says what each part evaluated to</span></td>
+                <td class="example"><pre>:Event {
+  :start xsd:date ;
+  :end xsd:date ;
+  :part @:Event *
+} %assert:{
+  :end &gt;= :start
+%}
+
+:Book {
+  :isbn xsd:string %assert:{
+    empty(^:isbn except $this)
+  %}
+}</pre></td>
+                <td class="links"><ul>
+                  <li><span class="tag try">try</span><a href="packages/shex-webapp/doc/shex.html?manifestURL=..%2F..%2Fextension-path-assert%2Fexamples%2Fmanifest.yaml">the SHACL-SPARQL cases as expressions, a lineage walk, a curation rule with exceptions, a cycle check</a></li>
+                  <li><span class="tag spec">spec</span><a href="http://shex.io/extensions/PathAssert/">PathAssert</a> <span class="pending">(unpublished)</span></li>
+                  <li><span class="tag npm">npm</span><a href="https://www.npmjs.com/package/@shexjs/extension-path-assert">@shexjs/extension-path-assert</a> <span class="pending">(unpublished)</span></li>
+                  <li><span class="tag size">size</span>26 KB</li>
+                </ul></td></tr>
+          </tbody>
+        </table>
+        </div>
       </div>
-      <div class="app shexreduce">
-        <h2>ShExReduce plugin</h2>
-        <p>Validate with the Reduce extension — actions that steer or check a
-          match as it happens — then fold the parse into an AST.  The demo
-          manifest's calculator entries show both.</p>
-        <ul>
-          <li><a href="packages/shex-webapp/doc/shex-simple.html?plugin=..%2F..%2Fextension-reduce%2Fdoc%2FShExReducePlugin.js&amp;manifestURL=..%2F..%2Fextension-reduce%2Fexamples%2Fmanifest.yaml">shex-simple + ShExReduce</a> <span class="variant">— with the calc examples</span></li>
-        </ul>
-      </div>
-      <div class="app semacts">
-        <h2>Semantic-action extensions</h2>
-        <p>Each link opens the validator on one extension's demo manifest;
-          every entry names the plugin it needs, so picking it installs the
-          handler.  Pass and fail examples each, appinfo shows what an
-          action recorded.</p>
-        <ul>
-          <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-eval%2Fexamples%2Fmanifest.yaml">Eval</a> <span class="variant">— JavaScript in a semantic action</span></li>
-          <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-test%2Fexamples%2Fmanifest.yaml">Test</a> <span class="variant">— print(o) / fail(…), the suite's probe</span></li>
-          <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-wasi%2Fexamples%2Fmanifest.yaml">WASI</a> <span class="variant">— WAT compiled in the page, prelude to standalone module</span></li>
-          <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-wasi-test%2Fexamples%2Fmanifest.yaml">Test in wasm</a> <span class="variant">— the probe, as hand-written WebAssembly</span></li>
-        </ul>
-      </div>
-      <div class="app shacl-sparql">
-        <h2>SHACL-SPARQL</h2>
-        <p>Your <code>sh:sparql</code> queries as ShEx semantic actions:
-          a <code>SELECT</code> fails on each row, an <code>ASK</code> passes
-          when true, <code>$this</code> and <code>$value</code> pre-bound
-          &mdash; with ShEx's recursion, <code>CLOSED</code> shapes, and
-          queries that steer which triple matches which constraint.  Queries
-          run over the data in the page, through Comunica (~3&nbsp;MB).</p>
-        <ul>
-          <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-shacl-sparql%2Fexamples%2Fmanifest.yaml">shex-simple + SPARQL</a> <span class="variant">— event dates, unique ISBNs, labels by language, a dataset-wide check</span></li>
-          <li><a href="packages/shex-webapp/doc/shex-simple.html?worker=1&amp;manifestURL=..%2F..%2Fextension-shacl-sparql%2Fexamples%2Fmanifest.yaml">shex-simple?worker=1 + SPARQL</a> <span class="variant">— the same, in a Web Worker</span></li>
-        </ul>
-      </div>
-      <div class="app path-assert">
-        <h2>PathAssert</h2>
-        <p>Constraints as expressions: <code>%assert:{ :end &gt;= :start %}</code>.
-          XPath-style paths from the focus node, <code>[filters]</code>,
-          closures (<code>rdfs:subClassOf*</code>), SPARQL's functions,
-          <code>some</code>/<code>every</code>, <code>implies</code> &mdash;
-          read through whatever data source the validator has, with no query
-          engine, and a failure that says what each part evaluated to.</p>
-        <ul>
-          <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-path-assert%2Fexamples%2Fmanifest.yaml">shex-simple + PathAssert</a> <span class="variant">— the SHACL-SPARQL examples as expressions, a lineage walk, a curation rule with exceptions, a cycle check</span></li>
-          <li><a href="packages/shex-webapp/doc/shex-simple.html?worker=1&amp;manifestURL=..%2F..%2Fextension-path-assert%2Fexamples%2Fmanifest.yaml">shex-simple?worker=1 + PathAssert</a> <span class="variant">— the same, in a Web Worker</span></li>
-        </ul>
-      </div>
-      <div class="app yours">
+
+      <div class="card yours">
         <h2>Write your own</h2>
         <p>A plugin is one URL: a module that registers what it adds.
-          <a href="https://github.com/shexSpec/shex.js/blob/main/doc/plugins.md">doc/plugins.md</a>
-          is the contract, and
           <a href="doc/plugin-skeleton/hello-plugin.js">hello-plugin.js</a>
-          is a working one in about forty lines.</p>
+          is a working one in about forty lines: an extension that records
+          what it matched, a pane, and a button that writes one into the other.</p>
         <ul>
-          <li><a href="packages/shex-webapp/doc/shex-simple.html?plugin=..%2F..%2F..%2Fdoc%2Fplugin-skeleton%2Fhello-plugin.js">shex-simple + Hello</a> <span class="variant">— the skeleton, loaded</span></li>
+          <li><span class="tag try">try</span><a href="packages/shex-webapp/doc/shex.html?plugin=..%2F..%2F..%2Fdoc%2Fplugin-skeleton%2Fhello-plugin.js">the skeleton, loaded</a></li>
+          <li><span class="tag doc">doc</span><a href="https://github.com/shexjs/shex.js/blob/main/doc/plugins.md">plugins.md</a> <span class="variant">— the contract: descriptors, panes, screens, the worker half</span></li>
+          <li><span class="tag doc">doc</span><a href="https://github.com/shexjs/shex.js/blob/main/.claude/skills/shexjs-extensions/SKILL.md">adding an extension package</a> <span class="variant">— the checklist the repository's own extensions follow</span></li>
         </ul>
       </div>
-      <div class="app experiments">
+
+      <div class="card beyond">
+        <h2>Beyond the browser</h2>
+        <p>The same validator, as a library and a command line.</p>
+        <ul>
+          <li><span class="tag npm">npm</span><a href="https://www.npmjs.com/package/shex">shex</a> <span class="variant">— the meta-package: parser, validator, the CLI tools, and every extension above but SHACL-SPARQL</span></li>
+          <li><span class="tag doc">doc</span><a href="https://github.com/shexjs/shex.js/tree/main/packages/shex-cli#readme">shex-validate</a> <span class="variant">— <code>--extension</code> loads any of the extensions; <code>--endpoint</code> and <code>--wikibase</code> the other data sources</span></li>
+          <li><span class="tag spec">spec</span><a href="http://shex.io/shex-semantics/">ShEx semantics</a>, <a href="http://shex.io/shex-primer/">primer</a> <span class="variant">— the language these pages validate with</span></li>
+          <li><span class="tag src">src</span><a href="https://github.com/shexjs/shex.js">shexjs/shex.js</a>, <a href="https://github.com/shexSpec/shexTest">shexSpec/shexTest</a> <span class="variant">— the implementation, and the conformance suite it runs against</span></li>
+        </ul>
+      </div>
+
+      <div class="card experiments wide">
         <h2>Experiments</h2>
-        <p>Long-running strawmen, each on a branch of its own, published
-          beside this site.  The table (and the publication itself) comes
-          from a data block in this page's source.</p>
-        <table id="experiment-table" style="width: 100%; border-collapse: collapse; font-size: .9em;"></table>
+        <p>Long-running strawmen, each on a branch of its own and published
+          beside this site with its own copy of the validator. The table
+          (and the publication itself) comes from a data block in this
+          page's source.</p>
+        <div class="tablewrap">
+          <table id="experiment-table" class="stacking"></table>
+        </div>
       </div>
     </div>
     <script>
       (function () {
         var data = JSON.parse(document.getElementById("experiment-sites").textContent);
         var table = document.getElementById("experiment-table");
+        var head = table.createTHead().insertRow();
+        ["strawman", "example", ""].forEach(function (label) {
+          var th = document.createElement("th"); th.textContent = label; head.appendChild(th);
+        });
+        var body = table.createTBody();
+        var tag = function (kind, text) { return '<span class="tag ' + kind + '">' + text + "</span>"; };
         data.forEach(function (e) {
-          var row = table.insertRow();
-          row.style.borderTop = "1px solid #ddd";
-          var site = row.insertCell();
-          site.innerHTML = '<a href="https://shex.js.org/' + e.dir + '/">/' + e.dir + '/</a>';
-          site.style.whiteSpace = "nowrap"; site.style.padding = ".3em .5em .3em 0"; site.style.verticalAlign = "top";
-          var desc = row.insertCell();
-          desc.textContent = e.description;
-          desc.style.padding = ".3em .5em"; desc.style.verticalAlign = "top";
-          var br = row.insertCell();
-          br.innerHTML = '<a href="https://github.com/shexjs/shex.js/tree/' + e.branch + '"><code>' + e.branch + "</code></a>";
-          br.style.whiteSpace = "nowrap"; br.style.padding = ".3em 0 .3em .5em"; br.style.verticalAlign = "top";
+          var row = body.insertRow();
+          var site = "https://shex.js.org/" + e.dir + "/";
+          var app = site + "packages/shex-webapp/doc/shex-simple.html";   // the experiment branches predate the rename
+          var name = row.insertCell();
+          name.className = "name";
+          name.innerHTML = '<a href="' + site + '">/' + e.dir + '/</a><span></span>';
+          name.querySelector("span").textContent = e.description;
+          var example = row.insertCell();
+          example.className = "example";
+          var pre = document.createElement("pre");
+          pre.textContent = e.example || "";
+          example.appendChild(pre);
+          var links = row.insertCell();
+          links.className = "links";
+          links.innerHTML = "<ul>"
+            + "<li>" + tag("try", "try") + '<a href="' + app + '"></a></li>'
+            + "<li>" + tag("src", "src") + '<a href="https://github.com/shexjs/shex.js/tree/' + e.branch + '">branch <code>' + e.branch + "</code></a></li>"
+            + "</ul>";
+          links.querySelector("li a").textContent = (e.examples || []).join(", ");
         });
       })();
     </script>
     <footer>
-      Built from <a href="https://github.com/shexSpec/shex.js">shexSpec/shex.js</a>
+      Built from <a href="https://github.com/shexjs/shex.js">shexjs/shex.js</a>
 <!-- STRIP-FOR-PUBLICATION -->
       by <code><a href=".github/workflows/webapps-site.yml">.github/workflows/webapps-site.yml</a></code>.
 <!-- /STRIP-FOR-PUBLICATION -->
