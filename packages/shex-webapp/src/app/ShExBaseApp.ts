@@ -1,5 +1,5 @@
 /**
- * The app: one object over the page, constructed by shex-simple.html and
+ * The app: one object over the page, constructed by shex.html and
  * extended by ShExApp (manifests) and ShExInWorkerApp (validation in a
  * worker).  This file holds what it is -- the caches it owns, its
  * controls, its key handlers -- and the files beside it add what it does,

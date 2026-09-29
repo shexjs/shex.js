@@ -683,7 +683,7 @@ class ManifestCache extends InterfaceCache {
     /** Load the picked entry's inputs beyond the schema/data/queryMap pick
      * machinery above, driven by the app's QueryParams manifest descriptors
      * (assigned post-construction): shexmap's staticVars, outputSchema[URL] and
-     * outputShapeMap; nothing in shex-simple.  <key>URL values resolve against
+     * outputShapeMap; nothing in shex.html.  <key>URL values resolve against
      * the manifest's base, and their fetched text memoizes into the entry. */
     /** the plugin modules an entry names, resolved against the manifest.
      * `plugins` is the key. */

@@ -9,7 +9,7 @@
  * handlers -- one, several, none -- and may change the page: panes, verbs,
  * styles, a worker script.  ShExMap grew its page changes by copying the
  * page and the app class, which is how shexmap-simple.html came to be a
- * fork of shex-simple.html; this is the register it hands them to instead.
+ * fork of shex.html; this is the register it hands them to instead.
  *
  * See doc/plugins.md for the contract.  A descriptor may carry kinds the app does not read yet, and
  * the app reads kinds no descriptor carries.  Both are fine.

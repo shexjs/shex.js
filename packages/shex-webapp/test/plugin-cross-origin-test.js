@@ -32,7 +32,7 @@ const [[GitRootServer, ElsewhereServer, ElsewhereRepoServer]] = require("../../.
         ]
       );
 
-const PAGE = "packages/shex-webapp/doc/shex-simple.html";
+const PAGE = "packages/shex-webapp/doc/shex.html";
 const HELLO_ID = "http://example.org/extensions/Hello/";
 const ELSEWHERE = ElsewhereServer.urlFor("hello-plugin.js");
 const ELSEWHERE_ORIGIN = new URL(ELSEWHERE).origin;
@@ -125,7 +125,7 @@ if (!TEST_browser) {
    * copy. */
   describe("a plugin whose worker half is on another origin", function () {
     this.timeout(20000);
-    const page = "packages/shex-webapp/doc/shex-simple.html";
+    const page = "packages/shex-webapp/doc/shex.html";
     const MAP_ELSEWHERE = ElsewhereRepoServer.urlFor("packages/extension-map/doc/ShExMapPlugin.js");
     let dom, $, shared;
 

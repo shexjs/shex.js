@@ -403,7 +403,7 @@ matched, a pane, and a button that writes one into the other.  Copy it,
 change the `id` to something of yours, and add what yours does.
 
 ```
-shex-simple.html?plugin=https://your.example/hello-plugin.js
+shex.html?plugin=https://your.example/hello-plugin.js
 ```
 
 ## What is not in the contract

@@ -1,7 +1,7 @@
 /** Smoke test for shex-worker.html?editors=1: the worker flavour of the app
  * must boot with the language-aware editors, round-trip a validation through
  * the (stubbed same-thread) worker, and anchor the marshalled results'
- * diagnostics in the schema and data panes just as shex-simple does.
+ * diagnostics in the schema and data panes just as shex.html does.
  * jsdom has no Worker; fakeWorker.js runs ShExWorkerThread.js unmodified in
  * a vm context with structuredClone message hops.
  */
@@ -30,7 +30,7 @@ if (!TEST_browser) {
   Harness = require("./harness");
   describe("shex-worker with ?editors=1", function () {
     this.timeout(20000);
-    const page = "packages/shex-webapp/doc/shex-simple.html";
+    const page = "packages/shex-webapp/doc/shex.html";
 
     let dom, $, shared, errors;
     before(async function () {

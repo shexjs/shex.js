@@ -1,6 +1,6 @@
 /** shex-serve - zero-dependency static web server for the ShEx web apps.
  *
- * The shex-simple and shexmap-simple pages reference scripts across
+ * The shex.html and shexmap-simple pages reference scripts across
  * `packages/*` with relative paths, so they must be served from the
  * repository root by *some* web server. Apache pointed at the checkout works
  * fine; this is the batteries-included alternative:
@@ -37,7 +37,7 @@ const ContentTypes: {[extension: string]: string} = {
 
 // the pages worth advertising on startup, relative to the served root
 const KnownPages = [
-  "packages/shex-webapp/doc/shex-simple.html",
+  "packages/shex-webapp/doc/shex.html",
   "packages/extension-map/doc/shexmap-simple.html",
 ];
 
@@ -136,8 +136,8 @@ export function makeServer (root: string, options: ServeOptions = {}): Http.Serv
       let filePath = resolved;
       let stat = Fs.existsSync(filePath) ? Fs.statSync(filePath) : null;
       if (!stat) {
-        // trivial content negotiation: /doc/shex-simple serves
-        // shex-simple.html; among several extension siblings (foo.shex,
+        // trivial content negotiation: /doc/shex serves
+        // shex.html; among several extension siblings (foo.shex,
         // foo.json, ...) the Accept header picks the winner
         const negotiated = negotiate(filePath, String(req.headers.accept || ""));
         if (negotiated) {

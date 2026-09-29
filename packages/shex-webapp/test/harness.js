@@ -2,7 +2,7 @@
  * The app page under jsdom, booted the way every browser suite boots it.
  *
  *   const Harness = require("./harness");
- *   ({dom, $, shared} = await Harness.boot("packages/shex-webapp/doc/shex-simple.html", "?editors=1"));
+ *   ({dom, $, shared} = await Harness.boot("packages/shex-webapp/doc/shex.html", "?editors=1"));
  *   $("#validate").trigger("click");
  *   await shared.promise;               // the app's settled(): everything it started
  *
@@ -61,7 +61,7 @@ const ResourceConfig = {
 };
 
 /**
- * @param page repo-relative path of the page (packages/shex-webapp/doc/shex-simple.html)
+ * @param page repo-relative path of the page (packages/shex-webapp/doc/shex.html)
  * @param search the query string, "?" included
  * @param options.worker `true` or `[{prefix, dir}]`: give the page a fake Worker
  * @param options.trust origins whose plugins load without asking

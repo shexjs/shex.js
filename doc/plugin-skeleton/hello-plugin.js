@@ -5,7 +5,7 @@
  * put what your plugin actually does.  It is a classic script: a page may
  * load it in a <script> tag, or an app may be told to fetch it --
  *
- *     shex-simple.html?plugin=https://your.example/hello-plugin.js
+ *     shex.html?plugin=https://your.example/hello-plugin.js
  *
  * -- from anywhere that permits the reader (see doc/plugins.md, "From
  * another origin").

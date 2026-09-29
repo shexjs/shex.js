@@ -1,6 +1,6 @@
 /** Loading a plugin by URL (doc/plugins.md).
  *
- * shex-simple.html has no ShExMap in it.  Told where one is -- in the query
+ * shex.html has no ShExMap in it.  Told where one is -- in the query
  * string, or by the manifest entry that needs it -- it fetches the module,
  * registers what the module says it adds, and puts it on the page: the
  * panes appear, the manifest keys they declare get read, and the permalink
@@ -27,7 +27,7 @@ const [[GitRootServer]] = require("../../../tools/testServer")
         ]
       );
 
-const PAGE = "packages/shex-webapp/doc/shex-simple.html";
+const PAGE = "packages/shex-webapp/doc/shex.html";
 const MAP_PLUGIN = "../../extension-map/doc/ShExMapPlugin.js";
 const MAP_MANIFEST = "../../extension-map/examples/manifest.yaml";
 // the package's build output, which needs no bundler: no requires, and
@@ -45,7 +45,7 @@ if (!TEST_browser) {
 } else {
   Harness = require("./harness");
 
-  /** shex-simple.html, booted with this query string */
+  /** shex.html, booted with this query string */
   async function boot (search) {
     return Harness.boot(PAGE, search);
   }
@@ -54,7 +54,7 @@ if (!TEST_browser) {
   const paneTexts = $ => ["#bindings1", "#staticVars", "#outputSchema"].map(
     sel => $(sel + " textarea").length ? $(sel + " textarea").first().val() : null);
 
-  describe("shex-simple, told in the query string where a plugin is", function () {
+  describe("shex.html, told in the query string where a plugin is", function () {
     this.timeout(20000);
     let dom, $, shared;
 
@@ -137,7 +137,7 @@ if (!TEST_browser) {
     });
   });
 
-  describe("shex-simple, given a manifest whose entries name a plugin", function () {
+  describe("shex.html, given a manifest whose entries name a plugin", function () {
     this.timeout(20000);
     let dom, $, shared;
 
@@ -184,7 +184,7 @@ if (!TEST_browser) {
     });
   });
 
-  describe("shex-simple, told to open on a plugin's screen", function () {
+  describe("shex.html, told to open on a plugin's screen", function () {
     this.timeout(20000);
     let dom, $, shared;
 
@@ -209,7 +209,7 @@ if (!TEST_browser) {
    * directories, so what this asks is whether they still find what they
    * name from doc/ -- the documents, and the plugins the entries that need
    * one name themselves by. */
-  describe("shex-simple, given the manifest that aggregates them all", function () {
+  describe("shex.html, given the manifest that aggregates them all", function () {
     this.timeout(20000);
     let dom, $, shared, errors;
 
@@ -297,7 +297,7 @@ if (!TEST_browser) {
 
   /* A plugin came from a URL, and the × on its screen tab is the way back
    * out: the page it leaves is the page it arrived at. */
-  describe("shex-simple, told to unload the plugin it loaded", function () {
+  describe("shex.html, told to unload the plugin it loaded", function () {
     this.timeout(20000);
     let dom, $, shared, descriptor;
     const set = (selector, value) => {
@@ -393,7 +393,7 @@ if (!TEST_browser) {
   /* A data source is a module like the ones the bundle carries; a plugin
    * may bring one, and it sits in the picklist beside the page's own for
    * as long as the plugin is loaded. */
-  describe("shex-simple, given a plugin that brings a data source", function () {
+  describe("shex.html, given a plugin that brings a data source", function () {
     this.timeout(20000);
     let dom, $, shared;
     const ECHO = "http://x.example/echo-plugin";
@@ -439,7 +439,7 @@ if (!TEST_browser) {
     });
   });
 
-  describe("shex-simple, given a semantic-action extension module", function () {
+  describe("shex.html, given a semantic-action extension module", function () {
     this.timeout(20000);
     let dom, $, shared;
     const set = (selector, value) => {

@@ -55,7 +55,7 @@
 >   while the live lint squiggles (which read the editor document directly)
 >   stayed current.
 
-Goal: replace the plain textareas (schema and data in shex-simple; bindings,
+Goal: replace the plain textareas (schema and data in shex.html; bindings,
 statics and output schema in shexmap-simple) with language-sensitive editors
 that can
 
@@ -225,7 +225,7 @@ Branch polish list found while prototyping:
 ## Phases
 
 **Phase 0 — editors in, behavior unchanged** (spike)
-CM6 `EditorPane` adapter behind `?editors=1` in shex-simple: schema + data
+CM6 `EditorPane` adapter behind `?editors=1` in shex.html: schema + data
 panes with Turtle/stream-ShExC modes, JSON panes in shexmap-simple. All
 existing tests must stay green (browser tests drive the textarea path; add a
 jsdom test for the adapter contract).
