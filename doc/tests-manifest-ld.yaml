@@ -41,7 +41,7 @@
 #     staticVars:
 #       http://abc.example/someConstant: '"123-456"'
 #
-# The prefix's context (packages/extension-map/manifest-context.jsonld) gives
+# The prefix's context (shexSpec/extensions' Map/manifest-context.jsonld) gives
 # the `map:parms` term a JSON-LD 1.1 property-scoped @context that defines the
 # mapping's keys, so inside it `outputSchemaURL` expands to map:outputSchema
 # (typed @id, like the core's schemaURL) while outside it the same bare key is
@@ -90,12 +90,13 @@
   - ./webapp-manifest-context.jsonld
   - ../packages/neighborhood-sparql/manifest-context.jsonld
   - ../packages/neighborhood-wikibase/manifest-context.jsonld
-  # the extensions' contexts belong beside their specs, at
-  # https://shexspec.github.io/extensions/{Map,SHACL-SPARQL}/manifest-context.jsonld;
-  # until those are published, the copies in this repository, so the sketch
-  # resolves offline
-  - ../packages/extension-map/manifest-context.jsonld
-  - ../packages/extension-shacl-sparql/manifest-context.jsonld
+  # the extensions' contexts live beside their specs, in shexSpec/extensions
+  # (its manifest-refactor branch); until that site publishes them,
+  # tools/yamlld-to-nested-turtle.js reads them under these same URLs from a
+  # sibling checkout, ../../shexSpec/extensions -- an out-of-project relative
+  # link from the tool
+  - https://shexspec.github.io/extensions/Map/manifest-context.jsonld
+  - https://shexspec.github.io/extensions/SHACL-SPARQL/manifest-context.jsonld
 
 entries:
 
