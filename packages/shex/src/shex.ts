@@ -52,6 +52,7 @@ export = {
       ReduceJs: require("@shexjs/extension-reduce-js"),
       Wasi: require("@shexjs/extension-wasi"),        // WebAssembly semantic actions
       WasiTest: require("@shexjs/extension-wasi-test"),
+      PathAssert: require("@shexjs/extension-path-assert"),    // path assertions: XPath-style expressions over the focus node
     };
   },
   get EditorServices () { return require("@shexjs/editor-services"); },   // parse, locate, lint and anchor results in editors

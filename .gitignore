@@ -48,6 +48,7 @@ packages/extension-map/doc/webpacks/
 packages/extension-reduce/doc/webpacks/
 packages/extension-wasi/doc/webpacks/
 packages/extension-shacl-sparql/doc/webpacks/
+packages/extension-path-assert/doc/webpacks/
 
 .coveralls.yml
 

@@ -1,0 +1,7 @@
+PREFIX : <http://a.example/>
+PREFIX assert: <http://shex.io/extensions/PathAssert/>
+# A start action has no focus node: it starts from a node it names, here
+# the class, and quantifies over its instances.  :parent+ walks up the
+# tree from each; a walk that reaches its own start is a cycle.
+%assert:{ every $p in @:Person/^a satisfies not($p/:parent+ = $p) %}
+:Person { a [:Person] ; :name . ; :parent @:Person * }

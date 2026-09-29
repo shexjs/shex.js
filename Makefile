@@ -61,6 +61,7 @@ $(eval $(call package,extension-map,        shex-extension-map.js,       eval-si
                                                                          shex-visitor shex-webapp))
 $(eval $(call package,extension-reduce,     shex-extension-reduce.js,))
 $(eval $(call package,extension-reduce-js,  shex-extension-reduce-js.js,))
+$(eval $(call package,extension-path-assert,     shex-extension-path-assert.js,))
 $(eval $(call package,extension-shacl-sparql,shex-extension-shacl-sparql.js,))
 $(eval $(call package,extension-test,       shex-extension-test.js,))
 $(eval $(call package,extension-wasi,       shex-extension-wasi.js,))
@@ -75,7 +76,7 @@ $(eval $(call package,shex-cli,             validate.js,                 eval-si
 $(eval $(call package,shex-shape-path-query,shape-path-query.js,         extension-map neighborhood-rdfjs shape-map shex-term \
                                                                          shex-util shex-validator))
 $(eval $(call package,shex,                 shex.js,                     eval-simple-1err eval-threaded-nerr eval-validator-api \
-                                                                         extension-eval extension-map extension-reduce \
+                                                                         extension-path-assert extension-eval extension-map extension-reduce \
                                                                          extension-reduce-js extension-test extension-wasi \
                                                                          extension-wasi-test neighborhood-api neighborhood-rdfjs \
                                                                          neighborhood-sparql neighborhood-wikibase semact-overlay \
