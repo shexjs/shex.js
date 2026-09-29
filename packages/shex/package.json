@@ -29,6 +29,7 @@
     "@shexjs/eval-simple-1err": "^1.0.0-alpha.33",
     "@shexjs/eval-threaded-nerr": "^1.0.0-alpha.33",
     "@shexjs/eval-validator-api": "^1.0.0-alpha.33",
+    "@shexjs/extension-path-assert": "^1.0.0-alpha.33",
     "@shexjs/extension-eval": "^1.0.0-alpha.33",
     "@shexjs/extension-map": "^1.0.0-alpha.33",
     "@shexjs/extension-reduce": "^1.0.0-alpha.33",

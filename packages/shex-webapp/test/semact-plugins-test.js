@@ -1,4 +1,4 @@
-/** The Eval, Test, WASI and SHACL-SPARQL extensions on the app page, loaded the way their
+/** The Eval, Test, WASI, SHACL-SPARQL and PathAssert extensions on the app page, loaded the way their
  * manifests load them (`plugins: ../doc/ShEx*Plugin.js`): the handler
  * registers, a passing action passes, a refusing one fails the pair, and
  * what Eval wrote into extensionStorage reads back from the appinfo.
@@ -39,6 +39,9 @@ if (!TEST_browser) {
     passes: "wasm Test prints the object", fails: "wasm Test can fail a match",
     inAppinfo: []},
    {ext: "shacl-sparql", label: "SHACL-SPARQL", plugin: "ShExShaclSparqlPlugin.js",
+    passes: "Events end after they start", fails: "Events end after they start",
+    inAppinfo: []},
+   {ext: "path-assert", label: "PathAssert", plugin: "ShExPathAssertPlugin.js",
     passes: "Events end after they start", fails: "Events end after they start",
     inAppinfo: []},
   ].forEach(({ext, label, plugin, passes, fails, inAppinfo}) =>

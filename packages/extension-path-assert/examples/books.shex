@@ -1,0 +1,8 @@
+PREFIX : <http://a.example/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX assert: <http://shex.io/extensions/PathAssert/>
+:Book {
+  :title xsd:string ;
+  # from the ISBN, ^:isbn is every book that has it; $this is this one
+  :isbn xsd:string %assert:{ empty(^:isbn except $this) %}
+}

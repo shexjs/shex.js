@@ -53685,7 +53685,10 @@ class ShExHumanErrorWriter {
                 return ["Node " + (0, error_messages_1.dataTerm)(val.errors.node, said, "node")
                         + " expected to NOT pass " + (0, error_messages_1.schemaIri)(val.errors.shape, said, "shape")];
             case "SemActFailure":
-                return ["rejected by semantic action:"].concat(this.nest(val.errors, said));
+                // an action that explains itself (extension-path-assert) says what each
+                // part evaluated to, one line each, under its message
+                return ["rejected by semantic action:"].concat(this.nest(val.errors, said))
+                    .concat(Array.isArray(val.explanation) ? val.explanation.map((line) => "    " + line) : []);
             case "ResultReference":
                 return ["see " + val.ref];
             default:

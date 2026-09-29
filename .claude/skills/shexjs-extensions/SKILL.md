@@ -1,6 +1,6 @@
 ---
 name: shexjs-extensions
-description: Write or maintain a shex.js semantic-action extension — the packages/extension-* packages (test, eval, map, reduce, reduce-js, wasi, wasi-test, shacl-sparql) and semact-overlay. Covers the register/dispatch/done contract, what a handler must return, how the CLI, the shex meta-package and the WebApp load extensions, the examples manifest, index.html box and tests every new extension gets, external (NoCode) action code, and how extension tests reach the shexTest corpus through findPath.js. Use when adding an extension, changing how %<IRI>{ … %} actions run, or debugging a SemAct test.
+description: Write or maintain a shex.js semantic-action extension — the packages/extension-* packages (test, eval, map, reduce, reduce-js, wasi, wasi-test, shacl-sparql, path-assert) and semact-overlay. Covers the register/dispatch/done contract, what a handler must return, how the CLI, the shex meta-package and the WebApp load extensions, the examples manifest (and copying it into doc/tests-manifest.yaml), index.html box and tests every new extension gets, external (NoCode) action code, and how extension tests reach the shexTest corpus through findPath.js. Use when adding an extension, changing how %<IRI>{ … %} actions run, or debugging a SemAct test.
 ---
 
 # Semantic-action extensions
@@ -19,6 +19,7 @@ covers plugins. Keep the two words apart.
 | `extension-map` | `http://shex.io/extensions/Map/#` | ShExMap: binds values, then `materializer` builds the target graph. A **factory**: `require(…)({rdfjs, Validator})`. CLI bins `shexmap-materialize`, `shexmap-debug` |
 | `extension-reduce` (+ `-reduce-js`) | `http://shex.io/extensions/Reduce/` | folds a validation result bottom-up into an AST. `reduce()` takes an `evaluate(code, scope)`; `-reduce-js` is the JS evaluator. `registerEager` runs during validation and can refuse a match |
 | `extension-shacl-sparql` | `http://shex.io/extensions/SHACL-SPARQL/` | SHACL-SPARQL: a `SELECT` fails per row (`?message`), an `ASK` passes when true; `$this`/`$value` pre-bound. Runs over the db's `querySource()` (Comunica over a dataset, or the endpoint). Answers with promises (`asynchronous: true`). Not in `@shexjs/shex` (Comunica's weight) |
+| `extension-path-assert` | `http://shex.io/extensions/PathAssert/` (prefix `assert:`) | XPath-style expressions over the focus node: property steps, `[filters]`, closures, SPARQL's functions, `some`/`every`, `implies`; passes when true, and a failure lists what each operand evaluated to. Reads through `validator.db.getNeighborhood` -- the validator's own data access -- so every data source works with no query engine; synchronous over a store, promises over an async source. In `@shexjs/shex` |
 | `extension-wasi` | `http://shex.io/extensions/WASI/` | the action code is WAT for a WASI command, compiled with wabt |
 | `extension-wasi-test` | Test's IRI | the Test extension written in hand-written WAT (`lib/*.wat` and `lib/*.wasm` are **tracked**). Register it *or* extension-test, not both |
 | `semact-overlay` | — | attaches actions from a separate RDF document: `applyOverlay` rewrites the schema; `indexOverlay` → `new ShExValidator(schema, db, {semActIndex})` leaves it untouched |
@@ -120,7 +121,14 @@ function done (validator) { /* e.g. delete results[URL] if empty */ }
    in `packages/shex/src/shex.ts`, plus a README entry (see the README
    pattern the other packages follow).
 4. **Give it examples, and point at them.** Every extension gets a demo
-   manifest, and every demo manifest gets a way in from the site:
+   manifest, and every demo manifest gets a way in from the site.
+   **Whenever you add or change an examples manifest, copy it into
+   `doc/tests-manifest.yaml`**: add the manifest to `SOURCES` in
+   `tools/aggregate-manifests.js` (once) and run
+   `node tools/aggregate-manifests.js` (every time). Never edit
+   `doc/tests-manifest.yaml` by hand. `tests-manifest-test.js` fails until
+   it is regenerated, and the site's "every example at once" page shows
+   only what is in it.
    - `examples/manifest.yaml`: a pass and a fail entry under each
      `schemaLabel`, each naming its plugin (`plugins:
      [../doc/ShEx<X>Plugin.js]`) so opening the manifest installs it. Use
@@ -135,13 +143,13 @@ function done (validator) { /* e.g. delete results[URL] if empty */ }
      a box of its own for an extension worth showing off (see the
      SHACL-SPARQL one). Add its bundle to the STRIP-FOR-PUBLICATION
      local-dev notice too.
-   - `tools/aggregate-manifests.js` `SOURCES`, then
-     `node tools/aggregate-manifests.js`. `tests-manifest-test.js` fails
-     until `doc/tests-manifest.yaml` is regenerated.
+   - `doc/tests-manifest.yaml`, regenerated as above.
    - A row in `packages/shex-webapp/test/semact-plugins-test.js`
      (`TEST_browser`, page and worker), and a node test that validates
      every manifest entry and checks its `status` (see
-     `extension-shacl-sparql/test/ShaclSparql-test.js`).
+     `extension-path-assert/test/PathAssert-test.js`). Fixtures for a
+     `validate --extension` row in `shex-cli/test/Cli-test.js` live in the
+     extension's own `test/cli/`.
 
 ## Testing
 

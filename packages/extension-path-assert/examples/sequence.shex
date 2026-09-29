@@ -1,0 +1,10 @@
+PREFIX : <http://a.example/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX assert: <http://shex.io/extensions/PathAssert/>
+:Protein {
+  :sequence xsd:string ;
+  :length xsd:integer
+} %assert:{
+  :length = strlen(:sequence)
+    or fail(concat("length says ", str(:length), " but the sequence has ", str(strlen(:sequence)), " residues"))
+%}

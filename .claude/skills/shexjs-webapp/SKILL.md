@@ -207,3 +207,7 @@ working.
 - A new examples manifest needs a way in from `/index.html`: a link in a
   box, or a box of its own (the shexjs-extensions skill has the checklist).
   Otherwise the site never shows it.
+- **A new or changed examples manifest is copied into
+  `doc/tests-manifest.yaml`** by `node tools/aggregate-manifests.js` (its
+  `SOURCES` list names the manifests). Never edit that file by hand;
+  `tests-manifest-test.js` fails until it is regenerated.
