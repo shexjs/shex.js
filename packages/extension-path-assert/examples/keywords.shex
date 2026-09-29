@@ -1,0 +1,17 @@
+PREFIX : <http://a.example/>
+PREFIX kw: <http://a.example/keyword/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX assert: <http://shex.io/extensions/PathAssert/>
+# A curation rule with known exceptions, after UniProt's URC90 (Bolleman &
+# Gehant, SWAT4LS 2012): a protein classified as Homeobox is expected to be
+# classified as DNA-binding too, unless its annotations say why not.
+:Protein {
+  :classifiedWith IRI * ;
+  :annotation @:Annotation *
+} %assert:{
+  :classifiedWith = @kw:Homeobox
+    implies :classifiedWith = @kw:DNA-binding
+         or ( :annotation[a = @:NucleotideBindingAnnotation]/rdfs:comment[contains(., "Homeobox; atypical")]
+          and :annotation[a = @:FunctionAnnotation]/rdfs:comment[contains(., "does not bind DNA")] )
+%}
+:Annotation { a [:NucleotideBindingAnnotation :FunctionAnnotation] ; rdfs:comment . }

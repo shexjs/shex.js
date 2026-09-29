@@ -1,0 +1,305 @@
+---
+# The PathAssert extension (http://shex.io/extensions/PathAssert/): an action's code
+# is an XPath-style expression over the graph -- property steps from the
+# focus node, [filters], closures (rdfs:subClassOf*), SPARQL's functions,
+# some/every, let, if, implies -- and the action passes when it is true.
+# A failure explains itself: it reports what each path and comparison
+# operand evaluated to.
+#
+# What `.` is depends on where the action sits: the focus node on a shape,
+# the value on a triple constraint or node constraint.  An IRI is a
+# property step; a node is written with @ in front (@:Bacteria).  Data is
+# read through the validator's own data source, so the same schema works
+# on a Turtle document, an endpoint or a wikibase.  Each entry names the
+# plugin it needs; it is small (no query engine).
+
+# ── The value of one property against another ──────────────────────────────
+- schemaLabel: Events end after they start
+  schemaURL: events.shex
+  dataLabel: a conference
+  data: |
+    PREFIX : <http://a.example/>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    :conf :name "ShEx Symposium" ;
+      :start "2026-10-05"^^xsd:date ; :end "2026-10-07"^^xsd:date .
+  queryMap: |
+    <http://a.example/conf>@<http://a.example/Event>
+  status: conformant
+  comment: ":end >= :start holds, so the shape holds."
+  plugins:
+  - ../doc/ShExPathAssertPlugin.js
+- schemaLabel: Events end after they start
+  schemaURL: events.shex
+  dataLabel: backwards dates
+  data: |
+    PREFIX : <http://a.example/>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    :conf :name "ShEx Symposium" ;
+      :start "2026-10-07"^^xsd:date ; :end "2026-10-05"^^xsd:date .
+  queryMap: |
+    <http://a.example/conf>@<http://a.example/Event>
+  status: nonconformant
+  comment: >-
+    The failure explains itself: it says what :end and :start were, the way
+    a unit-test assertion does.  Nothing had to be projected or written.
+  plugins:
+  - ../doc/ShExPathAssertPlugin.js
+- schemaLabel: Events end after they start
+  schemaURL: events.shex
+  dataLabel: a bad session, three levels down
+  data: |
+    PREFIX : <http://a.example/>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    :conf :name "ShEx Symposium" ;
+      :start "2026-10-05"^^xsd:date ; :end "2026-10-07"^^xsd:date ;
+      :part :day1 .
+    :day1 :name "Day one" ;
+      :start "2026-10-05"^^xsd:date ; :end "2026-10-05"^^xsd:date ;
+      :part :keynote .
+    :keynote :name "Keynote" ;
+      :start "2026-10-05"^^xsd:date ; :end "2026-10-04"^^xsd:date .
+  queryMap: |
+    <http://a.example/conf>@<http://a.example/Event>
+  status: nonconformant
+  comment: >-
+    The shape is recursive, so the assertion runs on every event it reaches:
+    the keynote's dates fail it, and so the conference fails.
+  plugins:
+  - ../doc/ShExPathAssertPlugin.js
+
+# ── An inverse step: who else has this value? ──────────────────────────────
+- schemaLabel: No two books share an ISBN
+  schemaURL: books.shex
+  dataLabel: two books, two ISBNs
+  data: |
+    PREFIX : <http://a.example/>
+    :primer :title "A ShEx Primer" ; :isbn "978-0-00-000001-1" .
+    :sequel :title "ShEx Returns" ; :isbn "978-0-00-000002-8" .
+  queryMap: |
+    <http://a.example/primer>@<http://a.example/Book>
+  status: conformant
+  comment: >-
+    On a triple constraint `.` is the value: from the ISBN, ^:isbn is every
+    book that carries it, and `except $this` leaves the others.
+  plugins:
+  - ../doc/ShExPathAssertPlugin.js
+- schemaLabel: No two books share an ISBN
+  schemaURL: books.shex
+  dataLabel: a copied ISBN
+  data: |
+    PREFIX : <http://a.example/>
+    :primer :title "A ShEx Primer" ; :isbn "978-0-00-000001-1" .
+    :sequel :title "ShEx Returns" ; :isbn "978-0-00-000001-1" .
+  queryMap: |
+    <http://a.example/primer>@<http://a.example/Book>
+  status: nonconformant
+  comment: The step looks past the node being validated, into the rest of the data.
+  plugins:
+  - ../doc/ShExPathAssertPlugin.js
+
+# ── What ShEx adds: actions take part in matching ───────────────────────────
+- schemaLabel: One label in German, one in English
+  schemaURL: labels.shex
+  dataLabel: Hund and dog
+  data: |
+    PREFIX : <http://a.example/>
+    :dog :label "dog"@en, "Hund"@de .
+  queryMap: |
+    <http://a.example/dog>@<http://a.example/Term>
+  status: conformant
+  comment: >-
+    Two constraints on one predicate, told apart only by their assertions.
+    An action on a triple constraint is part of deciding which triple goes
+    to which constraint, so the German label goes to the first and the
+    English one to the second.
+  plugins:
+  - ../doc/ShExPathAssertPlugin.js
+- schemaLabel: One label in German, one in English
+  schemaURL: labels.shex
+  dataLabel: two German labels
+  data: |
+    PREFIX : <http://a.example/>
+    :dog :label "Hund"@de, "Köter"@de .
+  queryMap: |
+    <http://a.example/dog>@<http://a.example/Term>
+  status: nonconformant
+  comment: No way to share out the triples satisfies both assertions.
+  plugins:
+  - ../doc/ShExPathAssertPlugin.js
+
+- schemaLabel: CLOSED, with English labels only
+  schemaURL: closed-labels.shex
+  dataLabel: English labels
+  data: |
+    PREFIX : <http://a.example/>
+    :dog :label "dog"@en, "hound"@en-GB .
+  queryMap: |
+    <http://a.example/dog>@<http://a.example/Term>
+  status: conformant
+  comment: Every label is English, so every triple has a constraint to go to.
+  plugins:
+  - ../doc/ShExPathAssertPlugin.js
+- schemaLabel: CLOSED, with English labels only
+  schemaURL: closed-labels.shex
+  dataLabel: a German label slips in
+  data: |
+    PREFIX : <http://a.example/>
+    :dog :label "dog"@en, "Hund"@de .
+  queryMap: |
+    <http://a.example/dog>@<http://a.example/Term>
+  status: nonconformant
+  comment: >-
+    The assertion refuses "Hund"@de, so no constraint takes it, and the
+    shape is CLOSED: a triple left over fails it.
+  plugins:
+  - ../doc/ShExPathAssertPlugin.js
+
+# ── A closure ───────────────────────────────────────────────────────────────
+- schemaLabel: An organism in the expected lineage
+  schemaURL: lineage.shex
+  dataLabel: E. coli
+  data: |
+    PREFIX : <http://a.example/>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    :sample1 :organism :Ecoli .
+    :Ecoli rdfs:label "Escherichia coli" ; rdfs:subClassOf :Escherichia .
+    :Escherichia rdfs:label "Escherichia" ; rdfs:subClassOf :Enterobacteriaceae .
+    :Enterobacteriaceae rdfs:label "Enterobacteriaceae" ; rdfs:subClassOf :Bacteria .
+    :Bacteria rdfs:label "Bacteria" .
+  queryMap: |
+    <http://a.example/sample1>@<http://a.example/Sample>
+  status: conformant
+  comment: >-
+    rdfs:subClassOf* walks up the taxonomy from the organism, one
+    neighborhood at a time, and Bacteria is among what it reaches.
+  plugins:
+  - ../doc/ShExPathAssertPlugin.js
+- schemaLabel: An organism in the expected lineage
+  schemaURL: lineage.shex
+  dataLabel: a yeast
+  data: |
+    PREFIX : <http://a.example/>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    :sample2 :organism :Yeast .
+    :Yeast rdfs:label "Saccharomyces cerevisiae" ; rdfs:subClassOf :Fungi .
+    :Fungi rdfs:label "Fungi" ; rdfs:subClassOf :Eukaryota .
+    :Eukaryota rdfs:label "Eukaryota" .
+  queryMap: |
+    <http://a.example/sample2>@<http://a.example/Sample>
+  status: nonconformant
+  comment: The walk ends at Eukaryota without passing Bacteria.
+  plugins:
+  - ../doc/ShExPathAssertPlugin.js
+
+# ── A curation rule with exceptions ─────────────────────────────────────────
+- schemaLabel: Homeobox implies DNA-binding
+  schemaURL: keywords.shex
+  dataLabel: both keywords
+  data: |
+    PREFIX : <http://a.example/>
+    PREFIX kw: <http://a.example/keyword/>
+    :p1 :classifiedWith kw:Homeobox, kw:DNA-binding .
+  queryMap: |
+    <http://a.example/p1>@<http://a.example/Protein>
+  status: conformant
+  comment: >-
+    After UniProt's curation rule URC90.  An implication with exceptions
+    is one expression; in SHACL-SPARQL it is a query with two nested
+    NOT EXISTS.
+  plugins:
+  - ../doc/ShExPathAssertPlugin.js
+- schemaLabel: Homeobox implies DNA-binding
+  schemaURL: keywords.shex
+  dataLabel: the keyword is missing
+  data: |
+    PREFIX : <http://a.example/>
+    PREFIX kw: <http://a.example/keyword/>
+    :p2 :classifiedWith kw:Homeobox .
+  queryMap: |
+    <http://a.example/p2>@<http://a.example/Protein>
+  status: nonconformant
+  comment: >-
+    Homeobox without DNA-binding, and no annotation excuses it.  The
+    failure lists what :classifiedWith and each annotation path held.
+  plugins:
+  - ../doc/ShExPathAssertPlugin.js
+- schemaLabel: Homeobox implies DNA-binding
+  schemaURL: keywords.shex
+  dataLabel: a known exception
+  data: |
+    PREFIX : <http://a.example/>
+    PREFIX kw: <http://a.example/keyword/>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    :p3 :classifiedWith kw:Homeobox ;
+      :annotation [ a :NucleotideBindingAnnotation ; rdfs:comment "Homeobox; atypical" ] ,
+                  [ a :FunctionAnnotation ; rdfs:comment "This protein does not bind DNA." ] .
+  queryMap: |
+    <http://a.example/p3>@<http://a.example/Protein>
+  status: conformant
+  comment: >-
+    The annotations' comments say why the general rule doesn't apply, so
+    the exception clause holds and the protein passes.
+  plugins:
+  - ../doc/ShExPathAssertPlugin.js
+
+# ── A message of your own ───────────────────────────────────────────────────
+- schemaLabel: Sequence length matches the sequence
+  schemaURL: sequence.shex
+  dataLabel: a short peptide
+  data: |
+    PREFIX : <http://a.example/>
+    :pep :sequence "MKTAYIAK" ; :length 8 .
+  queryMap: |
+    <http://a.example/pep>@<http://a.example/Protein>
+  status: conformant
+  comment: strlen() and the arithmetic comparison, over the literals as typed.
+  plugins:
+  - ../doc/ShExPathAssertPlugin.js
+- schemaLabel: Sequence length matches the sequence
+  schemaURL: sequence.shex
+  dataLabel: a length that lies
+  data: |
+    PREFIX : <http://a.example/>
+    :pep :sequence "MKTAYIAK" ; :length 9 .
+  queryMap: |
+    <http://a.example/pep>@<http://a.example/Protein>
+  status: nonconformant
+  comment: >-
+    `or fail(…)` composes a message from the values; without it the failure
+    would still have said what :length and strlen(:sequence) were.
+  plugins:
+  - ../doc/ShExPathAssertPlugin.js
+
+# ── A dataset-wide check, in the start actions ──────────────────────────────
+- schemaLabel: Nobody is their own ancestor
+  schemaURL: ancestry.shex
+  dataLabel: a family
+  data: |
+    PREFIX : <http://a.example/>
+    :alice a :Person ; :name "Alice" ; :parent :carol .
+    :carol a :Person ; :name "Carol" ; :parent :erin .
+    :erin a :Person ; :name "Erin" .
+  queryMap: |
+    <http://a.example/alice>@<http://a.example/Person>
+  status: conformant
+  comment: >-
+    A start action has no focus node.  It starts from the class node,
+    @:Person/^a being its instances, and checks each one's ancestry.
+  plugins:
+  - ../doc/ShExPathAssertPlugin.js
+- schemaLabel: Nobody is their own ancestor
+  schemaURL: ancestry.shex
+  dataLabel: a loop
+  data: |
+    PREFIX : <http://a.example/>
+    :alice a :Person ; :name "Alice" ; :parent :carol .
+    :carol a :Person ; :name "Carol" ; :parent :erin .
+    :erin a :Person ; :name "Erin" ; :parent :alice .
+  queryMap: |
+    <http://a.example/alice>@<http://a.example/Person>
+  status: nonconformant
+  comment: >-
+    The recursive shape conforms (ShEx allows the cycle), so this is a
+    check core ShEx can't make: :parent+ from Erin reaches Erin.
+  plugins:
+  - ../doc/ShExPathAssertPlugin.js

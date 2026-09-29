@@ -1,0 +1,53 @@
+{
+  "name": "@shexjs/extension-path-assert",
+  "version": "1.0.0-alpha.33",
+  "files": [
+    "lib",
+    "src",
+    "doc",
+    "examples"
+  ],
+  "description": "Assertions as ShEx semantic actions: %assert:{ :end >= :start %} -- XPath-style path expressions over the focus node, evaluated through the validator's data source",
+  "author": {
+    "name": "Eric Prud'hommeaux",
+    "email": "eric@w3.org",
+    "url": "http://www.w3.org/People/Eric/"
+  },
+  "keywords": [
+    "shex",
+    "shape expressions",
+    "xpath",
+    "rdf",
+    "validation"
+  ],
+  "license": "MIT",
+  "main": "./lib/shex-extension-path-assert.js",
+  "types": "./src/shex-extension-path-assert.ts",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "cd ../.. && mocha -C -R dot packages/extension-path-assert/test/*test.js",
+    "build": "tsc",
+    "webpack": "webpack --config webpack.config.js --mode production",
+    "prepublishOnly": "npm run webpack"
+  },
+  "devDependencies": {
+    "@rdfjs/types": "^2.0.1",
+    "@shexjs/webapp": "^1.0.0-alpha.33",
+    "terser-webpack-plugin": "*",
+    "webpack": "*",
+    "webpack-cli": "*"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shexjs/shex.js.git",
+    "directory": "packages/extension-path-assert"
+  },
+  "bugs": {
+    "url": "https://github.com/shexjs/shex.js/issues"
+  }
+}

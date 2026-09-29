@@ -1,0 +1,6 @@
+PREFIX : <http://a.example/>
+PREFIX assert: <http://shex.io/extensions/PathAssert/>
+:Term {
+  :label . %assert:{ lang(.) = "de" %} ;
+  :label . %assert:{ lang(.) = "en" %}
+}

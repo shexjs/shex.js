@@ -1,0 +1,9 @@
+PREFIX : <http://a.example/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX assert: <http://shex.io/extensions/PathAssert/>
+# rdfs:subClassOf* walks the taxonomy upward, as SPARQL's property path
+# would, one neighborhood at a time.
+:Sample {
+  :organism @:Taxon
+} %assert:{ :organism/rdfs:subClassOf* = @:Bacteria %}
+:Taxon { rdfs:label . ; rdfs:subClassOf @:Taxon ? }

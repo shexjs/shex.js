@@ -29,6 +29,7 @@
       .app.yours { background-color: #fffff4; border-color: #56fc1c; }
       .app.semacts { background-color: #f8f4ff; border-color: #8a56fc; }
       .app.shacl-sparql { background-color: #f4fffc; border-color: #1cb0a0; }
+      .app.path-assert { background-color: #fff8f0; border-color: #e08a1c; }
       .app.experiments { background-color: #f4f9ff; border-color: #5691fc; }
       .app h2 { font-size: 1.1em; margin: 0 0 .3em; }
       .app p { margin: .3em 0 .8em; font-size: .9em; color: #444; }
@@ -70,7 +71,7 @@
     <div class="local-dev">
       <p><strong>Browsing a clone?</strong> The app pages need the webpack
         bundles in (e.g. the <a href="packages/shex-webapp/doc/webpacks/shex-webapp.js">shex-webapp</a>, <a href="packages/extension-map/doc/webpacks/shexmap-webapp.js">shexmap</a>
-        and <a href="packages/extension-reduce/doc/webpacks/shexreduce-webapp.js">shexreduce</a> bundles, and the <a href="packages/extension-wasi/doc/webpacks/shexwasi-webapp.js">WASI</a> and <a href="packages/extension-shacl-sparql/doc/webpacks/shexshaclsparql-webapp.min.js">SHACL-SPARQL</a> ones), which aren't checked
+        and <a href="packages/extension-reduce/doc/webpacks/shexreduce-webapp.js">shexreduce</a> bundles, and the <a href="packages/extension-wasi/doc/webpacks/shexwasi-webapp.js">WASI</a> and <a href="packages/extension-shacl-sparql/doc/webpacks/shexshaclsparql-webapp.min.js">SHACL-SPARQL</a> and <a href="packages/extension-path-assert/doc/webpacks/shexpathassert-webapp.min.js">PathAssert</a> ones), which aren't checked
         in on <code>main</code>. Build them with
         <code>npm ci &amp;&amp; npm run webpacks-all</code>, or fetch the
         last-published ones with <code>npm run webpacks-fetch</code>
@@ -150,6 +151,19 @@
         <ul>
           <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-shacl-sparql%2Fexamples%2Fmanifest.yaml">shex-simple + SPARQL</a> <span class="variant">— event dates, unique ISBNs, labels by language, a dataset-wide check</span></li>
           <li><a href="packages/shex-webapp/doc/shex-simple.html?worker=1&amp;manifestURL=..%2F..%2Fextension-shacl-sparql%2Fexamples%2Fmanifest.yaml">shex-simple?worker=1 + SPARQL</a> <span class="variant">— the same, in a Web Worker</span></li>
+        </ul>
+      </div>
+      <div class="app path-assert">
+        <h2>PathAssert</h2>
+        <p>Constraints as expressions: <code>%assert:{ :end &gt;= :start %}</code>.
+          XPath-style paths from the focus node, <code>[filters]</code>,
+          closures (<code>rdfs:subClassOf*</code>), SPARQL's functions,
+          <code>some</code>/<code>every</code>, <code>implies</code> &mdash;
+          read through whatever data source the validator has, with no query
+          engine, and a failure that says what each part evaluated to.</p>
+        <ul>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-path-assert%2Fexamples%2Fmanifest.yaml">shex-simple + PathAssert</a> <span class="variant">— the SHACL-SPARQL examples as expressions, a lineage walk, a curation rule with exceptions, a cycle check</span></li>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html?worker=1&amp;manifestURL=..%2F..%2Fextension-path-assert%2Fexamples%2Fmanifest.yaml">shex-simple?worker=1 + PathAssert</a> <span class="variant">— the same, in a Web Worker</span></li>
         </ul>
       </div>
       <div class="app yours">

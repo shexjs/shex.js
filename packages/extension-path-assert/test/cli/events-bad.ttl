@@ -1,0 +1,6 @@
+PREFIX : <http://a.example/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+:conf :start "2026-10-05"^^xsd:date ; :end "2026-10-07"^^xsd:date ;
+  :part :keynote .
+:keynote :start "2026-10-05"^^xsd:date ; :end "2026-10-04"^^xsd:date .

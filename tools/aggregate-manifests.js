@@ -47,6 +47,8 @@ const SOURCES = [
    what: "the Test extension in hand-written WebAssembly"},
   {file: "packages/extension-shacl-sparql/examples/manifest.yaml",
    what: "the SPARQL extension: SHACL-SPARQL constraints, with ShEx's semantics"},
+  {file: "packages/extension-path-assert/examples/manifest.yaml",
+   what: "the PathAssert extension: XPath-style path expressions over the focus node"},
 ];
 
 /** the keys whose value is a document reference: what the runner and the
