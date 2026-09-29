@@ -2,6 +2,14 @@
 # (one entry per attribute-shape worth showing), re-expressed as YAML-LD -- this
 # YAML parses into a JSON structure that is itself valid JSON-LD.
 #
+# NOTE -- before this branch merges into main, this file must evolve to REPLACE
+# doc/tests-manifest.yaml: every entry of every package manifest, generated the
+# same way (tools/aggregate-manifests.js, from packages/*/examples/manifest.yaml
+# written in this form), read by tools/manifest-runner.js and the WebApp, with
+# tests-manifest-test.js checking it.  Until then the two coexist, and this one
+# is the design: the namespacing below, and the lexical scoping of the
+# namespaced attributes described next.
+#
 # The point of the exercise: doc/manifest-vocabulary.md surveyed the attributes
 # the examples manifests actually use across shex-webapp, every extension and
 # every neighborhood, and found them to be, in short, a dog's breakfast --
@@ -15,6 +23,34 @@
 # on it; anything neighborhood- or extension-specific gets its own namespace
 # prefix, so e.g. map:outputSchemaURL can never be confused with a same-named
 # attribute another extension or neighborhood might one day want.
+#
+# Those namespaced attributes are LEXICALLY SCOPED rather than prefixed one by
+# one.  Before, an entry wrote them as siblings of the core attributes, each
+# carrying its prefix:
+#
+#   map:outputSchemaURL: ../packages/extension-map/examples/BPdam-schema.shex
+#   map:outputShapeMap: "<tag:b0>@<BPunitsDAM>"
+#   map:staticVars:
+#     http://abc.example/someConstant: '"123-456"'
+#
+# Now an entry writes one `map:parms` mapping and its members bare:
+#
+#   map:parms:
+#     outputSchemaURL: ../packages/extension-map/examples/BPdam-schema.shex
+#     outputShapeMap: "<tag:b0>@<BPunitsDAM>"
+#     staticVars:
+#       http://abc.example/someConstant: '"123-456"'
+#
+# The prefix's context (packages/extension-map/manifest-context.jsonld) gives
+# the `map:parms` term a JSON-LD 1.1 property-scoped @context that defines the
+# mapping's keys, so inside it `outputSchemaURL` expands to map:outputSchema
+# (typed @id, like the core's schemaURL) while outside it the same bare key is
+# undefined and dropped: the scope is the definition, and a reader sees at once
+# which extension an attribute belongs to.  In RDF (doc/tests-manifest-ld.ttl,
+# from tools/yamlld-to-nested-turtle.js) the entry gets one map:parms arc to a
+# blank node holding them all; staticVars is a nested blank node whose
+# predicates are the variables.  The neighborhoods do the same with
+# sparql:parms and wikibase:parms.
 #
 # `@context` stacks one contribution per source: the core, then one entry per
 # neighborhood or extension actually exercised below.  Each of those lives
@@ -54,8 +90,12 @@
   - ./webapp-manifest-context.jsonld
   - ../packages/neighborhood-sparql/manifest-context.jsonld
   - ../packages/neighborhood-wikibase/manifest-context.jsonld
-  - https://shexspec.github.io/extensions/Map/manifest-context.jsonld
-  - https://shexspec.github.io/extensions/SHACL-SPARQL/manifest-context.jsonld
+  # the extensions' contexts belong beside their specs, at
+  # https://shexspec.github.io/extensions/{Map,SHACL-SPARQL}/manifest-context.jsonld;
+  # until those are published, the copies in this repository, so the sketch
+  # resolves offline
+  - ../packages/extension-map/manifest-context.jsonld
+  - ../packages/extension-shacl-sparql/manifest-context.jsonld
 
 entries:
 
@@ -73,13 +113,14 @@ entries:
   status: conformant
   comment: 'Everything core: no neighborhood, no extension, no plugin -- this is what an entry looks like when it needs nothing this sketch is about.'
 
-# --- neighborhood-sparql: sparql:endpoint, and slurp added to show it isn't sparql's alone
+# --- neighborhood-sparql: sparql:parms (endpoint), and slurp added to show it isn't sparql's alone
 - schemaLabel: Wikidata person
   schemaURL: ../packages/shex-webapp/examples/wikidata-person.shex
   dataLabel: Q42 from the query service
   neighborhood: sparql
   dataBase: http://www.wikidata.org/entity/
-  sparql:endpoint: https://query.wikidata.org/sparql
+  sparql:parms:
+    endpoint: https://query.wikidata.org/sparql
   queryMap: |
     <http://www.wikidata.org/entity/Q42>@START
   status: conformant
@@ -91,7 +132,7 @@ entries:
     replayable Turtle" checkbox (see doc/manifest-vocabulary.md), added here
     to show it belongs in the CORE context, not sparql's, because...
 
-# --- neighborhood-wikibase: wikibase:base, wikibase:sitematrix, and the same slurp
+# --- neighborhood-wikibase: wikibase:parms (sitematrix), and the same slurp
 - schemaLabel: Wikidata person
   schemaURL: ../packages/shex-webapp/examples/wikidata-person.shex
   dataLabel: Q42 from a downloaded page
@@ -102,17 +143,20 @@ entries:
     <http://www.wikidata.org/entity/Q42>@START
   status: conformant
   slurp: true
-  wikibase:sitematrix: ../packages/shex-webapp/examples/wikidata-sitematrix.json
+  wikibase:parms:
+    sitematrix: ../packages/shex-webapp/examples/wikidata-sitematrix.json
   comment: >-
     ...it means the same thing here, over an entirely different neighborhood:
     a viewer of this manifest that doesn't understand `wikibase:*` at all can
     still recognize `slurp` and `dataBase` as attributes it already knows from
     the sparql entry above.  `wikibase:sitematrix` and `sparql:endpoint`, by
     contrast, could not be swapped between these two entries -- which is
-    exactly why each is namespaced to the neighborhood it configures.
+    exactly why each is namespaced to the neighborhood it configures -- and why
+    each sits in its own parms mapping: `sitematrix` written bare beside
+    `sparql:parms` would be undefined, not silently sparql's.
 
-# --- extension-map: map:outputSchemaURL, map:outputShapeMap, map:staticVars,
-#     map:expectedBindingsURL, map:expectedOutputDataURL
+# --- extension-map: map:parms holds outputSchemaURL, outputShapeMap, staticVars,
+#     expectedBindingsURL, expectedOutputDataURL
 - schemaLabel: BP
   plugins:
   - ../packages/extension-map/doc/ShExMapPlugin.js
@@ -120,29 +164,31 @@ entries:
   dataLabel: simple
   dataURL: ../packages/extension-map/examples/BPfhir-instance.ttl
   queryMap: "<tag:BPfhir123>@START"
-  map:outputSchemaURL: ../packages/extension-map/examples/BPdam-schema.shex
-  map:outputShapeMap: "<tag:b0>@<BPunitsDAM>"
-  map:staticVars:
-    http://abc.example/someConstant: '"123-456"'
+  map:parms:
+    outputSchemaURL: ../packages/extension-map/examples/BPdam-schema.shex
+    outputShapeMap: "<tag:b0>@<BPunitsDAM>"
+    staticVars:
+      http://abc.example/someConstant: '"123-456"'
+    expectedBindingsURL: ../packages/extension-map/examples/BP-simple-bindings.json
+    expectedOutputDataURL: ../packages/extension-map/examples/BP-simple-out.ttl
   status: conformant
-  map:expectedBindingsURL: ../packages/extension-map/examples/BP-simple-bindings.json
-  map:expectedOutputDataURL: ../packages/extension-map/examples/BP-simple-out.ttl
 
-# --- extension-map: map:threadedOnly, the extension's one boolean flag
+# --- extension-map: threadedOnly, the extension's one boolean flag, in the same scope
 - schemaLabel: splits
   plugins:
   - ../packages/extension-map/doc/ShExMapPlugin.js
-  map:threadedOnly: true
   schemaURL: ../packages/extension-map/examples/contact-schema.shex
   dataLabel: Ann-phone-mbox
   dataURL: ../packages/extension-map/examples/contact-Ann.ttl
   queryMap: "<PersonX>@<Person>"
-  map:outputSchemaURL: ../packages/extension-map/examples/card-schema-phone-mbox.shex
-  map:outputShapeMap: "<tag:card1>@<Card>"
+  map:parms:
+    threadedOnly: true
+    outputSchemaURL: ../packages/extension-map/examples/card-schema-phone-mbox.shex
+    outputShapeMap: "<tag:card1>@<Card>"
+    expectedBindingsURL: ../packages/extension-map/examples/splits-bindings.json
+    expectedOutputDataURL: ../packages/extension-map/examples/splits-out.ttl
   status: conformant
-  map:expectedBindingsURL: ../packages/extension-map/examples/splits-bindings.json
-  map:expectedOutputDataURL: ../packages/extension-map/examples/splits-out.ttl
-  comment: 'threadedOnly marks an entry ThreadedMaterializer-test alone exercises -- extension-map''s own concern, hence map:threadedOnly rather than a bare flag any extension might reuse unrelated.'
+  comment: 'threadedOnly marks an entry ThreadedMaterializer-test alone exercises -- extension-map''s own concern, hence inside map:parms rather than a bare flag any extension might reuse unrelated.'
 
 # --- extension-reduce: overlay stays CORE (manifest-runner.js applies it generically)
 - schemaLabel: calc, actions in an overlay

@@ -1,0 +1,25 @@
+{
+  "_comment": "Manifest-entry attributes specific to @shexjs/extension-map (ShExMap), stacked onto ../../doc/webapp-manifest-context.jsonld's core. They are LEXICALLY SCOPED: an entry that uses ShExMap writes them under one `map:parms` key whose value is a mapping, and the property-scoped @context on that term (JSON-LD 1.1, hence @version) defines the mapping's keys, so inside it they are written bare -- outputSchemaURL, outputShapeMap, staticVars, expectedBindingsURL, expectedOutputDataURL, threadedOnly -- and still expand to map: IRIs. Written bare anywhere else they are undefined, and a JSON-LD processor drops them: the scope is the definition. In RDF the entry gets one map:parms arc to a blank node holding them all (see doc/tests-manifest-ld.ttl). The X/XURL pairs follow the core's schema/schemaURL convention: the same IRI, the URL form typed @id. staticVars maps variable IRIs to values, so it is a node object whose keys are the variables themselves -- a nested blank node in RDF. Tentative home: this is ShExMap's own vocabulary, so it belongs beside ShExMap's spec at https://shexspec.github.io/extensions/Map/manifest-context.jsonld and should be referenced from there; it is in this repository so the sketch resolves offline. NOTE the namespace: http://shex.io/extensions/Map/# is the one extension IRI ending in # (doc/plan.md, Decisions wanted), so map:parms is http://shex.io/extensions/Map/#parms.",
+
+  "@context": {
+    "@version": 1.1,
+    "map": "http://shex.io/extensions/Map/#",
+
+    "map:parms": {
+      "@id": "map:parms",
+      "@context": {
+        "outputSchema": "map:outputSchema",
+        "outputSchemaURL": {"@id": "map:outputSchema", "@type": "@id"},
+        "outputShapeMap": "map:outputShapeMap",
+        "outputShapeMapURL": {"@id": "map:outputShapeMap", "@type": "@id"},
+        "staticVars": "map:staticVars",
+        "staticVarsURL": {"@id": "map:staticVars", "@type": "@id"},
+        "expectedBindings": "map:expectedBindings",
+        "expectedBindingsURL": {"@id": "map:expectedBindings", "@type": "@id"},
+        "expectedOutputData": "map:expectedOutputData",
+        "expectedOutputDataURL": {"@id": "map:expectedOutputData", "@type": "@id"},
+        "threadedOnly": "map:threadedOnly"
+      }
+    }
+  }
+}

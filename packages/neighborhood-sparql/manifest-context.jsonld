@@ -1,8 +1,16 @@
 {
-  "_comment": "Manifest-entry attributes specific to @shexjs/neighborhood-sparql, stacked onto ../../doc/webapp-manifest-context.jsonld's core (see doc/manifest-vocabulary.md for the survey this came out of). A manifest entry that names this neighborhood (neighborhood: sparql, a core attribute) writes this backend's own parameters under the sparql: prefix, e.g. sparql:endpoint, rather than bare `endpoint` -- so it can never collide with the same-shaped attribute another backend defines. This is a tentative home: a SPARQL endpoint isn't specific to ShEx or to shex.js, so other RDF tooling may want this vocabulary too. If a better shared home turns up (a SPARQL-protocol-adjacent namespace, say), this prefix should point there instead.",
+  "_comment": "Manifest-entry attributes specific to @shexjs/neighborhood-sparql, stacked onto ../../doc/webapp-manifest-context.jsonld's core (see doc/manifest-vocabulary.md for the survey this came out of). A manifest entry that names this neighborhood (neighborhood: sparql, a core attribute) writes this backend's own parameters under one `sparql:parms` mapping -- lexically scoped, like every extension's and neighborhood's: the property-scoped @context on that term (JSON-LD 1.1) defines the mapping's keys, so `endpoint` is written bare inside it and still expands to sparql:endpoint, and can never collide with the same-shaped attribute another backend defines, because outside its scope it is undefined. The keys are the backend's dbParams (its module's `dbParams` declaration), endpoint being the one this sketch exercises. This is a tentative home: a SPARQL endpoint isn't specific to ShEx or to shex.js, so other RDF tooling may want this vocabulary too. If a better shared home turns up (a SPARQL-protocol-adjacent namespace, say), this prefix should point there instead.",
 
   "@context": {
+    "@version": 1.1,
     "sparql": "http://shex.io/neighborhoods/sparql#",
-    "sparql:endpoint": {"@id": "sparql:endpoint", "@type": "@id"}
+
+    "sparql:parms": {
+      "@id": "sparql:parms",
+      "@context": {
+        "endpoint": {"@id": "sparql:endpoint", "@type": "@id"},
+        "allOutgoing": "sparql:allOutgoing"
+      }
+    }
   }
 }
