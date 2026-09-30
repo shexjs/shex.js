@@ -1,5 +1,5 @@
 {
-  "_comment": "The core of the shex.js 'examples manifest' vocabulary -- packages/*/examples/manifest.yaml, aggregated by tools/aggregate-manifests.js into doc/tests-manifest.yaml and read by tools/manifest-runner.js. This is NOT the shexTest conformance-manifest vocabulary (node_modules/shex-test/context.jsonld, mf:/sht:/sx:): that is a real, RDF-based format shared with other ShEx implementations (PyShEx, the Scala and Rust implementations). This one is shex.js's own ad hoc webapp/example-gallery convention, which grew one key at a time and has no shared vocabulary backing it -- this file is a first sketch at giving it one, reusing shexTest's terms where the meaning is genuinely the same (schema, data, shape, node/focus, comment) so the two can be crosswalked, and minting shex.js's own terms both for the conventions shexTest has no concept of (URL variants, labels, the query-map DSL, plugin loading, neighborhood selection) AND for the one place a shex.js term looks like a shexTest one but is not: `status` here is the expected validation VERDICT (conformant/nonconformant), while shexTest's mf:status is the TEST'S OWN curation status (mf:Approved/mf:Proposed/...) -- shexTest encodes the verdict structurally instead, via rdf:type (sht:ValidationTest vs sht:ValidationFailure). Aliasing shex.js's status to mf:status would have been a false cognate, not a crosswalk, so it gets its own shexjs:status term instead; a real crosswalk would need to turn an entry's status into its @type, which is future work past this sketch. A manifest entry stacks this context with the neighborhood- and extension-specific ones it needs (see packages/neighborhood-*/manifest-context.jsonld in this repository, and https://shexspec.github.io/extensions/*/manifest-context.jsonld beside each extension's spec in shexSpec/extensions -- which tools/yamlld-to-nested-turtle.js reads from a sibling checkout until that site publishes them), each contributing one namespace prefix. Those attributes are LEXICALLY SCOPED: an entry writes a neighborhood's or extension's attributes under one `<prefix>:parms` key whose value is a mapping (map:parms, sparql:parms, wikibase:parms), and that term's JSON-LD 1.1 property-scoped @context defines the mapping's keys, so inside it they are written bare (outputSchemaURL, endpoint) and still expand to the namespace's IRIs, while outside it the same bare key is undefined and dropped -- the prefix is written once per entry, not once per attribute, and an attribute can't be confused with a same-named one from another extension because it is only defined inside its own scope. In RDF the entry gets one <prefix>:parms arc to a blank node holding them (doc/tests-manifest-ld.ttl shows the graph). Each contribution is two files. manifest-context.jsonld is the default binding, the one a manifest imports: it declares only the prefix and the <prefix>:parms term, and is @protected, so two stacked contexts claiming one prefix are an error rather than a silent override. manifest-parms-context.jsonld, beside it, is the scope that term names as its @context: the bare keys mapped to absolute IRIs, with no prefix, so it puts nothing in the outer scope, and a manifest that has to avoid a prefix can bind it under a name of its own (doc/tests-manifest-ld.yaml's header shows how). NOTE: this top-level _comment sits beside @context, not inside it -- a JSON-LD context's own term values may only be strings or objects, never arrays, so this is deliberately here instead.",
+  "_comment": "The core of the shex.js 'examples manifest' vocabulary -- packages/*/examples/manifest.yaml, aggregated by tools/aggregate-manifests.js into doc/tests-manifest.yaml and read by tools/manifest-runner.js. This is NOT the shexTest conformance-manifest vocabulary (node_modules/shex-test/context.jsonld, mf:/sht:/sx:): that is a real, RDF-based format shared with other ShEx implementations (PyShEx, the Scala and Rust implementations). This one is shex.js's own ad hoc webapp/example-gallery convention, which grew one key at a time and has no shared vocabulary backing it -- this file is a first sketch at giving it one, reusing shexTest's terms where the meaning is genuinely the same (schema, data, shape, node/focus, comment) so the two can be crosswalked, and minting shex.js's own terms both for the conventions shexTest has no concept of (URL variants, labels, the query-map DSL, plugin loading, neighborhood selection) AND for the one place a shex.js term looks like a shexTest one but is not: `status` here is the expected validation VERDICT (conformant/nonconformant), while shexTest's mf:status is the TEST'S OWN curation status (mf:Approved/mf:Proposed/...) -- shexTest encodes the verdict structurally instead, via rdf:type (sht:ValidationTest vs sht:ValidationFailure). Aliasing shex.js's status to mf:status would have been a false cognate, not a crosswalk, so it gets its own shexjs:status term instead; a real crosswalk would need to turn an entry's status into its @type, which is future work past this sketch. A manifest entry's neighborhood- and extension-specific attributes are LEXICALLY SCOPED: the entry writes them under one `<prefix>:parms` key whose value is a mapping (map:parms, nsp:parms), bare inside it, and the manifest's own @context binds that key -- a prefix of the manifest's choosing and, beside it, the term, whose JSON-LD 1.1 property-scoped @context is the vocabulary's scope file: packages/neighborhood-*/manifest-context.jsonld in this repository, https://shexspec.github.io/extensions/*/manifest-context.jsonld beside each extension's spec in shexSpec/extensions (which tools/yamlld-to-nested-turtle.js reads from a sibling checkout until that site publishes them). A scope file defines only the names written inside its mapping, each mapped to an absolute IRI, and declares no prefix, so vocabularies cannot collide and the prefix is the manifest's, written once per entry rather than once per attribute; outside its mapping a bare name is undefined and dropped, and inside it the outer names -- this core -- stay visible, as in any lexical scope, which is how pluginURL (below) is written inside a mapping without the scope file defining it, and how a scope file that wants an attribute another vocabulary defined binds the same bare name to that vocabulary's IRI: the IRI is the identity, the name is local. The binding has to name the TERM (map:parms), not just the prefix: JSON-LD attaches a scoped context to the key as written, so a prefix alone gives map:parms its IRI but not its scope, and the mapping's contents are dropped. In RDF the entry gets one <prefix>:parms arc to a blank node holding them (doc/tests-manifest-ld.ttl shows the graph). pluginURL names a module the web app loads by URL to provide what the entry needs -- a semantic-action extension, a neighborhood, a screen, any or all of these (doc/plugins.md) -- and is written inside the mapping of the vocabulary that module implements, so an entry's plugins sit with their parameters and are all loaded before the entry is read; it replaces the entry-level plugins list. neighborhood still names one of the web app's built-in data sources; a plugin-delivered one would come from a pluginURL. NOTE: this top-level _comment sits beside @context, not inside it -- a JSON-LD context's own term values may only be strings or objects, never arrays, so this is deliberately here instead.",
 
   "@context": {
     "mf": "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#",
@@ -9,30 +9,29 @@
 
     "entries": {"@id": "mf:entries", "@container": "@list"},
 
-    "schemaLabel": "shexjs:schemaLabel",
-    "dataLabel": "shexjs:dataLabel",
     "comment": "rdfs:comment",
-
-    "status": "shexjs:status",
 
     "schema": {"@id": "sx:schema"},
     "schemaURL": {"@id": "sx:schema", "@type": "@id"},
+    "schemaLabel": "shexjs:schemaLabel",
+
     "data": {"@id": "sx:data"},
     "dataURL": {"@id": "sx:data", "@type": "@id", "@container": "@set"},
+    "dataLabel": "shexjs:dataLabel",
 
-    "node": {"@id": "sx:focus", "@type": "@id"},
-    "shape": {"@id": "sx:shape", "@type": "@id"},
     "queryMap": "shexjs:queryMap",
     "queryMapURL": {"@id": "shexjs:queryMap", "@type": "@id"},
 
-    "overlay": "shexjs:overlay",
-    "overlayURL": {"@id": "shexjs:overlay", "@type": "@id"},
+    "node": {"@id": "sx:focus", "@type": "@id"},
+    "shape": {"@id": "sx:shape", "@type": "@id"},
 
-    "plugins": {"@id": "shexjs:plugins", "@type": "@id", "@container": "@list"},
+    "status": "shexjs:status",
 
     "neighborhood": "shexjs:neighborhood",
-    "dataBase": {"@id": "shexjs:dataBase", "@type": "@id"},
+    "pluginURL": {"@id": "shexjs:plugin", "@type": "@id"},
 
+    "overlayURL": {"@id": "shexjs:overlay", "@type": "@id"},
+    "dataBase": {"@id": "shexjs:dataBase", "@type": "@id"},
     "slurp": "shexjs:slurp"
   }
 }
