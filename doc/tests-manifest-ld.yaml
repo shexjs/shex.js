@@ -41,12 +41,13 @@
 #     staticVars:
 #       http://abc.example/someConstant: '"123-456"'
 #
-# The prefix's context (shexSpec/extensions' Map/manifest-context.jsonld) gives
-# the `map:parms` term a JSON-LD 1.1 property-scoped @context that defines the
-# mapping's keys, so inside it `outputSchemaURL` expands to map:outputSchema
-# (typed @id, like the core's schemaURL) while outside it the same bare key is
-# undefined and dropped: the scope is the definition, and a reader sees at once
-# which extension an attribute belongs to.  In RDF (doc/tests-manifest-ld.ttl,
+# The prefix's context (shexSpec/extensions' Map/manifest-context.jsonld) binds
+# the prefix and the `map:parms` term, and gives that term a JSON-LD 1.1
+# property-scoped @context -- the file beside it, manifest-parms-context.jsonld
+# -- that defines the mapping's keys, so inside it `outputSchemaURL` expands to
+# map:outputSchema (typed @id, like the core's schemaURL) while outside it the
+# same bare key is undefined and dropped: the scope is the definition, and a
+# reader sees at once which extension an attribute belongs to.  In RDF (doc/tests-manifest-ld.ttl,
 # from tools/yamlld-to-nested-turtle.js) the entry gets one map:parms arc to a
 # blank node holding them all; staticVars is a nested blank node whose
 # predicates are the variables.  The neighborhoods do the same with
@@ -59,6 +60,30 @@
 # in shexSpec/extensions, alongside that extension's own spec) rather than all
 # in one place, so whoever maintains that neighborhood or extension owns its
 # vocabulary's definition too.
+#
+# Each contribution is a pair of files, and importing it is one line, the URL
+# of its manifest-context.jsonld: the default binding, which declares the
+# prefix and the <prefix>:parms term and nothing else.  The names written
+# inside the mapping are in manifest-parms-context.jsonld beside it, which that
+# term names as its scope; it maps them to absolute IRIs and declares no
+# prefix, so it adds nothing to the outer scope.  The bindings are @protected:
+# should two of them ever claim one prefix, a JSON-LD processor refuses the
+# stack ("protected term redefinition") rather than let the later one silently
+# take the name.  A manifest that needs both then imports one and names the
+# other's scope itself -- once, in its @context:
+#
+#   - m: http://shex.io/extensions/Map/#
+#     m:parms:
+#       "@id": m:parms
+#       "@context": https://shexspec.github.io/extensions/Map/manifest-parms-context.jsonld
+#
+# and `m:parms:` in its entries; or with no declaration at all, in the entry:
+#
+#   http://shex.io/extensions/Map/#parms:
+#     "@context": https://shexspec.github.io/extensions/Map/manifest-parms-context.jsonld
+#     outputSchemaURL: ../packages/extension-map/examples/BPdam-schema.shex
+#
+# Nothing clashes here, so this manifest just imports.
 #
 # neighborhood-rdfjs has no manifest-context.jsonld of its own: shex.js uses
 # it for two things at once -- the data LANGUAGE (the TriG family: Turtle,

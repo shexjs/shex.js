@@ -1,0 +1,8 @@
+{
+  "_comment": "The scope of @shexjs/neighborhood-sparql's manifest vocabulary: what a manifest entry may write inside the mapping that manifest-context.jsonld, beside this file, binds as sparql:parms. The keys are the backend's dbParams (its module's `dbParams` declaration), endpoint being the one the sketch exercises. Each is bare and mapped to an absolute IRI, and this file declares no prefix, so it puts nothing in the scope it is used from -- which is what lets a manifest bind it under a name of its own instead of sparql:parms, should that prefix be taken.",
+
+  "@context": {
+    "endpoint": {"@id": "http://shex.io/neighborhoods/sparql#endpoint", "@type": "@id"},
+    "allOutgoing": "http://shex.io/neighborhoods/sparql#allOutgoing"
+  }
+}

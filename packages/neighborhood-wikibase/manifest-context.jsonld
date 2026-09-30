@@ -1,18 +1,14 @@
 {
-  "_comment": "Manifest-entry attributes specific to @shexjs/neighborhood-wikibase, stacked onto ../../doc/webapp-manifest-context.jsonld's core. An entry that names this neighborhood (neighborhood: wikibase, a core attribute) writes this backend's own parameters under one `wikibase:parms` mapping -- base, sitematrix, pages, cacheDir, bare inside it -- and the property-scoped @context on that term (JSON-LD 1.1) expands them to wikibase: IRIs, so they can't collide with another backend's same-shaped attribute (compare neighborhood-sparql's own, differently-typed, endpoint). Tentative home, as with neighborhood-sparql: this reads Wikibase's own entity-page JSON, not anything ShEx-specific, so a wikidata- or Wikibase-tooling namespace may be a better long-term home for it.",
+  "_comment": "The default binding of @shexjs/neighborhood-wikibase's manifest vocabulary, stacked onto ../../doc/webapp-manifest-context.jsonld's core. An entry that names this neighborhood (neighborhood: wikibase, a core attribute) writes this backend's own parameters under one `wikibase:parms` mapping -- base, sitematrix, pages, cacheDir, bare inside it. This file only binds names: the wikibase: prefix and the wikibase:parms term, whose property-scoped @context (JSON-LD 1.1) is the file beside it, manifest-parms-context.jsonld, which expands those keys to wikibase: IRIs, so they can't collide with another backend's same-shaped attribute (compare neighborhood-sparql's own, differently-typed, endpoint). @protected, for the reason neighborhood-sparql's is: a clash with another stacked context is an error, not a silent override, and the scope file can be bound under another name. Tentative home, as with neighborhood-sparql: this reads Wikibase's own entity-page JSON, not anything ShEx-specific, so a wikidata- or Wikibase-tooling namespace may be a better long-term home for it.",
 
   "@context": {
     "@version": 1.1,
+    "@protected": true,
     "wikibase": "http://shex.io/neighborhoods/wikibase#",
 
     "wikibase:parms": {
       "@id": "wikibase:parms",
-      "@context": {
-        "base": {"@id": "wikibase:base", "@type": "@id"},
-        "sitematrix": {"@id": "wikibase:sitematrix", "@type": "@id"},
-        "pages": {"@id": "wikibase:pages", "@type": "@id", "@container": "@set"},
-        "cacheDir": "wikibase:cacheDir"
-      }
+      "@context": "manifest-parms-context.jsonld"
     }
   }
 }
