@@ -4,7 +4,7 @@
   "files": [
     "lib",
     "src",
-    "manifest-context.json"
+    "known-contexts.json"
   ],
   "description": "Read a shex.js examples manifest -- YAML, JSON or an RDF graph -- into the entries validate, the web app and the tools consume",
   "author": {

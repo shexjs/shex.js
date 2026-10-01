@@ -27,18 +27,25 @@
  *
  * The same entries come out of an RDF rendering of the manifest (the graph
  * tools/yamlld-to-nested-turtle.js writes from the YAML-LD): entriesFromGraph
- * reads a store back by predicate IRI through the core @context, the copy
- * of doc/webapp-manifest-context.jsonld this package ships (a test keeps the
- * two identical).  A vocabulary's parms arc is its namespace IRI + "parms".
- * How the attributes inside are spelled is that vocabulary's context's to
- * say -- outputSchemaURL for an IRI object under a @type: @id term, bare
- * endpoint for an IRI that is a value rather than a reference -- and a
- * JSON-LD context is not part of a graph, so the rendering names each
- * vocabulary's context (<namespace> shexjs:manifestContext <url>) and the
- * reader fetches it through the caller's loadContext, or takes it from
- * `scopes`.  Failing both, an IRI object spells `<local>URL` and a literal
- * `<local>`, which is right for a document reference and wrong for an
- * endpoint.
+ * reads a store back by predicate IRI through the core @context.  A
+ * vocabulary's parms arc is its namespace IRI + "parms".  How the
+ * attributes inside are spelled is that vocabulary's context's to say --
+ * outputSchemaURL for an IRI object under a @type: @id term, bare endpoint
+ * for an IRI that is a value rather than a reference -- and a JSON-LD
+ * context is not part of a graph, so the rendering names each vocabulary's
+ * context (<namespace> shexjs:manifestContext <url>) and the reader looks
+ * it up: in `scopes`, then in the KNOWN CONTEXTS, then through the
+ * caller's loadContext.  Failing all three, an IRI object spells
+ * `<local>URL` and a literal `<local>`, which is right for a document
+ * reference and wrong for an endpoint.
+ *
+ * KnownContexts is a static roll-up of every context a manifest is known
+ * to stack -- the core, the neighborhoods', the extensions' published
+ * beside their specs -- keyed by the URL a manifest names it by, so no
+ * reader needs the network for a known vocabulary.  It is
+ * known-contexts.json, written by tools/rollup-manifest-contexts.js in the
+ * shex.js repository (rerun it after editing a context or adding one); a
+ * JSON-LD processor is given it as documentLoader().
  *
  * x / xURL: an attribute `x` holds a document's text and `xURL` says where to
  * fetch it.  Older manifests wrote a URL under `x`.  Given a `probe`, the
@@ -66,10 +73,11 @@ export interface ReadOptions {
 }
 
 export interface GraphOptions extends ReadOptions {
-  /** a vocabulary's scope context by namespace, consulted before loadContext */
+  /** a vocabulary's scope context by namespace, consulted first */
   scopes?: {[namespace: string]: any};
   /** fetch a context document by URL -- the one the graph names for a
-   * vocabulary.  Absent, or failing, the spelling falls back to the heuristic */
+   * vocabulary -- when the known roll-up lacks it.  Absent, or failing, the
+   * spelling falls back to the heuristic */
   loadContext?: (url: string) => Promise<any>;
 }
 
@@ -84,8 +92,39 @@ export interface TextOptions extends ReadOptions, GraphOptions {
   parseTurtle?: (text: string, base?: string) => any;
 }
 
+/** every context a manifest is known to stack, by URL (see the file comment) */
+export const KnownContexts: {[url: string]: any} = require("../known-contexts.json");
+
+/** where the core vocabulary is published */
+export const CoreContextURL = "https://shex.js.org/doc/webapp-manifest-context.jsonld";
+
 /** the core vocabulary, as shipped */
-export const CoreContext: any = require("../manifest-context.json");
+export const CoreContext: any = KnownContexts[CoreContextURL];
+
+/** what jsonld.js calls a RemoteDocument */
+export interface RemoteDocument { contextUrl: null; documentUrl: string; document: any; }
+
+/** a JSON-LD documentLoader that answers the known contexts from the
+ * roll-up and hands anything else to `fallback` (jsonld.js's own loader,
+ * a fetch), or refuses it when there is none */
+export function documentLoader (fallback?: (url: string) => Promise<RemoteDocument>): (url: string) => Promise<RemoteDocument> {
+  return async (url: string): Promise<RemoteDocument> => {
+    if (url in KnownContexts)
+      return {contextUrl: null, documentUrl: url, document: KnownContexts[url]};
+    if (fallback)
+      return fallback(url);
+    throw new Error(`context not in the known roll-up, and no loader to fetch it: ${url}`);
+  };
+}
+
+/** a context document by URL: from the roll-up, else fetched by `fetchText` */
+export async function loadContext (url: string, fetchText?: (url: string) => Promise<string>): Promise<any> {
+  if (url in KnownContexts)
+    return KnownContexts[url];
+  if (fetchText)
+    return JSON.parse(await fetchText(url));
+  throw new Error(`context not in the known roll-up, and no fetch to load it: ${url}`);
+}
 
 /** the attributes that come as text (`x`) or by reference (`xURL`) */
 export const DOCUMENTS = ["schema", "data", "queryMap", "overlay"];
@@ -386,15 +425,20 @@ export async function entriesFromGraph (store: any, options: GraphOptions = {}):
     if (scopeVocabs.has(ns))
       return scopeVocabs.get(ns)!;
     let ctx: any = options.scopes && ns in options.scopes ? options.scopes[ns] : undefined;
-    if (ctx === undefined && options.loadContext && manifestContextIRI) {
+    if (ctx === undefined && manifestContextIRI) {
       const named = store.getQuads(null, manifestContextIRI, null)
             .filter((q: any) => q.subject.termType === "NamedNode" && q.subject.value === ns);
-      if (named.length)
-        try {
-          ctx = await options.loadContext(named[0].object.value);
-        } catch (e) {
-          ctx = undefined;
-        }
+      if (named.length) {
+        const url = named[0].object.value;
+        if (url in KnownContexts)
+          ctx = KnownContexts[url];
+        else if (options.loadContext)
+          try {
+            ctx = await options.loadContext(url);
+          } catch (e) {
+            ctx = undefined;
+          }
+      }
     }
     const v = ctx === undefined || ctx === null ? null : vocabularyOf(ctx);
     scopeVocabs.set(ns, v);

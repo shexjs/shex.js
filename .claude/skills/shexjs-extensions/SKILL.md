@@ -150,6 +150,16 @@ function done (validator) { /* e.g. delete results[URL] if empty */ }
      SHACL-SPARQL one). Add its bundle to the STRIP-FOR-PUBLICATION
      local-dev notice too.
    - `doc/tests-manifest.yaml`, regenerated as above.
+   - **A manifest vocabulary, if the extension's entries need attributes
+     of their own** (ShExMap's outputSchemaURL, say): a scope-only
+     `manifest-context.jsonld` beside its spec in shexSpec/extensions,
+     published at `https://shexspec.github.io/extensions/<X>/manifest-context.jsonld`
+     (Map's is the model; Reduce's and SHACL-SPARQL's are empty, reserved
+     scopes). Then add `<X>` to `EXTENSION_NAMES` in
+     `tools/rollup-manifest-contexts.js` and run it: it refreshes
+     `packages/shex-manifest/known-contexts.json`, the static roll-up every
+     reader consults before the network, and `Manifest-test.js` fails until
+     the roll-up agrees. Same rerun after editing any context.
    - A row in `packages/shex-webapp/test/semact-plugins-test.js`
      (`TEST_browser`, page and worker), and a node test that validates
      every manifest entry and checks its `status` (see

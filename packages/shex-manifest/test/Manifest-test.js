@@ -30,17 +30,9 @@ const probe = async (url) => {
   }
 };
 
-/** a vocabulary's context, from the checkout: the neighborhoods' by their
- * relative URLs, the extensions' (published beside their specs, not yet
- * there) from the sibling shexSpec/extensions checkout the way
- * tools/yamlld-to-nested-turtle.js reads them */
-const EXTENSIONS = "https://shexspec.github.io/extensions/";
-const loadContext = async (url) => {
-  const file = url.startsWith(EXTENSIONS)
-        ? Path.join(ROOT, "..", "..", "shexSpec", "extensions", url.slice(EXTENSIONS.length))
-        : Url.fileURLToPath(url);
-  return JSON.parse(Fs.readFileSync(file, "utf8"));
-};
+/** a context the roll-up lacks: the neighborhoods', which the Turtle names
+ * by URLs relative to itself (file:// here) */
+const loadContext = async (url) => JSON.parse(Fs.readFileSync(Url.fileURLToPath(url), "utf8"));
 
 const parseTurtle = (text, base) => {
   const store = new N3.Store();
@@ -219,11 +211,40 @@ describe("@shexjs/manifest", function () {
     });
   });
 
-  describe("the core context", function () {
-    it("is the repository's doc/webapp-manifest-context.jsonld", function () {
-      const shipped = Manifest.CoreContext["@context"];
-      const repo = JSON.parse(Fs.readFileSync(Path.join(DOC, "webapp-manifest-context.jsonld"), "utf8"))["@context"];
-      expect(shipped).to.deep.equal(repo);
+  describe("the known contexts", function () {
+    const TEST_network = require("../../shex-cli/test/testGate.js")("TEST_network");
+
+    it("carry the repository's own contexts verbatim (rerun tools/rollup-manifest-contexts.js otherwise)", function () {
+      for (const file of ["doc/webapp-manifest-context.jsonld",
+                          "packages/neighborhood-sparql/manifest-context.jsonld",
+                          "packages/neighborhood-wikibase/manifest-context.jsonld"]) {
+        const repo = JSON.parse(Fs.readFileSync(Path.join(ROOT, file), "utf8"));
+        expect(Manifest.KnownContexts["https://shex.js.org/" + file], file).to.deep.equal(repo);
+      }
+      expect(Manifest.CoreContext).to.equal(Manifest.KnownContexts[Manifest.CoreContextURL]);
+    });
+
+    it("answer a documentLoader without the network, and hand the rest on", async function () {
+      const asked = [];
+      const loader = Manifest.documentLoader(async url => { asked.push(url); return {contextUrl: null, documentUrl: url, document: {}}; });
+      const map = await loader("https://shexspec.github.io/extensions/Map/manifest-context.jsonld");
+      expect(map.document["@context"]).to.have.property("outputSchemaURL");
+      await loader("https://other.example/ctx.jsonld");
+      expect(asked).to.deep.equal(["https://other.example/ctx.jsonld"]);
+      let error;
+      await Manifest.documentLoader()("https://other.example/ctx.jsonld").catch(e => { error = e; });
+      expect(error.message).to.include("roll-up");
+    });
+
+    (TEST_network ? it : it.skip)("are what the web publishes", async function () {
+      this.timeout(20000);
+      for (const [url, doc] of Object.entries(Manifest.KnownContexts)) {
+        if (url.startsWith("https://shex.js.org/"))
+          continue; // published from main; this branch is ahead of it
+        const resp = await fetch(url);
+        expect(resp.ok, url).to.equal(true);
+        expect(await resp.json(), url).to.deep.equal(doc);
+      }
     });
 
     it("maps a predicate to its text and URL spellings", function () {

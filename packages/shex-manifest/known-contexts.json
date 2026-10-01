@@ -1,0 +1,136 @@
+{
+  "https://shex.js.org/doc/webapp-manifest-context.jsonld": {
+    "_comment": "The core of the shex.js 'examples manifest' vocabulary -- packages/*/examples/manifest.yaml, aggregated by tools/aggregate-manifests.js into doc/tests-manifest.yaml and read by tools/manifest-runner.js. This is NOT the shexTest conformance-manifest vocabulary (node_modules/shex-test/context.jsonld, mf:/sht:/sx:): that is a real, RDF-based format shared with other ShEx implementations (PyShEx, the Scala and Rust implementations). This one is shex.js's own ad hoc webapp/example-gallery convention, which grew one key at a time and has no shared vocabulary backing it -- this file is a first sketch at giving it one, reusing shexTest's terms where the meaning is genuinely the same (schema, data, shape, node/focus, comment) so the two can be crosswalked, and minting shex.js's own terms both for the conventions shexTest has no concept of (URL variants, labels, the query-map DSL, plugin loading, neighborhood selection) AND for the one place a shex.js term looks like a shexTest one but is not: `status` here is the expected validation VERDICT (conformant/nonconformant), while shexTest's mf:status is the TEST'S OWN curation status (mf:Approved/mf:Proposed/...) -- shexTest encodes the verdict structurally instead, via rdf:type (sht:ValidationTest vs sht:ValidationFailure). Aliasing shex.js's status to mf:status would have been a false cognate, not a crosswalk, so it gets its own shexjs:status term instead; a real crosswalk would need to turn an entry's status into its @type, which is future work past this sketch. A manifest entry's neighborhood- and extension-specific attributes are LEXICALLY SCOPED: the entry writes them under one `<prefix>:parms` key whose value is a mapping (map:parms, nsp:parms), bare inside it, and the manifest's own @context binds that key -- a prefix of the manifest's choosing and, beside it, the term, whose JSON-LD 1.1 property-scoped @context is the vocabulary's scope file: packages/neighborhood-*/manifest-context.jsonld in this repository, https://shexspec.github.io/extensions/*/manifest-context.jsonld beside each extension's spec in shexSpec/extensions. All of them are also in @shexjs/manifest's static roll-up (packages/shex-manifest/known-contexts.json, refreshed by tools/rollup-manifest-contexts.js), which every reader consults before the network, so a known vocabulary costs no fetch. A scope file defines only the names written inside its mapping, each mapped to an absolute IRI, and declares no prefix, so vocabularies cannot collide and the prefix is the manifest's, written once per entry rather than once per attribute; outside its mapping a bare name is undefined and dropped, and inside it the outer names -- this core -- stay visible, as in any lexical scope, which is how pluginURL (below) is written inside a mapping without the scope file defining it, and how a scope file that wants an attribute another vocabulary defined binds the same bare name to that vocabulary's IRI: the IRI is the identity, the name is local. The binding has to name the TERM (map:parms), not just the prefix: JSON-LD attaches a scoped context to the key as written, so a prefix alone gives map:parms its IRI but not its scope, and the mapping's contents are dropped. In RDF the entry gets one <prefix>:parms arc to a blank node holding them (doc/tests-manifest-ld.ttl shows the graph). pluginURL names a module the web app loads by URL to provide what the entry needs -- a semantic-action extension, a neighborhood, a screen, any or all of these (doc/plugins.md) -- and is written inside the mapping of the vocabulary that module implements, so an entry's plugins sit with their parameters and are all loaded before the entry is read; it replaces the entry-level plugins list. neighborhood still names one of the web app's built-in data sources; a plugin-delivered one would come from a pluginURL. manifestContext is the one term no entry writes: the RDF rendering of a manifest (tools/yamlld-to-nested-turtle.js) says with it which scope file defines each vocabulary -- <namespace> shexjs:manifestContext <url>, one triple per binding the manifest's @context declares -- because a JSON-LD context is not part of the graph, and without it a reader of the graph could not tell whether an IRI-valued attribute is spelled outputSchemaURL or endpoint. NOTE: this top-level _comment sits beside @context, not inside it -- a JSON-LD context's own term values may only be strings or objects, never arrays, so this is deliberately here instead.",
+    "@context": {
+      "mf": "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#",
+      "sx": "https://shexspec.github.io/shexTest/ns#",
+      "shex": "http://www.w3.org/ns/shex#",
+      "shexMan": "http://www.w3.org/ns/shex-manifest#",
+      "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+      "shexjs": "https://shex.io/ns/examples-manifest#",
+      "entries": {
+        "@id": "mf:entries",
+        "@container": "@list"
+      },
+      "comment": "rdfs:comment",
+      "schema": {
+        "@id": "shexMan:schema"
+      },
+      "schemaURL": {
+        "@id": "shexMan:schema",
+        "@type": "@id"
+      },
+      "schemaLabel": "shexMan:schemaLabel",
+      "data": {
+        "@id": "shexMan:data"
+      },
+      "dataURL": {
+        "@id": "shexMan:data",
+        "@type": "@id",
+        "@container": "@set"
+      },
+      "dataLabel": "shexMan:dataLabel",
+      "queryMap": "shexMan:queryMap",
+      "queryMapURL": {
+        "@id": "shexMan:queryMap",
+        "@type": "@id"
+      },
+      "queryMapLabel": "shexMan:queryMapLabel",
+      "node": {
+        "@id": "shex:focus",
+        "@type": "@id"
+      },
+      "shape": {
+        "@id": "shex:shape",
+        "@type": "@id"
+      },
+      "status": "shexjs:status",
+      "neighborhood": "shexjs:neighborhood",
+      "pluginURL": {
+        "@id": "shexjs:plugin",
+        "@type": "@id"
+      },
+      "manifestContext": {
+        "@id": "shexjs:manifestContext",
+        "@type": "@id"
+      },
+      "overlayURL": {
+        "@id": "shexjs:overlay",
+        "@type": "@id"
+      },
+      "dataBase": {
+        "@id": "shexjs:dataBase",
+        "@type": "@id"
+      },
+      "slurp": "shexjs:slurp"
+    }
+  },
+  "https://shex.js.org/packages/neighborhood-sparql/manifest-context.jsonld": {
+    "_comment": "@shexjs/neighborhood-sparql's manifest vocabulary: what an examples manifest may write inside the mapping it binds to this file -- the backend's own parameters, its module's dbParams: endpoint (the one doc/tests-manifest-ld.yaml exercises) and allOutgoing. A manifest binds this file under a term of its own choosing and gives that term this file's URL as its property-scoped @context (JSON-LD 1.1): in the manifest's @context, `nsp: http://shex.js.org/neighborhoods/Sparql/#` and, beside it, `nsp:parms: {@context: ../packages/neighborhood-sparql/manifest-context.jsonld}`; an entry then writes `nsp:parms:` with these names bare inside it, plus pluginURL, a core name visible inside the scope, for the module that implements the neighborhood. Never import this file at the top level of a manifest: that would put these names in the outer scope, where they belong to nobody. Each name maps to an absolute IRI under http://shex.js.org/neighborhoods/Sparql/#, shex.js's own namespace, since neighborhoods are shex.js's data-access layer rather than anything the ShEx specs define; the file declares no prefix and nothing outside the scope, so it cannot collide with another vocabulary, whatever prefix the manifest chose for it. Stacked onto ../../doc/webapp-manifest-context.jsonld's core (see doc/manifest-vocabulary.md for the survey this came out of). Tentative home: a SPARQL endpoint isn't specific to ShEx or to shex.js, so other RDF tooling may want this vocabulary too; if a better shared home turns up (a SPARQL-protocol-adjacent namespace, say), these IRIs should point there instead.",
+    "@context": {
+      "endpoint": {
+        "@id": "http://shex.js.org/neighborhoods/Sparql/#endpoint",
+        "@type": "@id"
+      },
+      "allOutgoing": "http://shex.js.org/neighborhoods/Sparql/#allOutgoing"
+    }
+  },
+  "https://shex.js.org/packages/neighborhood-wikibase/manifest-context.jsonld": {
+    "_comment": "@shexjs/neighborhood-wikibase's manifest vocabulary: what an examples manifest may write inside the mapping it binds to this file -- the backend's own parameters, its module's dbParams: base, sitematrix, pages, cacheDir. Bound the way neighborhood-sparql's is (a term of the manifest's choosing, nwb:parms in doc/tests-manifest-ld.yaml, whose property-scoped @context is this file's URL; never imported at the top level), and written bare inside that mapping, beside pluginURL for the module that implements the neighborhood. Each name maps to an absolute IRI under http://shex.js.org/neighborhoods/Wikibase/#, shex.js's own namespace; no prefix and nothing outside the scope is declared, so this cannot collide with another backend's same-shaped attribute (compare neighborhood-sparql's own, differently-typed, endpoint), whatever prefix the manifest chose. Tentative home, as with neighborhood-sparql: this reads Wikibase's own entity-page JSON, not anything ShEx-specific, so a wikidata- or Wikibase-tooling namespace may be a better long-term home for it.",
+    "@context": {
+      "base": {
+        "@id": "http://shex.js.org/neighborhoods/Wikibase/#base",
+        "@type": "@id"
+      },
+      "sitematrix": {
+        "@id": "http://shex.js.org/neighborhoods/Wikibase/#sitematrix",
+        "@type": "@id"
+      },
+      "pages": {
+        "@id": "http://shex.js.org/neighborhoods/Wikibase/#pages",
+        "@type": "@id",
+        "@container": "@set"
+      },
+      "cacheDir": "http://shex.js.org/neighborhoods/Wikibase/#cacheDir"
+    }
+  },
+  "https://shexspec.github.io/extensions/Map/manifest-context.jsonld": {
+    "_comment": "The ShExMap extension's manifest vocabulary: what an examples manifest may write inside the mapping it binds to this file. A manifest binds it under a term of its own choosing and gives that term this file's URL as its property-scoped @context (JSON-LD 1.1): in the manifest's @context, `map: http://shex.io/extensions/Map/#` and, beside it, `map:parms: {@context: https://shexspec.github.io/extensions/Map/manifest-context.jsonld}`; an entry then writes `map:parms:` with these names bare inside it. The binding must name the term, not just the prefix: JSON-LD attaches a scoped context to the key as written, so a prefix alone would give map:parms its IRI but not its scope, and the mapping's contents would be dropped. Never import this file at the top level of a manifest: that would put these names in the outer scope, where they belong to nobody. Every name maps to an absolute IRI in the extension's namespace -- the one its schemas already use for %Map:{ ... %} semantic actions, `PREFIX Map: <http://shex.io/extensions/Map/#>`, so an implementation only needs one IRI to make sense of both -- and this file declares no prefix and nothing outside the scope, so it cannot collide with another vocabulary, whatever prefix the manifest chose for it. Outer names stay visible inside the scope, so the manifest core's pluginURL is written inside the mapping too, naming the plugin that implements this vocabulary. outputSchema(URL)/outputShapeMap(URL) name the materialization's target schema and root; staticVars are always-available globals handed to the materializer, written as a mapping from variable IRI to value, i.e. a node object whose keys are the variables themselves -- a nested blank node in RDF; expectedBindings(URL)/expectedOutputData(URL) are regression fixtures a test compares the run against; threadedOnly marks an entry that only ThreadedMaterializer-test exercises (its output has no legacy materializer to compare against). An X/XURL pair shares one IRI, the URL form typed @id, as the core's schema/schemaURL do. Stacked onto shex.js's doc/webapp-manifest-context.jsonld core. NOTE the namespace: http://shex.io/extensions/Map/# is the one extension IRI ending in #, so a term bound to it as map:parms is http://shex.io/extensions/Map/#parms.",
+    "@context": {
+      "outputSchema": "http://shex.io/extensions/Map/#outputSchema",
+      "outputSchemaURL": {
+        "@id": "http://shex.io/extensions/Map/#outputSchema",
+        "@type": "@id"
+      },
+      "outputShapeMap": "http://shex.io/extensions/Map/#outputShapeMap",
+      "outputShapeMapURL": {
+        "@id": "http://shex.io/extensions/Map/#outputShapeMap",
+        "@type": "@id"
+      },
+      "staticVars": "http://shex.io/extensions/Map/#staticVars",
+      "staticVarsURL": {
+        "@id": "http://shex.io/extensions/Map/#staticVars",
+        "@type": "@id"
+      },
+      "expectedBindings": "http://shex.io/extensions/Map/#expectedBindings",
+      "expectedBindingsURL": {
+        "@id": "http://shex.io/extensions/Map/#expectedBindings",
+        "@type": "@id"
+      },
+      "expectedOutputData": "http://shex.io/extensions/Map/#expectedOutputData",
+      "expectedOutputDataURL": {
+        "@id": "http://shex.io/extensions/Map/#expectedOutputData",
+        "@type": "@id"
+      },
+      "threadedOnly": "http://shex.io/extensions/Map/#threadedOnly"
+    }
+  },
+  "https://shexspec.github.io/extensions/Reduce/manifest-context.jsonld": {
+    "_comment": "The ShExReduce extension's manifest vocabulary: what an examples manifest may write inside the mapping it binds to this file. Bound the way Map/manifest-context.jsonld explains: a term of the manifest's choosing (rdc:parms, say) whose property-scoped @context is this file's URL, declared beside the prefix in the manifest's @context; never imported at the top level. Empty so far: the one thing ShExReduce's examples add to an entry, overlay/overlayURL, is a core attribute of shex.js's manifest vocabulary (its manifest runner applies an overlay for any extension), and pluginURL, written inside the mapping to name the plugin, is core too. Reserved so that an attribute of ShExReduce's own has a place to land: bare, mapped to an absolute IRI under http://shex.io/extensions/Reduce/, the extension's IRI. A vocabulary that wants an attribute another one defined binds the same bare name to the other's IRI in its own scope file: the IRI is the identity, the name is local. Stacked onto shex.js's doc/webapp-manifest-context.jsonld core.",
+    "@context": {}
+  },
+  "https://shexspec.github.io/extensions/SHACL-SPARQL/manifest-context.jsonld": {
+    "_comment": "The SHACL-SPARQL extension's manifest vocabulary: what an examples manifest may write inside the mapping it binds to this file. Bound the way Map/manifest-context.jsonld explains: a term of the manifest's choosing (ssp:parms, say) whose property-scoped @context is this file's URL, declared beside the prefix in the manifest's @context; never imported at the top level. Empty so far: no manifest-specific attribute exists yet -- shex.js's example manifest for this extension uses only the core vocabulary, plus pluginURL inside the mapping to name the plugin -- but the scope is reserved, so the day this extension needs an attribute (a fixture format for its ?message rows, say) it is defined here, bare and mapped to an absolute IRI under http://shex.io/extensions/SHACL-SPARQL/, the namespace its schemas already use for %shacl-sparql:{ ... %} semantic actions. Stacked onto shex.js's doc/webapp-manifest-context.jsonld core.",
+    "@context": {}
+  }
+}

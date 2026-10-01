@@ -492,7 +492,7 @@ class ManifestCache extends InterfaceCache {
     if (Manifest.detectFormat(text, url) === "turtle") {
       const store = new N3js.Store();
       store.addQuads(new N3js.Parser({baseIRI: url}).parse(text));
-      return Manifest.entriesFromGraph(store, {
+      return Manifest.entriesFromGraph(store, { // a known vocabulary's context comes from the package's roll-up; an unknown one is fetched
         base: url,
         loadContext: (u: string) => this.fetchOK(u).then((t: string) => JSON.parse(t)),
       });

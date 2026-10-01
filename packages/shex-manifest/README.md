@@ -73,9 +73,18 @@ const entries = await Manifest.entriesFromGraph(store, {
 });
 ```
 
+### KnownContexts / documentLoader(fallback) / loadContext(url, fetchText)
+
+`KnownContexts` is a static roll-up of every context a manifest is known to stack -- the core, the neighborhoods', the extensions' published beside their specs -- keyed by the URL a manifest names it by, so no reader needs the network for a known vocabulary. `documentLoader(fallback)` is a JSON-LD processor's document loader over it, handing unknown URLs to `fallback` (jsonld.js's own loader, a fetch); `loadContext(url, fetchText)` is the same for anyone who just wants the document. The graph reader consults the roll-up itself. shex.js refreshes the roll-up with `node tools/rollup-manifest-contexts.js` after a context changes or a vocabulary is added.
+
+``` js
+const jsonld = require("jsonld");
+const quads = await jsonld.toRDF(doc, {base, documentLoader: Manifest.documentLoader(jsonld.documentLoaders.node())});
+```
+
 ### detectFormat(text, url) / prefixesOf(context) / vocabularyOf(context)
 
-The sniffer; the prefixes a context declares inline (JSON-LD's rule: a term whose IRI ends in a gen-delim, or marked `@prefix`); a context's terms as a map from predicate IRI to its text and URL spellings. `CoreContext` is the core vocabulary the package ships, a copy of shex.js's `doc/webapp-manifest-context.jsonld`.
+The sniffer; the prefixes a context declares inline (JSON-LD's rule: a term whose IRI ends in a gen-delim, or marked `@prefix`); a context's terms as a map from predicate IRI to its text and URL spellings. `CoreContext` is the core vocabulary, the roll-up's copy of shex.js's `doc/webapp-manifest-context.jsonld`.
 
 ---
 

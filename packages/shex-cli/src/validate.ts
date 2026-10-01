@@ -1176,9 +1176,10 @@ async function resourceExists (url: string): Promise<boolean> {
 }
 
 /** a context document by URL, for @shexjs/manifest's graph reader to
- * spell a vocabulary's attributes the way its YAML writes them */
+ * spell a vocabulary's attributes the way its YAML writes them: the known
+ * roll-up first, then fetched */
 async function loadContext (url: string): Promise<any> {
-  return JSON.parse((await ShExNode.GET(url)).text);
+  return Manifest.loadContext(url, async (u: string) => (await ShExNode.GET(u)).text);
 }
 
 const arrayOf = (v: any): any[] => Array.isArray(v) ? v : [v];

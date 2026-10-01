@@ -102,10 +102,11 @@
 # https://shexspec.github.io/extensions/*/manifest-context.jsonld in
 # shexSpec/extensions, alongside that extension's spec) rather than all in one
 # place, so whoever maintains that neighborhood or extension owns its
-# vocabulary's definition too.  Until that site publishes them,
-# tools/yamlld-to-nested-turtle.js reads the extensions' files under those
-# same URLs from a sibling checkout, ../../shexSpec/extensions -- an
-# out-of-project relative link from the tool.
+# vocabulary's definition too.  All of them are also in @shexjs/manifest's
+# static roll-up (packages/shex-manifest/known-contexts.json, refreshed by
+# tools/rollup-manifest-contexts.js), which every reader -- the tool, validate,
+# the web app -- consults before the network, so a known vocabulary costs no
+# fetch, online or off.
 #
 # neighborhood-rdfjs has no manifest-context.jsonld of its own: shex.js uses
 # it for two things at once -- the data LANGUAGE (the TriG family: Turtle,

@@ -20,13 +20,11 @@
  *
  * A relative URL in @context (or in an @id/@type/document-reference value)
  * resolves against the input file's own location, same as a browser would
- * resolve one found in an HTML page at that path; an http(s) one is fetched
- * for real -- except one under a MIRRORS prefix whose file exists in the
- * sibling checkout named there, which is read from that checkout instead,
- * by an out-of-project relative link from this file.  That is how a
- * vocabulary that lives beside its extension's spec (shexSpec/extensions)
- * is worked on before that site publishes it; once published, deleting or
- * moving the checkout makes the fetch happen.
+ * resolve one found in an HTML page at that path.  An http(s) one is
+ * answered from @shexjs/manifest's static roll-up of the known contexts
+ * (packages/shex-manifest/known-contexts.json, refreshed by
+ * tools/rollup-manifest-contexts.js) when it is there, and fetched for real
+ * otherwise -- so the usual run touches no network.
  */
 "use strict";
 
@@ -36,6 +34,7 @@ const YAML = require("js-yaml");
 const jsonld = require("jsonld");
 const N3 = require("n3");
 const { Writer: NestedWriter } = require("../packages/extension-map/lib/NestedWriter");
+const Manifest = require("@shexjs/manifest");
 
 const DF = N3.DataFactory;
 
@@ -58,35 +57,13 @@ function readInput (arg) {
   return {text: Fs.readFileSync(arg, "utf8"), baseFile: Path.resolve(arg)};
 }
 
-/** published prefixes read from a sibling checkout while unpublished: the
- * URL's identity stays the published one, so what it says resolves as it
- * will once it is up there */
-const MIRRORS = {
-  "https://shexspec.github.io/extensions/": Path.join(__dirname, "..", "..", "..", "shexSpec", "extensions"),
-};
-
 /** resolve a relative context/document reference against `baseFile`'s
- * directory; fetch http(s) ones for real over the network, unless a MIRRORS
- * checkout has them */
+ * directory; answer an http(s) one from the known roll-up, else fetch it */
 function makeDocumentLoader (baseFile) {
-  const nodeLoader = jsonld.documentLoaders.node();
-  const noted = new Set();
+  const known = Manifest.documentLoader(jsonld.documentLoaders.node());
   return async function documentLoader (url) {
-    if (/^https?:/.test(url)) {
-      for (const [prefix, dir] of Object.entries(MIRRORS)) {
-        if (!url.startsWith(prefix))
-          continue;
-        const local = Path.join(dir, url.slice(prefix.length));
-        if (!Fs.existsSync(local))
-          continue;
-        if (!noted.has(url)) {
-          noted.add(url);
-          console.error(`# ${url}: read from ${Path.relative(process.cwd(), local)} (unpublished)`);
-        }
-        return {contextUrl: null, documentUrl: url, document: JSON.parse(Fs.readFileSync(local, "utf8"))};
-      }
-      return nodeLoader(url);
-    }
+    if (/^https?:/.test(url))
+      return known(url);
     const file = url.startsWith("file://") ? url.slice("file://".length)
           : Path.resolve(Path.dirname(baseFile), url);
     return {contextUrl: null, documentUrl: url, document: JSON.parse(Fs.readFileSync(file, "utf8"))};
