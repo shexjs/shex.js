@@ -290,19 +290,7 @@ class ManifestCache extends InterfaceCache {
             }
             try {
                 // exceptions pass through to caller (asyncGet)
-                try {
-                    textOrObj = JSON.parse(textOrObj);
-                }
-                catch (eJson) {
-                    try {
-                        textOrObj = ShExWebApp.JsYaml.load(textOrObj);
-                    }
-                    catch (eYaml) {
-                        throw url.endsWith(".yaml")
-                            ? eYaml
-                            : eJson;
-                    }
-                }
+                textOrObj = await this.readManifestText(textOrObj, url);
             }
             catch (e) {
                 $("#inputSchema .manifest").append($("<li/>").text(NO_MANIFEST_LOADED));
@@ -396,6 +384,39 @@ class ManifestCache extends InterfaceCache {
         }, []);
         await this.prepareManifest(demos, url);
         $("#manifestDrop").show(); // may have been hidden if no manifest loaded.
+    }
+    /** the manifest's text as its entries, through @shexjs/manifest: YAML or
+     * JSON -- the classic list, or the YAML-LD form whose @context binds each
+     * vocabulary's `<prefix>:parms` scope, flattened back to the classic
+     * entries with the plugins collected under `plugins` -- or Turtle, the
+     * same entries read back by predicate, a vocabulary's attributes spelled
+     * through the context the graph names for it.  An entry's `schema`
+     * (data, queryMap, overlay) that resolves to a resource becomes
+     * `schemaURL`; one that does not is the document's text. */
+    async readManifestText(text, url) {
+        const Manifest = ShExWebApp.Manifest;
+        const exists = (u) => this.fetchOK(u).then(() => true, () => false);
+        if (Manifest.detectFormat(text, url) === "turtle") {
+            const store = new N3js.Store();
+            store.addQuads(new N3js.Parser({ baseIRI: url }).parse(text));
+            return Manifest.entriesFromGraph(store, {
+                base: url,
+                loadContext: (u) => this.fetchOK(u).then((t) => JSON.parse(t)),
+            });
+        }
+        let doc;
+        try {
+            doc = JSON.parse(text);
+        }
+        catch (eJson) {
+            try {
+                doc = ShExWebApp.JsYaml.load(text);
+            }
+            catch (eYaml) {
+                throw url.endsWith(".yaml") ? eYaml : eJson;
+            }
+        }
+        return Manifest.entriesFromJson(doc, { base: url, probe: exists });
     }
     async parse(text, base) {
         throw Error("should not try to parse manifest cache");

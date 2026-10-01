@@ -8,7 +8,14 @@
 # written in this form), read by tools/manifest-runner.js and the WebApp, with
 # tests-manifest-test.js checking it.  Until then the two coexist, and this one
 # is the design: the namespacing below, and the lexical scoping of the
-# namespaced attributes described next.
+# namespaced attributes described next.  The readers are ahead of the
+# writers: @shexjs/manifest (packages/shex-manifest) turns this form, the
+# classic one, and the Turtle rendering (doc/tests-manifest-ld.ttl) into the
+# same flat entries, and `validate --yaml-manifest`/`--turtle-manifest` and
+# the web app's ?manifestURL= read all three through it
+# (packages/shex-webapp/test/manifest-formats-test.js drives the app over
+# this file and the .ttl).  What remains is for packages/*/examples/manifest.yaml
+# and tools/aggregate-manifests.js to write it.
 #
 # The point of the exercise: doc/manifest-vocabulary.md surveyed the attributes
 # the examples manifests actually use across shex-webapp, every extension and

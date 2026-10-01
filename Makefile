@@ -33,6 +33,7 @@ BUILD.extension-wasi := npm run build
 # ----------------------------------------------------------------------------
 #                   DIR                    OUTPUT                        UPSTREAM
 $(eval $(call package,shex-term,            shex-term.js,))
+$(eval $(call package,shex-manifest,        shex-manifest.js,))
 $(eval $(call package,eval-validator-api,   validator-api.js,            shex-term))
 $(eval $(call package,eval-simple-1err,     eval-simple-1err.js,         eval-validator-api shex-term))
 $(eval $(call package,eval-threaded-nerr,   eval-threaded-nerr.js,       eval-validator-api shex-term))
@@ -54,7 +55,7 @@ $(eval $(call package,shex-validator,       shex-validator.js,           eval-si
 $(eval $(call package,shex-webapp,          shex-serve.js,               eval-simple-1err eval-threaded-nerr eval-validator-api \
                                                                          neighborhood-api neighborhood-rdfjs neighborhood-sparql \
                                                                          neighborhood-wikibase shape-map shex-editor-services \
-                                                                         shex-loader shex-parser shex-term shex-util \
+                                                                         shex-loader shex-manifest shex-parser shex-term shex-util \
                                                                          shex-validator shex-visitor shex-writer))
 $(eval $(call package,extension-map,        shex-extension-map.js,       eval-simple-1err neighborhood-rdfjs shex-editor-services \
                                                                          shex-node shex-parser shex-term shex-util shex-validator \
@@ -71,7 +72,7 @@ $(eval $(call package,shex-cli,             validate.js,                 eval-si
                                                                          extension-eval extension-map extension-test \
                                                                          neighborhood-api neighborhood-rdfjs neighborhood-sparql \
                                                                          neighborhood-wikibase shape-map shex-editor-services \
-                                                                         shex-node shex-parser shex-term shex-util \
+                                                                         shex-manifest shex-node shex-parser shex-term shex-util \
                                                                          shex-validator shex-visitor shex-writer))
 $(eval $(call package,shex-shape-path-query,shape-path-query.js,         extension-map neighborhood-rdfjs shape-map shex-term \
                                                                          shex-util shex-validator))
@@ -80,7 +81,7 @@ $(eval $(call package,shex,                 shex.js,                     eval-si
                                                                          extension-reduce-js extension-test extension-wasi \
                                                                          extension-wasi-test neighborhood-api neighborhood-rdfjs \
                                                                          neighborhood-sparql neighborhood-wikibase semact-overlay \
-                                                                         shape-map shex-cli shex-editor-services shex-loader \
+                                                                         shape-map shex-cli shex-editor-services shex-loader shex-manifest \
                                                                          shex-node shex-parser shex-shape-path-query shex-term \
                                                                          shex-util shex-validator shex-visitor shex-webapp shex-writer))
 $(eval $(call package,shex-language-server, server.js,                   neighborhood-rdfjs shex-editor-services shex-util shex-validator))

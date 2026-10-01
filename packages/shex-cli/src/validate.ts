@@ -65,6 +65,8 @@ import {ShExValidator, resultMapToShapeExprTest} from "@shexjs/validator";
 import ShapeMap = require("shape-map");
 const N3 = require("n3");
 import ShExNodeCjsModule = require("@shexjs/node");
+import * as Manifest from "@shexjs/manifest";
+import Url = require("url");
 const ShExNode = ShExNodeCjsModule({
   rdfjs: N3,
   fetch: globalThis.fetch,
@@ -1080,6 +1082,13 @@ async function loadRDFmanifest (cmds: Cmds) {
       {turtle: cmds["turtle-manifest"] || [], jsonld: cmds["jsonld-manifest"] || []},
       SchemaOptions, undefined
     );
+    const manifestUrl = ((cmds["turtle-manifest"] || []).concat(cmds["jsonld-manifest"] || []))[0];
+    if (loaded.data.getQuads(null, mf+"action", null).length === 0) {
+      // not the test-suite format: an examples manifest as RDF (the graph
+      // tools/yamlld-to-nested-turtle.js writes), read back by predicate
+      const entries = await Manifest.entriesFromGraph(loaded.data, {loadContext});
+      return await runExampleEntries(entries, urlOf(manifestUrl), cmds);
+    }
     const testNodes = cmds["test-name"].length ?
         cmds["test-name"].reduce((ret: any[], testName) => {
           const pattern = RegExp(testName);
@@ -1142,9 +1151,123 @@ function injectCertainCommandLineArgs (run: any, cmds: Cmds) {
 }
 
 function relUrlOrFile (rel: string, base: string) {
+  if (rel.match(/^[a-z]+:\/\//))
+    return rel; // already absolute (an RDF manifest's resolved IRIs)
   if (base.match(/^[a-z]+:\/\//))
     return new URL(rel, base).href;
   return Path.join(base, base.endsWith('/') ? '.' : '..', rel);
+}
+
+/** a manifest's location as a URL, for resolving what it refers to */
+function urlOf (fileOrUrl: string): string {
+  return fileOrUrl.match(/^[a-z]+:\/\//) ? fileOrUrl : Url.pathToFileURL(Path.resolve(fileOrUrl)).href;
+}
+
+/** "does this URL name a resource?" -- @shexjs/manifest's probe, which
+ * settles whether an entry's `schema` (or data, queryMap, overlay) is a
+ * reference to rename `schemaURL` or the document's own text */
+async function resourceExists (url: string): Promise<boolean> {
+  try {
+    await ShExNode.GET(url);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/** a context document by URL, for @shexjs/manifest's graph reader to
+ * spell a vocabulary's attributes the way its YAML writes them */
+async function loadContext (url: string): Promise<any> {
+  return JSON.parse((await ShExNode.GET(url)).text);
+}
+
+const arrayOf = (v: any): any[] => Array.isArray(v) ? v : [v];
+
+/** a test manifest's `shex` is a demo manifest's `schema`; renamed before
+ * @shexjs/manifest settles whether it is text or a reference */
+function shexAsSchema (doc: any): any {
+  const entries = Array.isArray(doc) ? doc : doc && typeof doc === "object" && Array.isArray(doc.entries) ? doc.entries : [doc];
+  for (const elt of entries)
+    if (elt && typeof elt === "object" && "shex" in elt && !("schema" in elt)) {
+      elt.schema = elt.shex;
+      delete elt.shex;
+    }
+  return doc;
+}
+
+/** run an examples manifest's entries (the shape @shexjs/manifest gives,
+ * whether the manifest was YAML, JSON or RDF): each becomes a validation
+ * like a command line's, documents named by `x` as text and by `xURL` by
+ * reference, resolved against the manifest */
+async function runExampleEntries (d: any[], manifestUrl: string, cmds: Cmds) {
+  d = d.map((x: any) => injectCertainCommandLineArgs(x, cmds));
+
+  if (cmds["test-name"].length) // Include only tests listed in --test-name.
+    d = d.filter(function (elt: any) {
+      return cmds["test-name"].reduce(function (ret: any, n) {
+        const pattern = RegExp(n);
+        const name = "name" in elt
+              ? elt.name
+              : "".concat(elt.schemaLabel || '', '/', elt.dataLabel || '');
+        return ret || name.match(pattern);
+      }, false);
+    });
+
+  d.forEach(function (elt: any) {
+    // change .shex as found in test manifest to .schema as found in demo manifests
+    if ("shex" in elt) {
+      elt["schema"] = elt["shex"]
+      delete elt["shex"];
+    }
+    if ("queryMapURL" in elt) {
+      elt["mapURL"] = elt["queryMapURL"]
+      delete elt["queryMapURL"];
+    }
+
+    // x holds a document's text and xURL says where it is; @shexjs/manifest
+    // has settled which is which (probing, for an old manifest that wrote a
+    // URL under x).  Both become the URL list the validator takes, text as
+    // {text, url: the manifest}.
+    ([{text: "schema", asUrl: "schemaURL"},
+      {text: "data"  , asUrl: "dataURL"  }])
+      .forEach(pair => {
+        const texts: string[] = pair.text in elt ? arrayOf(elt[pair.text]) : [];
+        const urls: string[] = pair.asUrl in elt ? arrayOf(elt[pair.asUrl]) : [];
+        delete elt[pair.text];
+        elt[pair.asUrl] = (texts.map(text => ({ text, url: manifestUrl })) as any[])
+          .concat(urls.map(u => relUrlOrFile(u, manifestUrl)));
+      });
+    // ShExJ and JSON-LD, which nothing probes: text if it has whitespace or
+    // a bracket, else a reference
+    ["json", "jsonld"].forEach(key => {
+      elt[key] = key in elt
+        ? arrayOf(elt[key]).map((text: string) => /[ <>]/.test(text) ? { text, url: manifestUrl } : relUrlOrFile(text, manifestUrl))
+        : [];
+    });
+
+    // Command like arguments override *each* manifest entry.
+    ["node", "shape", "queryMap", "mapURL"].forEach(function (attr) {
+      if (attr in cmds)
+        elt[attr] = cmds[attr];
+    });
+
+    // Resolve URL parameters.
+    ["mapURL"].forEach(function (attr) {
+      if (attr in elt) {
+        elt[attr] = relUrlOrFile(elt[attr], manifestUrl)
+      }
+    });
+
+    elt.schemaOptions = Object.assign({}, SchemaOptions);
+    if ("options" in elt) {
+      elt.validatorOptions = elt.options;
+      delete elt.options;
+    } else
+      elt.validatorOptions = ValidatorOptions;
+    if ("result" in elt && elt.result !== null && typeof elt.result !== "boolean")
+      elt.result = relUrlOrFile(elt.result, manifestUrl);
+  });
+  return await queueTests(d, cmds);
 }
 
 function loadJSONmanifest (jsonManifests: string[], parser: (text: string) => any, cmds: Cmds) {
@@ -1156,100 +1279,31 @@ function loadJSONmanifest (jsonManifests: string[], parser: (text: string) => an
       let d = parser(p.text);
 
         // normalize the input
-        if (!Array.isArray(d)) {
-          if ("@graph" in d) // Extract from the JSON-LD manifest format.
-            d = d["@graph"][0].entries.map(function (t: any) {
-              const options = Object.assign({}, ValidatorOptions);
-              (t.trait || []).forEach(function (tStr: string) {
-                tStr = tStr.substr(0, 1).toLowerCase() + tStr.substr(1);
-                if (tStr in TraitToOption)
-                  options[TraitToOption[tStr]] = tStr;
-              });
-              return Object.assign(
-                { name: t.name,
-                  schemaURL: t.action.schema,
-                  dataURL: t.action.data,
-                  options: options },
-                "shape" in t.action ? {shape: t.action.shape} : {},
-                "focus" in t.action ? {node: t.action.focus} : {},
-                "map" in t.action ? {queryMap: t.action.map} : {}
-              );
+        if (!Array.isArray(d) && "@graph" in d) { // Extract from the JSON-LD manifest format.
+          d = d["@graph"][0].entries.map(function (t: any) {
+            const options = Object.assign({}, ValidatorOptions);
+            (t.trait || []).forEach(function (tStr: string) {
+              tStr = tStr.substr(0, 1).toLowerCase() + tStr.substr(1);
+              if (tStr in TraitToOption)
+                options[TraitToOption[tStr]] = tStr;
             });
-          else // Hopefully an object like { schemaURL: "t.shex" , shape: "S", dataURL: "t.ttl", "node": "s" }
-            d = [d];
+            return Object.assign(
+              { name: t.name,
+                schemaURL: t.action.schema,
+                dataURL: t.action.data,
+                options: options },
+              "shape" in t.action ? {shape: t.action.shape} : {},
+              "focus" in t.action ? {node: t.action.focus} : {},
+              "map" in t.action ? {queryMap: t.action.map} : {}
+            );
+          });
+        } else {
+          // an examples manifest: the classic list, one entry, or the YAML-LD
+          // form with its @context and `<prefix>:parms` scopes -- @shexjs/manifest
+          // flattens the scopes, collects the plugins and settles x/xURL
+          d = await Manifest.entriesFromJson(shexAsSchema(d), {base: urlOf(p.url), probe: resourceExists});
         }
-
-        d = d.map((x: any) => injectCertainCommandLineArgs(x, cmds));
-
-        if (cmds["test-name"].length) // Include only tests listed in --test-name.
-          d = d.filter(function (elt: any) {
-            return cmds["test-name"].reduce(function (ret: any, n) {
-              const pattern = RegExp(n);
-              const name = "name" in elt
-                    ? elt.name
-                    : "".concat(elt.schemaLabel || '', '/', elt.dataLabel || '');
-              return ret || name.match(pattern);
-            }, false);
-          });
-
-        d.forEach(function (elt: any) {
-          // change .shex as found in test manifest to .schema as found in demo manifests
-          if ("shex" in elt) {
-            elt["schema"] = elt["shex"]
-            delete elt["shex"];
-          }
-          if ("queryMapURL" in elt) {
-            elt["mapURL"] = elt["queryMapURL"]
-            delete elt["queryMapURL"];
-          }
-
-          // Turn test manifest format into common ShEx manifest format.
-          ([{from: "schema", asText: "schemaP", mediaType: "text/shex"  , asUrl: "schemaURL"},
-            {from: "json"  , asText: "schemaP", mediaType: "text/json"  , asUrl: "json"},
-            {from: "data"  , asText: "dataP"  , mediaType: "text/turtle", asUrl: "dataURL"  },
-            {from: "jsonld", asText: "dataP"  , mediaType: "text/jsonld", asUrl: "jsonld"  }])
-            .forEach(pair => {
-              if (pair.from in elt) { // looks URL-ish
-                const values = Array.isArray(elt[pair.from])
-                      ? elt[pair.from]
-                      : [elt[pair.from]];
-                delete elt[pair.from];
-                elt[pair.asUrl] = values.map(
-                  (text: string) =>
-                    /[ <>]/.test(text)
-                    ? { text, /*mediaType: pair.mediaType,*/ url: p.url }
-                  : relUrlOrFile(text, p.url)
-                );
-              } else if (pair.asUrl in elt) {
-                elt[pair.asUrl] = [relUrlOrFile(elt[pair.asUrl], p.url)];
-              } else {
-                elt[pair.asUrl] = [];
-              }
-            });
-
-          // Command like arguments override *each* manifest entry.
-          ["node", "shape", "queryMap", "mapURL"].forEach(function (attr) {
-            if (attr in cmds)
-              elt[attr] = cmds[attr];
-          });
-
-          // Resolve URL parameters.
-          ["mapURL"].forEach(function (attr) {
-            if (attr in elt) {
-              elt[attr] = relUrlOrFile(elt[attr], p.url)
-            }
-          });
-
-          elt.schemaOptions = Object.assign({}, SchemaOptions);
-          if ("options" in elt) {
-            elt.validatorOptions = elt.options;
-            delete elt.options;
-          } else
-            elt.validatorOptions = ValidatorOptions;
-          if ("result" in elt && elt.result !== null && typeof elt.result !== "boolean")
-            elt.result = relUrlOrFile(elt.result, p.url);
-        });
-        return await queueTests(d, cmds);
+        return await runExampleEntries(d, urlOf(p.url), cmds);
     } catch (e: any) {
       console.error(`failed to ${curAct} json manifest: ` + (e.stack || e));
       return errorCode;

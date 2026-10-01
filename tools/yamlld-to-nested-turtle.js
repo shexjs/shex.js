@@ -186,6 +186,35 @@ function orderForNesting (quads, lists) {
   return out;
 }
 
+/** what the YAML's @context says in RDF: a JSON-LD context is not part of
+ * the graph, so the graph would not know which scope file spells a
+ * vocabulary's attributes -- whether <http://shex.io/extensions/Map/#outputSchema>
+ * with an IRI object is written outputSchemaURL or endpoint-style, bare.
+ * So, for each binding `<p>:parms: {@context: <url>}` the manifest declares
+ * inline beside its prefix `<p>: <namespace>`, one triple names the
+ * vocabulary's context: <namespace> shexjs:manifestContext <url>.
+ * @shexjs/manifest's graph reader fetches those to spell the entries back
+ * the way the YAML wrote them. */
+function vocabularyContexts (contextValue, base) {
+  const MANIFEST_CONTEXT = "https://shex.io/ns/examples-manifest#manifestContext";
+  const quads = [];
+  const prefixes = {};
+  for (const ctx of Array.isArray(contextValue) ? contextValue : [contextValue])
+    if (ctx && typeof ctx === "object")
+      for (const [term, def] of Object.entries(ctx))
+        if (typeof def === "string" && ABSOLUTE_IRI.test(def))
+          prefixes[term] = def;
+  for (const ctx of Array.isArray(contextValue) ? contextValue : [contextValue])
+    if (ctx && typeof ctx === "object")
+      for (const [term, def] of Object.entries(ctx)) {
+        const m = /^([^:]+):parms$/.exec(term);
+        if (m && m[1] in prefixes && def && typeof def === "object" && typeof def["@context"] === "string")
+          quads.push(DF.quad(DF.namedNode(prefixes[m[1]]), DF.namedNode(MANIFEST_CONTEXT),
+                             DF.namedNode(new URL(def["@context"], base).href)));
+      }
+  return quads;
+}
+
 async function main () {
   const {text, baseFile} = readInput(process.argv[2]);
   const doc = YAML.load(text);
@@ -205,6 +234,7 @@ async function main () {
   // ShExMapPlugin.ts's writeNestedTurtle takes before handing quads to it
   const store = new N3.Store();
   store.addQuads(rawQuads.map(toRdfJsQuad));
+  store.addQuads(vocabularyContexts(doc["@context"], base));
   const lists = store.extractLists({remove: true});
   const ordered = orderForNesting(store.getQuads(), lists);
 

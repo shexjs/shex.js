@@ -1,0 +1,46 @@
+{
+  "name": "@shexjs/manifest",
+  "version": "1.0.0-alpha.33",
+  "files": [
+    "lib",
+    "src",
+    "manifest-context.json"
+  ],
+  "description": "Read a shex.js examples manifest -- YAML, JSON or an RDF graph -- into the entries validate, the web app and the tools consume",
+  "author": {
+    "name": "Eric Prud'hommeaux",
+    "email": "eric@w3.org",
+    "url": "http://www.w3.org/People/Eric/"
+  },
+  "keywords": [
+    "shex",
+    "shape expressions",
+    "rdf",
+    "manifest",
+    "yaml-ld",
+    "json-ld"
+  ],
+  "license": "MIT",
+  "main": "./lib/shex-manifest.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "js-yaml": "^5.4.2"
+  },
+  "scripts": {
+    "test": "cd ../.. && npm run test",
+    "build": "tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shexjs/shex.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shexSpec/grammar/issues"
+  },
+  "types": "./src/shex-manifest.ts"
+}

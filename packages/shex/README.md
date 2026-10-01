@@ -161,6 +161,7 @@ The RDF root IRI (`-r`, default `tag:eric@w3.org/2016/root`) names the node from
 - [`@shexjs/validator`](https://github.com/shexjs/shex.js/tree/main/packages/shex-validator#readme) -- validate nodes in an RDF graph against shapes in a schema
 - [`@shexjs/loader`](https://github.com/shexjs/shex.js/tree/main/packages/shex-loader#readme) -- an API for loading and using ShEx schemas
 - [`@shexjs/node`](https://github.com/shexjs/shex.js/tree/main/packages/shex-node#readme) -- additional API functionality for a node environment
+- [`@shexjs/manifest`](https://github.com/shexjs/shex.js/tree/main/packages/shex-manifest#readme) -- read an examples manifest (YAML, JSON or an RDF graph) into the entries validate, the web app and the tools consume
 - [`@shexjs/cli`](https://github.com/shexjs/shex.js/tree/main/packages/shex-cli#readme) -- command line tools for transforming and validating with schemas
 - [`@shexjs/webapp`](https://github.com/shexjs/shex.js/tree/main/packages/shex-webapp#readme) -- the shex.html web app
 - [`@shexjs/term`](https://github.com/shexjs/shex.js/tree/main/packages/shex-term#readme) -- RDF terms, as ShExJ and RDF/JS write them

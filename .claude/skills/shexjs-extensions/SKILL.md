@@ -104,7 +104,13 @@ function done (validator) { /* e.g. delete results[URL] if empty */ }
   ReduceJs/Wasi/WasiTest for `register(validator)`.
 - **Library/tests**: `require` the module and call `register`/`done` yourself.
 - **WebApp**: through a plugin descriptor's `register`, or a
-  `.pluginControl` checkbox. `extension-{map,reduce,wasi}/doc/*Plugin.js`
+  `.pluginControl` checkbox. A manifest entry names its plugins in a
+  `plugins` list, or (the YAML-LD form on the `manifest-refactor` branch,
+  `doc/tests-manifest-ld.yaml`) as `pluginURL` inside the `<prefix>:parms`
+  scope of the vocabulary the plugin implements; `@shexjs/manifest`
+  (`packages/shex-manifest`) reads both, and Turtle, into the same flat
+  entries for the web app, `validate --yaml-manifest`/`--turtle-manifest`
+  and the tools. `extension-{map,reduce,wasi}/doc/*Plugin.js`
   are worked examples. Each has a webpack bundle (`npm run webpack` in the
   package; the root `npm run webpacks-all` builds them all), and the
   browser tests need those bundles.
