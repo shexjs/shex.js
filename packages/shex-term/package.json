@@ -28,7 +28,7 @@
   "dependencies": {
     "@rdfjs/types": "^2.0.1",
     "@types/shexj": "^2.1.7",
-    "rdf-data-factory": "^2.0.2",
+    "rdf-data-factory": "^2.1.0",
     "relativize-url": "^1.0.0"
   },
   "scripts": {

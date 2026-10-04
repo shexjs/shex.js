@@ -35,7 +35,7 @@
   "dependencies": {
     "@comunica/query-sparql-rdfjs": "^5.4.1",
     "@comunica/utils-bindings-factory": "^5.4.0",
-    "rdf-data-factory": "^2.0.2",
+    "rdf-data-factory": "^2.1.0",
     "sparqljs": "^3.7.4"
   },
   "devDependencies": {
