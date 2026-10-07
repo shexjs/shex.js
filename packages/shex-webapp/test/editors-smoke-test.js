@@ -1947,6 +1947,21 @@ if (!TEST_browser) {
         source().select("rdfjs");
         expect(await shared.app.getPermalink()).not.to.include("endpoint=");
       });
+
+    it("should leave parameters at their defaults out of the permalink", async function () {
+        source().select("rdfjs");
+        const parms = async () => (await shared.app.getPermalink()).split("?")[1].split("&").map(p => p.split("=")[0]);
+        const was = $("#success").val();
+        try {
+          $("#success").val("proof");
+          expect(await parms(), "the default success style").not.to.include("success");
+          expect(await parms(), "the default source").not.to.include("neighborhood");
+          $("#success").val("query");
+          expect(await parms(), "a changed one").to.include("success");
+        } finally {
+          $("#success").val(was);
+        }
+      });
     });
 
     /* "minimal" strips the page back to the schema, the data and the shape
