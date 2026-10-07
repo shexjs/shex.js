@@ -75,9 +75,10 @@ let dataFactoryCounter = 0;
  */
 class DataFactory {
     constructor(options) {
+        var _a;
         this.blankNodeCounter = 0;
-        options = options || {};
-        this.blankNodePrefix = options.blankNodePrefix || `df_${dataFactoryCounter++}_`;
+        options = options !== null && options !== void 0 ? options : {};
+        this.blankNodePrefix = (_a = options.blankNodePrefix) !== null && _a !== void 0 ? _a : `df_${dataFactoryCounter++}_`;
     }
     /**
      * @param value The IRI for the named node.
@@ -95,7 +96,7 @@ class DataFactory {
      * @see BlankNode
      */
     blankNode(value) {
-        return new BlankNode_1.BlankNode(value || `${this.blankNodePrefix}${this.blankNodeCounter++}`);
+        return new BlankNode_1.BlankNode(value !== null && value !== void 0 ? value : `${this.blankNodePrefix}${this.blankNodeCounter++}`);
     }
     /**
      * @param value              The literal value.
@@ -137,7 +138,7 @@ class DataFactory {
      * @see Quad
      */
     quad(subject, predicate, object, graph) {
-        return new Quad_1.Quad(subject, predicate, object, graph || this.defaultGraph());
+        return new Quad_1.Quad(subject, predicate, object, graph !== null && graph !== void 0 ? graph : this.defaultGraph());
     }
     /**
      * Create a deep copy of the given term using this data factory.
@@ -149,22 +150,30 @@ class DataFactory {
         //  https://github.com/microsoft/TypeScript/issues/26933
         switch (original.termType) {
             case 'NamedNode':
+                // eslint-disable-next-line ts/no-unsafe-return
                 return this.namedNode(original.value);
             case 'BlankNode':
+                // eslint-disable-next-line ts/no-unsafe-return
                 return this.blankNode(original.value);
             case 'Literal':
                 if (original.language) {
+                    // eslint-disable-next-line ts/no-unsafe-return
                     return this.literal(original.value, original.language);
                 }
                 if (!original.datatype.equals(Literal_1.Literal.XSD_STRING)) {
+                    // eslint-disable-next-line ts/no-unsafe-return
                     return this.literal(original.value, this.fromTerm(original.datatype));
                 }
+                // eslint-disable-next-line ts/no-unsafe-return
                 return this.literal(original.value);
             case 'Variable':
+                // eslint-disable-next-line ts/no-unsafe-return
                 return this.variable(original.value);
             case 'DefaultGraph':
+                // eslint-disable-next-line ts/no-unsafe-return
                 return this.defaultGraph();
             case 'Quad':
+                // eslint-disable-next-line ts/no-unsafe-return
                 return this.quad(this.fromTerm(original.subject), this.fromTerm(original.predicate), this.fromTerm(original.object), this.fromTerm(original.graph));
         }
     }
@@ -210,6 +219,7 @@ class DefaultGraph {
     }
 }
 exports.DefaultGraph = DefaultGraph;
+// eslint-disable-next-line ts/naming-convention
 DefaultGraph.INSTANCE = new DefaultGraph();
 //# sourceMappingURL=DefaultGraph.js.map
 
@@ -230,10 +240,11 @@ const NamedNode_1 = __webpack_require__(963);
  */
 class Literal {
     constructor(value, languageOrDatatype) {
+        var _a;
         this.termType = 'Literal';
         this.value = value;
         if (typeof languageOrDatatype === 'string') {
-            this.language = languageOrDatatype;
+            this.language = languageOrDatatype.toLowerCase();
             this.datatype = Literal.RDF_LANGUAGE_STRING;
             this.direction = '';
         }
@@ -244,11 +255,11 @@ class Literal {
                 this.direction = '';
             }
             else {
-                this.language = languageOrDatatype.language;
+                this.language = languageOrDatatype.language.toLowerCase();
                 this.datatype = languageOrDatatype.direction ?
                     Literal.RDF_DIRECTIONAL_LANGUAGE_STRING :
                     Literal.RDF_LANGUAGE_STRING;
-                this.direction = languageOrDatatype.direction || '';
+                this.direction = (_a = languageOrDatatype.direction) !== null && _a !== void 0 ? _a : '';
             }
         }
         else {
@@ -265,8 +276,11 @@ class Literal {
     }
 }
 exports.Literal = Literal;
+// eslint-disable-next-line ts/naming-convention
 Literal.RDF_LANGUAGE_STRING = new NamedNode_1.NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#langString');
+// eslint-disable-next-line ts/naming-convention
 Literal.RDF_DIRECTIONAL_LANGUAGE_STRING = new NamedNode_1.NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#dirLangString');
+// eslint-disable-next-line ts/naming-convention
 Literal.XSD_STRING = new NamedNode_1.NamedNode('http://www.w3.org/2001/XMLSchema#string');
 //# sourceMappingURL=Literal.js.map
 
