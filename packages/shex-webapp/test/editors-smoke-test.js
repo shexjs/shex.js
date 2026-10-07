@@ -928,7 +928,7 @@ if (!TEST_browser) {
           expect($("#fixedMap tr.pair").length, "into a fixed map").to.equal(1);
 
           source().select("rdfjs");           // as a slurp leaves the picker
-          $("#shapeMap-tabs").tabs("option", "active", tabIndex("#queryMap"));
+          $("#shapeMap-tabs").tabs("option", "active", tabIndex("#queryMap-tab"));
           $("#shapeMap-tabs").tabs("option", "active", tabIndex("#fixedMap-tab"));
           await new Promise(resolve => setTimeout(resolve, 50));
           expect(asked.length, "not asked again").to.equal(1);
@@ -936,7 +936,7 @@ if (!TEST_browser) {
           expect($("#fixedMap tr.pair").length, "the rows stay").to.equal(1);
 
           // ...but a query map that changed is read again, and this source says no
-          $("#shapeMap-tabs").tabs("option", "active", tabIndex("#queryMap"));
+          $("#shapeMap-tabs").tabs("option", "active", tabIndex("#queryMap-tab"));
           $("#queryMap").val($("#queryMap").val().replace("LIMIT 10", "LIMIT 11"));
           $("#shapeMap-tabs").tabs("option", "active", tabIndex("#fixedMap-tab"));
           await new Promise(resolve => setTimeout(resolve, 50));
@@ -1326,26 +1326,27 @@ if (!TEST_browser) {
       });
 
       it("should hide the Query Map editor behind the Editor and Fixed Map tabs", async function () {
-        // the editor is a CodeMirror view beside the #queryMap textarea (the
-        // tab's panel), so jQuery UI's show/hide of the textarea doesn't reach
-        // it -- it must be kept in step with the active tab, or it stays over
-        // the Query Map Editor and Fixed Map panels
+        // the editor is a CodeMirror view beside the #queryMap textarea, both
+        // inside the #queryMap-tab panel, so jQuery UI's show/hide of the panel
+        // takes the editor with it
         $("#queryMap").val("<http://a.example/a>@<http://a.example/B>").trigger("change");
         await shared.promise;
         const pane = shared.Caches.editorSupport.panes.shapeMap;
         expect(pane && pane.view, "the query map has a CodeMirror editor").to.exist;
-        const editor = pane.view.dom;
+        const panel = $("#queryMap-tab")[0];
+        expect(pane.view.dom.closest("#queryMap-tab"), "the editor is in the Query Map panel").to.equal(panel);
         const activate = i => $("#shapeMap-tabs").tabs("option", "active", i);
 
         activate(0); // Query Map
-        expect(editor.style.display, "editor shows on the Query Map tab").to.not.equal("none");
+        expect($(panel).css("display"), "panel shows on the Query Map tab").to.not.equal("none");
         activate(1); // Query Map Editor
-        expect(editor.style.display, "editor hidden behind the Editor tab").to.equal("none");
+        expect($(panel).css("display"), "panel hidden behind the Editor tab").to.equal("none");
         expect($("#queryMap").css("display"), "the textarea it stands in for stays hidden").to.equal("none");
         activate(2); // Fixed Map
-        expect(editor.style.display, "still hidden behind Fixed Map").to.equal("none");
+        expect($(panel).css("display"), "still hidden behind Fixed Map").to.equal("none");
         activate(0); // back to Query Map
-        expect(editor.style.display, "editor shows again").to.not.equal("none");
+        expect($(panel).css("display"), "panel shows again").to.not.equal("none");
+        expect($("#queryMap").css("display"), "textarea still hidden").to.equal("none");
       });
 
       /* CodeMirror measures when it is built and when its own observers
