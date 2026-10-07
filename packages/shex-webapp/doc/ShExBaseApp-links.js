@@ -173,6 +173,10 @@ mixin(ShExBaseApp, {
                 parm += "URL";
                 val = input.cache.url;
             }
+            // a parameter left out comes back as its default, so a link only
+            // says what differs from it
+            if ("deflt" in input && val === input.deflt)
+                return acc;
             return val.length > 0 ?
                 acc.concat(parm + "=" + encodeURIComponent(val)) :
                 acc;
