@@ -113,7 +113,7 @@ mixin(ShExBaseApp, {
         // came from there and the `data=` values are the ones after it.
         if (iface.data && this.neighborhoods && iface.data.length > ("dataURL" in iface ? 0 : 1))
             this.neighborhoods.setDocuments(("dataURL" in iface ? [this.Caches.inputData.selection.val()] : [])
-                                            .concat(iface.data));
+                .concat(iface.data));
         // Parse the shape-map using the prefixes and base.  What it reports is
         // rendered where the map is; this is called for what it fills in -- and
         // awaited, so that a link finishes loading with the map it named ready

@@ -371,7 +371,8 @@ class ShExBaseApp {
                 // shows and hides it; a pane built while its tab was hidden measured nothing
                 if (ui.newPanel.get(0) === $("#queryMap-tab").get(0)) {
                     const pane = this.editorSupport && this.editorSupport.panes["shapeMap"];
-                    if (pane && pane.view) pane.requestMeasure();
+                    if (pane && pane.view)
+                        pane.requestMeasure();
                 }
                 if (ui.oldPanel.get(0) === $("#editMap-tab").get(0))
                     await this.Caches.shapeMap.copyEditMapToQueryMap();

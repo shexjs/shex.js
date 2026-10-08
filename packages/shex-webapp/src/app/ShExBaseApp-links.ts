@@ -211,7 +211,7 @@ parseQueryString (query: any) {
     // are shown.  With `dataURL=` the first came from there, so the rest follow.
     const neighborhoods = this.neighborhoods;
     if (neighborhoods && neighborhoods.documents().length > 1) {
-        const docs = neighborhoods.documents().map((d: any, at: number) => neighborhoods.docAt(at).text);
+        const docs = neighborhoods.documents().map((d: any, at: number) => neighborhoods.docAt(at)!.text);
         const fromUrl = parms.some(p => p.startsWith("dataURL="));
         parms = parms.filter(p => !p.startsWith("data="));
         (fromUrl ? docs.slice(1) : docs).forEach(text => parms.push("data=" + encodeURIComponent(text)));
