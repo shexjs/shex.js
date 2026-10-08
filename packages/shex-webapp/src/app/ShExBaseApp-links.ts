@@ -89,8 +89,8 @@ mixin(ShExBaseApp, {
               input.location.val() :
               "";
         const value = prepend + (input.normalize
-                                 ? input.normalize(iface[parm].join(""))
-                                 : iface[parm].join(""));
+                                 ? input.normalize((parm === "data" ? iface[parm].slice(0, 1) : iface[parm]).join(""))
+                                 : (parm === "data" ? iface[parm].slice(0, 1) : iface[parm]).join(""));
         const origValue = input.location.val();
 
         try {
@@ -125,6 +125,13 @@ mixin(ShExBaseApp, {
       acc[fromArray[0]] = fromArray[1]
       return acc
     }, {});
+
+    // A data source may hold several documents: `data=` repeats, once per
+    // pane in the order they are shown.  With `dataURL=` the first document
+    // came from there and the `data=` values are the ones after it.
+    if (iface.data && this.neighborhoods && iface.data.length > ("dataURL" in iface ? 0 : 1))
+        this.neighborhoods.setDocuments(("dataURL" in iface ? [this.Caches.inputData.selection.val()] : [])
+                                        .concat(iface.data));
 
     // Parse the shape-map using the prefixes and base.  What it reports is
     // rendered where the map is; this is called for what it fills in -- and
@@ -199,6 +206,16 @@ parseQueryString (query: any) {
         acc.concat(parm + "=" + encodeURIComponent(val)) :
         acc;
     }, []));
+    // The data source may hold several documents (a measurement in one, its
+    // patient in another): `data=` repeats, once per pane in the order they
+    // are shown.  With `dataURL=` the first came from there, so the rest follow.
+    const neighborhoods = this.neighborhoods;
+    if (neighborhoods && neighborhoods.documents().length > 1) {
+        const docs = neighborhoods.documents().map((d: any, at: number) => neighborhoods.docAt(at)!.text);
+        const fromUrl = parms.some(p => p.startsWith("dataURL="));
+        parms = parms.filter(p => !p.startsWith("data="));
+        (fromUrl ? docs.slice(1) : docs).forEach(text => parms.push("data=" + encodeURIComponent(text)));
+    }
     const s = parms.join("&");
     return location.origin + location.pathname + "?" + s;
   },
