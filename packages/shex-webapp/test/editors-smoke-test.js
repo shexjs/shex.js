@@ -1520,6 +1520,45 @@ if (!TEST_browser) {
         await shared.promise;
       });
 
+      it("should carry every document of the data source as repeated data= in the permalink", async function () {
+        this.timeout(60000);
+        const examples = Path.join(__dirname, "../examples");
+        const read = f => Fs.readFileSync(Path.join(examples, f), "utf8");
+        await shared.Caches.manifest.set([{
+          schemaLabel: "FHIR-ish", schema: read("ClinObs.shex"),
+          dataLabel: "two documents", neighborhood: "rdfjs",
+          data: [read("ClinObs-observation.ttl"), read("ClinObs-patient.ttl")],
+          queryMap: "<http://hl7.example/Obs1>@<ObservationShape>",
+        }], "http://localhost/manifest.json");
+        $("#inputSchema .manifest li").last().trigger("click");
+        await shared.promise;
+        $("#inputData .indeterminant li").last().trigger("click");
+        await shared.promise;
+
+        const link = async () => (await shared.app.getPermalink()).split("?")[1].split("&")
+              .map(p => p.split("=")).filter(([k]) => k === "data").map(([k, v]) => decodeURIComponent(v));
+        const docs = shared.neighborhoods.documents().map(d => d.text);
+        expect(docs.length, "two documents").to.equal(2);
+        for (const showing of [0, 1]) {            // whichever document is up
+          shared.neighborhoods.show(showing);
+          expect(await link(), "every document, in pane order").to.deep.equal(docs);
+        }
+
+        // ...and the link brings them back
+        const search = (await shared.app.getPermalink()).split("?")[1];
+        shared.neighborhoods.forgetDocuments();
+        shared.Caches.inputData.selection.val("");
+        shared.Caches.inputSchema.selection.val("");
+        const was = dom.window.location.href;
+        dom.window.history.replaceState({}, "", "?" + search + "&manifest=");
+        try {
+          await shared.app.loadSearchParameters();
+        } finally {
+          dom.window.history.replaceState({}, "", was);
+        }
+        expect(shared.neighborhoods.documents().map(d => d.text), "both documents are back").to.deep.equal(docs);
+      });
+
       /* A graph is not a file: rdfjs holds as many Turtle documents as the
        * data was written in, parses them into one store, and names each tab
        * after what the document says it is.  A result about a triple in the
