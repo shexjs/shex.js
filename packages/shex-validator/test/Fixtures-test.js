@@ -30,6 +30,7 @@ describe("reference results", function () {
    * is no such thing as one that travels, which is why the fix is a relative
    * reference rather than a cleverer absolute one. */
   it("should name nothing by an absolute file: URL", function () {
+    this.timeout(20000);   // reads every reference result: slow on a loaded machine
     const offenders = [];
     for (const f of files) {
       const text = fs.readFileSync(path.join(valDir, f), "utf8");

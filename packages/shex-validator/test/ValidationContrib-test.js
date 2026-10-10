@@ -38,8 +38,7 @@ describe("A ShEx validator (contrib)", function () {
     it.skip("is skipped: no validation-contrib/ in any shexTest checkout");
     return;
   }
-  const manifest = JSON.parse(fs.readFileSync(contribPath + "manifest.jsonld", "utf8"));
-  let entries = manifest["@graph"][0].entries;
+  let entries = require("../../shex-cli/test/suiteManifest.js")(contribPath);
   if (TESTS)
     entries = entries.filter(t => t["@id"].match(TESTS) || t.action.schema.match(TESTS) || t.action.data.match(TESTS));
 

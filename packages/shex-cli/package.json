@@ -32,6 +32,7 @@
     "@shexjs/extension-eval": "^1.0.0-alpha.33",
     "@shexjs/extension-map": "^1.0.0-alpha.33",
     "@shexjs/extension-test": "^1.0.0-alpha.33",
+    "@shexjs/manifest": "^1.0.0-alpha.33",
     "@shexjs/neighborhood-api": "^1.0.0-alpha.33",
     "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.33",
     "@shexjs/neighborhood-sparql": "^1.0.0-alpha.33",

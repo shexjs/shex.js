@@ -104,7 +104,13 @@ function done (validator) { /* e.g. delete results[URL] if empty */ }
   ReduceJs/Wasi/WasiTest for `register(validator)`.
 - **Library/tests**: `require` the module and call `register`/`done` yourself.
 - **WebApp**: through a plugin descriptor's `register`, or a
-  `.pluginControl` checkbox. `extension-{map,reduce,wasi}/doc/*Plugin.js`
+  `.pluginControl` checkbox. A manifest entry names its plugins in a
+  `plugins` list, or (the YAML-LD form,
+  `doc/tests-manifest-ld.yaml`) as `pluginURL` inside the `<prefix>:parms`
+  scope of the vocabulary the plugin implements; `@shexjs/manifest`
+  (`packages/shex-manifest`) reads both, and Turtle, into the same flat
+  entries for the web app, `validate --yaml-manifest`/`--turtle-manifest`
+  and the tools. `extension-{map,reduce,wasi}/doc/*Plugin.js`
   are worked examples. Each has a webpack bundle (`npm run webpack` in the
   package; the root `npm run webpacks-all` builds them all), and the
   browser tests need those bundles.
@@ -144,6 +150,28 @@ function done (validator) { /* e.g. delete results[URL] if empty */ }
      SHACL-SPARQL one). Add its bundle to the STRIP-FOR-PUBLICATION
      local-dev notice too.
    - `doc/tests-manifest.yaml`, regenerated as above.
+   - **A manifest vocabulary, if the extension's entries need attributes
+     of their own** (ShExMap's outputSchemaURL, say): a scope-only
+     `manifest-context.jsonld` beside its spec in shexSpec/extensions,
+     published at `https://shexspec.github.io/extensions/<X>/manifest-context.jsonld`
+     (Map's is the model; Reduce's holds overlay/overlayURL under the hash
+     namespace `http://shex.io/extensions/Reduce/#`; SHACL-SPARQL's is an
+     empty, reserved scope; Test's holds `prints`, what the suite's probe
+     must print, so shexTest's validation manifest binds it as `tst:parms`). A vocabulary namespace that differs from the
+     plugin's `id` is matched to the plugin by the file the roll-up names. Then add a row for `<X>` (prefix, namespace, plugin file) to
+     the extensions in `SCOPES` in `tools/rollup-manifest-contexts.js` and
+     run it: it refreshes `packages/shex-manifest/known-contexts.json`, the
+     static roll-up every reader consults before the network, and
+     `Manifest-test.js` fails until the roll-up agrees. Same rerun after
+     editing any context. The tool fetches each context from where it is
+     published unless told to read a checkout: `--extensions <shexSpec/extensions>`,
+     `--ns <w3c/ns>` (the shared vocabulary, `shex-manifest.jsonld`, and
+     the test vocabulary, `shex-test.jsonld`) -- which is how to roll up a
+     context ahead of its publication. An attribute goes in the shared
+     vocabulary (w3c/ns `shex-manifest`, generated from shexTest's
+     `vocab/manifest-vocab.csv`) only when other implementations' manifests
+     would write it too; shex.js's own top-level terms are in
+     `doc/manifest-context.jsonld`.
    - A row in `packages/shex-webapp/test/semact-plugins-test.js`
      (`TEST_browser`, page and worker), and a node test that validates
      every manifest entry and checks its `status` (see

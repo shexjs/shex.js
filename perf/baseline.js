@@ -61,9 +61,9 @@ const stats = ms => {
 /* ---- A. shexTest: many tiny graphs, the per-call overhead case ---------- */
 function shexTestSuite () {
   const root = Path.join(__dirname, "..", "..", "shexTest");
-  const manifest = Path.join(root, "validation", "manifest.jsonld");
-  if (!fs.existsSync(manifest)) return {skipped: "no ../shexTest checkout"};
-  const entries = JSON.parse(fs.readFileSync(manifest, "utf8"))["@graph"][0].entries
+  const validation = Path.join(root, "validation") + "/";
+  if (!fs.existsSync(Path.join(validation, "manifest.jsonld"))) return {skipped: "no ../shexTest checkout"};
+  const entries = require("../packages/shex-cli/test/suiteManifest.js")(validation)
         .filter(t => t.action && t.action.schema && t.action.data && typeof t.action.focus === "string");
   const tally = {calls: 0, ns: 0};
   const each = [];

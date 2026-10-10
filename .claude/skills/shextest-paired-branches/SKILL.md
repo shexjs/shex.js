@@ -45,7 +45,14 @@ git -C ../shexTest worktree remove /tmp/shexTest-main
    (cd schemas && ../bin/genJSON.js manifest.ttl > manifest.jsonld)
    (cd validation && ../bin/genJSON.js manifest.ttl > manifest.jsonld)
    ```
-   Do the same for `schemas-contrib/` and `validation-contrib/` if you touched them.
+   Do the same for `validation-contrib/` if you touched it. Write to a file
+   as shown: `genJSON.js` calls `process.exit`, which truncates a pipe. Then
+   regenerate the directory's `manifest-ld` from the Turtle and check it:
+   ```sh
+   node bin/manifest-ld-from-legacy.js validation/manifest.ttl -o validation/manifest-ld.yaml
+   npm run manifest-ld && npm run manifest-ld-check && npm run manifest-ld-legacy-check
+   ```
+   (shexTest's `shextest-manifest-ld` skill has the whole story.)
 3. **Change shex.js** and generate `.val` reference results for every new
    passing validation test (see [.val files](#val-reference-results)).
 4. **Point shex.js CI at the shexTest branch.** CI clones shexTest at the ref
@@ -73,7 +80,12 @@ git -C ../shexTest worktree remove /tmp/shexTest-main
 8. **Merge shex.js first, then shexTest right away.** shex.js's `.val` files
    have to be in place before the shexTest tests that need them. Until the
    shexTest PR merges, shex.js `main` shows the step-5 failures, so keep that
-   gap short. Both repos use merge commits, not squash.
+   gap short. Both repos use merge commits, not squash. If the pair
+   introduces an extension's manifest scope (shexSpec/extensions
+   `<X>/manifest-context.jsonld`), publish that before either: shexTest's
+   `manifest-ld-check` fetches it in CI, and shex.js's `TEST_network` roll-up
+   check tolerates its 404 only while it is in `Manifest-test`'s `PENDING`
+   list.
 
 ## Adding tests to shexTest
 
@@ -141,6 +153,19 @@ refuses branches that aren't fully merged, which makes it a useful check.
 
 ## Notes
 
+- **On shexTest's `manifest-refactor` branch** each suite directory has two
+  manifests: `manifest.ttl` and `manifest.jsonld`, the original structure,
+  as on main; and `manifest-ld.yaml`, `.jsonld` and `.ttl`, the same tests
+  in the ShEx manifest vocabulary. shex.js's suites read
+  `manifest-ld.jsonld` when the corpus has it, through
+  `packages/shex-cli/test/suiteManifest.js`, which spells its tests the way
+  `manifest.jsonld` does with the corpus's own
+  `bin/manifest-ld-to-legacy-jsonld.js`, and `manifest.jsonld` otherwise
+  (`TEST_original_manifest=true` forces that). The Turtle is still the
+  source there: regenerate `manifest-ld.yaml` from it (step 2), then
+  `npm run manifest-ld`; shexTest's CI checks all of it
+  (`manifest-ld-check`, `manifest-ld-legacy-check`). The `shexjs-manifests`
+  skill covers the reader side.
 - shex.js has a pre-commit hook that runs the whole test suite (about a
   minute).
 - Build outputs under `packages/*/lib/*.js` are gitignored. After editing the

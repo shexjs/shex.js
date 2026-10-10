@@ -48,7 +48,7 @@ describe("A ShEx validator", function () {
   "use strict";
 
   const shexParser = ShExParser.construct();
-  let tests = parseJSONFile(manifestFile)["@graph"][0]["entries"];
+  let tests = require("../../shex-cli/test/suiteManifest.js")(validationPath);
   const resultMap = parseJSONFile(__dirname + "/val/test-result-map.json");
   const unusedResults = new Set(Object.keys(resultMap));
 
