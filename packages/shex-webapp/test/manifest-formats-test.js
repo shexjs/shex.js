@@ -103,6 +103,49 @@ if (!TEST_browser) {
       });
     }));
 
+  /* A manifest whose schema (as ShExR) and data are its own graph: the entry
+   * names its schema with a fragment of the document, its data with the
+   * document, and its focus and shape as shex:node and shex:shape. */
+  describe("shex.html with a manifest that is also its schema and its data", function () {
+    this.timeout(20000);
+    let dom, $, shared;
+    const manifest = "../examples/manifest-clinObs-allRdf.ttl";
+
+    before(async function () {
+      ({dom, $, shared} = await Harness.boot(PAGE, "?editors=1&manifestURL=" + encodeURIComponent(manifest)));
+    });
+    after(function () { if (dom) dom.window.close(); });
+
+    it("should fill the schema pane with the document and read it as ShExR", async function () {
+      const schemaLi = $("#inputSchema .manifest li").filter((i, li) => $(li).text() === "clinical observation").first();
+      expect(schemaLi.length, "the entry").to.equal(1);
+      schemaLi.trigger("click");
+      await shared.promise;
+      expect($("#inputSchema textarea").val()).to.include("<#schema> a shex:Schema");
+      expect(shared.Caches.inputSchema.language).to.equal("ShExR");
+      const shapes = await shared.Caches.inputSchema.getItems();
+      expect(shapes.some(s => /ObservationShape>$/.test(s)), "the shapes: " + shapes.join(" ")).to.equal(true);
+    });
+
+    it("should fill the data pane with the document and the query map from shex:node and shex:shape", async function () {
+      const dataLi = $("#inputData .passes li").first();
+      expect(dataLi.text()).to.equal("the same measurement, in two documents");
+      dataLi.trigger("click");
+      await shared.promise;
+      expect($("#inputData textarea").val()).to.include("<http://hl7.example/Obs1>");
+      // the node as the data pane writes it: scheme-relative here, where the
+      // test server's http: base shares the IRI's scheme; absolute under
+      // https: or file:.  The shape relative to the schema, as the manifest wrote it.
+      expect($("#queryMap").val()).to.match(/^<(http:)?\/\/hl7\.example\/Obs1>@<ObservationShape>$/);
+    });
+
+    it("should validate the entry", async function () {
+      $("#validate").trigger("click");
+      await shared.promise;
+      expect($("#fixedMap .pair a").first().text(), "the pair's mark").to.equal("✓");
+    });
+  });
+
   describe("shex.html with a manifest that is JSON-LD but not framed", function () {
     this.timeout(20000);
     let dom, $, shared;

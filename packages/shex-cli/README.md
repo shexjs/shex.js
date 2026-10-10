@@ -42,7 +42,7 @@ The result is a JSON structure which tells you exactly how the data matched the 
 }
 ```
 
-`-x` names a ShEx compact syntax (ShExC) schema; `-j` selects ShExJ and `-t` ShExR.
+`-x` names a ShEx compact syntax (ShExC) schema; `-j` selects ShExJ and `-r` ShExR, a schema written as RDF in Turtle (`schema.ttl#schema` names the schema node in a document that holds more than the schema).
 
 A `Failure` tells you the data was invalid with respect to the schema. Try the same command with `-n http://shex.io/examples/Issue1#User2` (a user, so it shouldn't conform to IssueShape):
 

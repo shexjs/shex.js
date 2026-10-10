@@ -91,7 +91,7 @@ function ShExNodeCjsModule (config: ShExNodeCjsModule.Config = {}): ShExLoader.L
         let filename = url;
         const fileURLmatch = filename.match(FileColonUrlRe);
         if (fileURLmatch)
-          filename = fileURLmatch[1];
+          filename = fileURLmatch[1].replace(/#.*$/, ""); // a fragment names something in the file, not a file
         if (config.cwd !== undefined)
           filename = Path.join(config.cwd, filename)
         Fs.readFile(filename, "utf8", function (error: Error | null, text: string) {

@@ -105,6 +105,14 @@ const AllTests = {
     { name: "json-override-fail" , args: ["--json-manifest", "cli/manifest-simple.json", "-n", "<x999>", "-s", "<http://a.example/S1>"], result: "cli/1dotOr2dot_fail_p1_p2_p3.val", status: X.shape_test_fail },
     { name: "turtle-override" , args: ["--turtle-manifest", "cli/manifest-simple.ttl", "-n", "<x>", "-s", "<http://a.example/S1>"], result: "cli/1dotOr2dot_pass_p1.val", status: X.val_match_pass },
     { name: "turtle-override-fail" , args: ["--turtle-manifest", "cli/manifest-simple.ttl", "-n", "<x999>", "-s", "<http://a.example/S1>"], result: "cli/1dotOr2dot_fail_p1_p2_p3.val", status: X.shape_test_fail },
+    // a manifest whose schema (as ShExR) and data are its own graph: the entry
+    // names the schema node with a fragment, the data with the document, and
+    // the focus and shape as shex:node and shex:shape
+    { name: "all-rdf-manifest", args: ["--turtle-manifest", "../../shex-webapp/examples/manifest-clinObs-allRdf.ttl"], resultMatch: '"type": "ShapeTest"', status: X.shape_test_pass },
+    { name: "all-rdf-override-fail", args: ["--turtle-manifest", "../../shex-webapp/examples/manifest-clinObs-allRdf.ttl", "-n", "<http://hl7.example/Practitioner7>"], resultMatch: '"type": "Failure"', status: X.shape_test_fail },
+    // the same document given as a ShExR schema (-r) and as data, the shape relative to the schema
+    { name: "shexr-schema", args: ["-r", "../../shex-webapp/examples/manifest-clinObs-allRdf.ttl", "-d", "../../shex-webapp/examples/manifest-clinObs-allRdf.ttl", "-n", "http://hl7.example/Obs1", "-s", "ObservationShape"], resultMatch: '"type": "ShapeTest"', status: X.shape_test_pass },
+    { name: "shexr-schema-fail", args: ["-r", "../../shex-webapp/examples/manifest-clinObs-allRdf.ttl", "-d", "../../shex-webapp/examples/manifest-clinObs-allRdf.ttl", "-n", "http://hl7.example/Practitioner7", "-s", "ObservationShape"], resultMatch: '"type": "Failure"', status: X.shape_test_fail },
     { name: "results", args: ["--json-manifest", "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: X.val_match_pass },
     { name: "test-name", args: ["--json-manifest", "cli/manifest-results.json", "--test-name", "1dotOr2dot-someOf_pass_p1-p2p3"], resultText: "true\n", status: X.val_match_pass },
     { name: "shape-map", args: ["--json-manifest", "cli/manifest-results.json", "--queryMap", '[{"node":"x", "shape":"http://a.example/S1"}]'], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: X.val_match_pass },

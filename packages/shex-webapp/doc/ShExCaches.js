@@ -97,13 +97,19 @@ class SchemaCache extends InterfaceCache {
         const parseShExR = () => {
             const graphParser = new ShExWebApp.Validator(this.shexcParser.parseString(ShExWebApp.Util.ShExRSchema, {}, base), // !! do something useful with the meta parm (prefixes and base)
             ShExWebApp.RdfJsDb(this.graph), {});
-            const schemaRoot = this.graph.getQuads(null, ShExWebApp.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject; // !!check
+            // the schema node: the one the schema's URL names (a document that is
+            // also a manifest and data names its schema with a fragment), else the first
+            const schemas = this.graph.getQuads(null, ShExWebApp.Util.RDF.type, "http://www.w3.org/ns/shex#Schema");
+            const named = schemas.find((q) => q.subject.termType === "NamedNode" && q.subject.value === base);
+            if (!named && schemas.length === 0)
+                throw Error("no shex:Schema in " + base);
+            const schemaRoot = (named || schemas[0]).subject;
             const val = graphParser.validateNodeShapePair(schemaRoot, ShExWebApp.Validator.Start); // start shape
             return ShExWebApp.Util.ShExJtoAS(ShExWebApp.Util.ShExRtoShExJ(ShExWebApp.Util.valuesToSchema(ShExWebApp.Util.valToValues(val))));
         };
         const isJSON = text.match(/^\s*\{/);
         const isDCTAP = text.match(/\s*shapeID/);
-        this.graph = isJSON ? null : this.tryN3(text);
+        this.graph = isJSON ? null : this.tryN3(text, base);
         this.language =
             isJSON ? "ShExJ" :
                 isDCTAP ? "DCTAP" :
@@ -135,11 +141,14 @@ class SchemaCache extends InterfaceCache {
         const rest = "shapes" in obj ? obj.shapes.map((se) => this.meta.termToLex(se.id)) : [];
         return start.concat(rest);
     }
-    tryN3(text) {
+    /** the text as a graph, or null when it is not Turtle: relative IRIs in
+     * a schema written as RDF resolve against the document's base, as ShExC's
+     * do (`this.base` was passed here, and is never set) */
+    tryN3(text, base) {
         try {
             if (text.match(/^\s*$/))
                 return null;
-            const db = this.turtleParser.parseString(text, this.meta, this.base); // interpret empty schema as ShExC
+            const db = this.turtleParser.parseString(text, this.meta, base); // interpret empty schema as ShExC
             if (db.getQuads().length === 0)
                 return null;
             return db;
@@ -741,6 +750,18 @@ class ManifestCache extends InterfaceCache {
                 catch (e) {
                     this.renderErrorMessage(e, "queryMap");
                 }
+            }
+            else if (dataTest.entry.node !== undefined) {
+                // the vocabulary's one-pair form, shex:node and shex:shape (START
+                // without a shape): how a manifest written as RDF says a query map.
+                // Each pane writes its term as it writes every other -- prefixed,
+                // relative, or scheme-relative (<//hl7.example/Obs1>) when the
+                // data's base shares the IRI's scheme and not its host -- which is
+                // how the fixed map will write it back
+                const shape = dataTest.entry.shape === undefined
+                    ? START_SHAPE_LABEL
+                    : this.caches.inputSchema.meta.termToLex([].concat(dataTest.entry.shape)[0], false);
+                await this.queryMapLoaded(dataTest, [].concat(dataTest.entry.node).map((node) => ldToTurtle(node, this.caches.inputData.meta.termToLex) + "@" + shape).join(",\n"));
             }
             else {
                 this.resultsWidget.append($("<div/>").text("No queryMap or queryMapURL supplied in manifest").addClass("warning"));

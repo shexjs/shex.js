@@ -33,6 +33,26 @@ describe("ShExLoader (extra)", function () {
     expect(loaded.schemaMeta[0].mediaType).to.equal("text/turtle");
   });
 
+  it("reads the schema a URL's fragment names, in a document holding two", async function () {
+    const ShExParser = require("@shexjs/parser");
+    const ShExUtil = require("@shexjs/util");
+    const {ShExValidator} = require("@shexjs/validator");
+    const {ctor: RdfJsDb} = require("@shexjs/neighborhood-rdfjs");
+    const graphParser = {validator: ShExValidator, rdfjsdb: RdfJsDb,
+                         schema: ShExParser.construct("http://www.w3.org/ns/shex", {}, {index: true}).parse(ShExUtil.ShExRSchema)};
+    const two = inTmp("two.ttl", `PREFIX sx: <http://www.w3.org/ns/shex#>
+<#a> a sx:Schema ; sx:shapes ( <A> ) .
+<A> a sx:ShapeDecl ; sx:shapeExpr [ a sx:Shape ] .
+<#b> a sx:Schema ; sx:shapes ( <B> ) .
+<B> a sx:ShapeDecl ; sx:shapeExpr [ a sx:Shape ] .
+`);
+    const url = require("url").pathToFileURL(two).href;
+    const shapesOf = async u => (await ShExNode.load({turtle: [u]}, null, {graphParser}, {})).schema.shapes.map(s => s.id);
+    expect(await shapesOf(url + "#b"), "the fragment picks the schema").to.deep.equal([new URL("B", url).href]);
+    expect(await shapesOf(url + "#a")).to.deep.equal([new URL("A", url).href]);
+    expect(await shapesOf(url), "no fragment: the first").to.deep.equal([new URL("A", url).href]);
+  });
+
   it("says which file's JSON, Turtle or JSON-LD would not parse", async function () {
     const badJson = inTmp("bad.json", "{ not json");
     expect(String(await failureOf(ShExNode.load({shexc: [], json: [badJson]}, null, {}, {})))).to.match(/error parsing JSON .*bad\.json/);
