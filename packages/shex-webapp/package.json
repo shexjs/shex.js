@@ -34,6 +34,7 @@
     "@shexjs/eval-threaded-nerr": "^1.0.0-alpha.33",
     "@shexjs/eval-validator-api": "^1.0.0-alpha.33",
     "@shexjs/loader": "^1.0.0-alpha.33",
+    "@shexjs/manifest": "^1.0.0-alpha.33",
     "@shexjs/neighborhood-api": "^1.0.0-alpha.33",
     "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.33",
     "@shexjs/neighborhood-sparql": "^1.0.0-alpha.33",
@@ -57,6 +58,7 @@
     "make": "(cd test/ && make test)",
     "test": "mocha -C -R dot",
     "webpack": "webpack --config webpack.config.js --mode production",
+    "postwebpack": "node -e \"require('fs').copyFileSync(require.resolve('jsonld/dist/jsonld.min.js'), 'doc/webpacks/jsonld.min.js')\"",
     "webpack-analyzer": "webpack --config webpack.config.js --mode production --profile --json > ./doc/webpacks/shex-webapp-stats.json && webpack-bundle-analyzer ./doc/webpacks/shex-webapp-stats.json",
     "webpack-jquery-components": "webpack --config webpack-jquery-components.config.js --mode development",
     "webpack-monitor": "WEBPACK_MONITOR=true webpack --config webpack.config.js --mode production",
@@ -67,6 +69,7 @@
   },
   "devDependencies": {
     "jquery": "^4.0.0",
+    "jsonld": "^9.0.0",
     "jquery-contextmenu": "^2.9.2",
     "jquery-ui": "^1.14.0"
   },

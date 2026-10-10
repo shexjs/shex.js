@@ -13,8 +13,11 @@
  *
  * A document is named inline (`schema:`, `data:`, `overlay:`) or by a path
  * relative to the manifest (`schemaURL:` ...); `data` may be a list, one
- * graph in several documents.  A query map may name its nodes or ask the
- * data for them with `{FOCUS <p> <o>}`.
+ * graph in several documents.  A reference without an extension (the
+ * conformance suite's `../schemas/1dot`) is read in the first of its
+ * representations that is there: .shex, .json, .ttl, in that order.  A
+ * query map may name its nodes or ask the data for them with
+ * `{FOCUS <p> <o>}`.
  */
 "use strict";
 
@@ -31,6 +34,17 @@ function readManifest (file) {
   return {dir: Path.dirname(file), entries};
 }
 
+/** the file a reference names: among the representations a reference
+ * without an extension may be served as (@shexjs/manifest's order: as
+ * written, .shex, .json, .ttl), the first that is there */
+function fileOf (ref, dir) {
+  const candidates = require("@shexjs/manifest").representations(ref);
+  const found = candidates.map(c => Path.join(dir, c)).find(f => Fs.existsSync(f) && Fs.statSync(f).isFile());
+  if (found === undefined)
+    throw Error(`no file for ${ref} in ${dir}` + (candidates.length > 1 ? ` (tried ${candidates.join(", ")})` : ""));
+  return found;
+}
+
 /** the text(s) an entry gives for `key`: inline, or read from `<key>URL` */
 function textOf (entry, key, dir) {
   if (entry[key] !== undefined)
@@ -38,7 +52,7 @@ function textOf (entry, key, dir) {
   const ref = entry[key + "URL"];
   if (ref === undefined)
     return undefined;
-  const read = f => Fs.readFileSync(Path.join(dir, f), "utf8");
+  const read = f => Fs.readFileSync(fileOf(f, dir), "utf8");
   return Array.isArray(ref) ? ref.map(read) : read(ref);
 }
 
@@ -58,7 +72,11 @@ function loadEntry (entry, dir, options = {}) {
   const base = options.base || BASE;
   const ShExParser = require("@shexjs/parser");
   const N3 = require("n3");
-  let schema = ShExParser.construct(base, null, {index: true}).parse(textOf(entry, "schema", dir), base);
+  // the schema as ShExC, or as ShExJ when that is the representation found
+  const schemaFile = entry.schema === undefined && typeof entry.schemaURL === "string" ? fileOf(entry.schemaURL, dir) : null;
+  let schema = schemaFile !== null && /\.json$/.test(schemaFile)
+        ? require("@shexjs/util").ShExJtoAS(JSON.parse(textOf(entry, "schema", dir)))
+        : ShExParser.construct(base, null, {index: true}).parse(textOf(entry, "schema", dir), base);
   const overlayText = textOf(entry, "overlay", dir);
   if (overlayText !== undefined) {
     const overlay = new N3.Store();
@@ -121,4 +139,4 @@ function validateEntry (entry, dir, options = {}) {
   return Object.assign({fixed, results, surprises, verdict: surprises.length ? "nonconformant" : "conformant"}, loaded);
 }
 
-module.exports = {isReference, readManifest, textOf, resolveTexts, loadEntry, fixedMapOf, validateEntry};
+module.exports = {isReference, readManifest, fileOf, textOf, resolveTexts, loadEntry, fixedMapOf, validateEntry};

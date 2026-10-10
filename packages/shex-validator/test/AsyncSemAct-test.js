@@ -172,7 +172,7 @@ describe("the shexTest Test-extension tests, with every action waiting once", fu
   const validationPath = findPath("validation");
   const manifestFile = validationPath + "manifest.jsonld";
   const shexParser = ShExParser.construct();
-  let tests = JSON.parse(fs.readFileSync(manifestFile, "utf8"))["@graph"][0].entries
+  let tests = require("../../shex-cli/test/suiteManifest.js")(validationPath)
       .filter(t => fs.readFileSync(schemasPath + t.action.schema.replace(/^\.\.\/schemas\//, ""), "utf8")
               .indexOf(TestExtension.url) !== -1);
   if (TESTS)

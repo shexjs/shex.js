@@ -85,7 +85,9 @@ A new `src/app/Foo.ts` also needs a `<script src="./Foo.js">` in
 Root scripts:
 
 ```sh
-npm run webpacks-all    # n3js + shex-webapp + map + reduce + wasi
+npm run webpacks-all    # n3js + shex-webapp + map + reduce + wasi; shex-webapp's postwebpack also
+                        # copies jsonld.min.js beside the bundle (fetched only for a manifest that
+                        # must be read as JSON-LD: @shexjs/manifest, ManifestCache.loadJsonLd)
 npm run webpack         # the same minus n3js (faster once n3js exists)
 npm run webpacks-fetch  # tools/sync-webpacks.sh: copy the last published bundles from gh-pages
 ```

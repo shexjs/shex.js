@@ -633,11 +633,19 @@ if (!TEST_browser) {
       const search = await SharedForTests.promise
 
       const manifest = postedBody.files['.manifest.yaml'].content
+      // the canonical form: the core contexts -- the ShEx manifest
+      // vocabulary's, then shex.js's own terms -- then the entries
+      expect(manifest).to.match(/^"@context":\n  - https:\/\/www\.w3\.org\/ns\/shex-manifest\.jsonld\n  - https:\/\/shex\.js\.org\/doc\/manifest-context\.jsonld\nentries:\n- /)
       expect(manifest).to.include('- schemaLabel: schema\n  schemaURL: schema.shex\n')
       expect(postedBody.files['schema.shex'].content).to.equal(longSchema)
       expect(manifest).to.include('  dataLabel: data\n  data: |\n    PREFIX : <http://a.example/>\n    :x :p 42 .\n')
       expect(manifest).to.include('  queryMap: |\n    <http://a.example/x>@<http://a.example/S>')
       expect(manifest).to.include('  status: conformant\n')
+      // ...which @shexjs/manifest reads plainly, every key known to the core
+      const Manifest = require('@shexjs/manifest')
+      const doc = require('js-yaml').load(manifest)
+      expect(Manifest.frameCheck(doc)).to.deep.equal({faithful: true, reasons: [], unknown: []})
+      expect(Manifest.entriesFromJson(doc)[0].schemaURL).to.equal('schema.shex')
       expect(postedBody.public).to.equal(true)
       expect(postedBody.description).to.equal('EJP-RD-LOVD')
 

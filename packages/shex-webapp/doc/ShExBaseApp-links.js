@@ -372,39 +372,77 @@ mixin(ShExBaseApp, {
     },
     /** the files Create/Update Gist publish: .manifest.yaml holding one entry
      * built from the QueryParams manifest descriptors, plus a spill-over file
-     * per input whose text is over GIST_INLINE_LINES lines */
+     * per input whose text is over GIST_INLINE_LINES lines.
+     *
+     * The manifest is written in the CANONICAL form (@shexjs/manifest): an
+     * @context stacking the core contexts (the ShEx manifest vocabulary's,
+     * then shex.js's own terms) and a binding for each scoped
+     * vocabulary the entry uses, and `entries`; a core attribute at the
+     * entry, and an attribute some vocabulary's scope defines inside that
+     * vocabulary's `<prefix>:parms`, which also names the plugin that
+     * implements it when that plugin is loaded here -- so the gist says by
+     * itself what it needs.  An input left empty is left out: a reader
+     * defaults it, and "" is no reference. */
     async assembleGistFiles() {
         await this.Caches.shapeMap.copyEditMapToQueryMap();
+        const Manifest = ShExWebApp.Manifest;
         const status = $("#results .fails").length ? "nonconformant" : "conformant";
         const files = {};
-        const part = (parm, fileName, text) => {
+        const part = (indent, parm, fileName, text) => {
             if (text.split("\n").length > GIST_INLINE_LINES) {
                 files[fileName] = { content: text };
-                return `  ${parm}URL: ${fileName}\n`;
+                return `${indent}${parm}URL: ${fileName}\n`;
             }
-            return `  ${parm}: |\n` + text.replace(/\n+$/, "").split("\n")
-                .map((l) => l.length ? "    " + l : "").join("\n") + "\n";
+            return `${indent}${parm}: |\n` + text.replace(/\n+$/, "").split("\n")
+                .map((l) => l.length ? indent + "  " + l : "").join("\n") + "\n";
         };
         // each QueryParams entry with a manifest descriptor contributes to the
         // manifest entry, so each app's input registry declares what a gist records
-        const yamlEntry = this.QueryParams.reduce((acc, q) => {
+        const core = [];
+        const scoped = new Map(); // a vocabulary -> the lines of its scope
+        for (const q of this.QueryParams) {
             if (!("manifest" in q))
-                return acc;
+                continue;
             const m = q.manifest;
-            if ("labelKey" in m)
-                acc += `  ${m.labelKey}: ${m.label}\n`;
+            const vocabulary = Manifest.vocabularyOfTerm(m.key);
+            if (vocabulary && !scoped.has(vocabulary))
+                scoped.set(vocabulary, []);
+            const lines = vocabulary ? scoped.get(vocabulary) : core;
+            const indent = vocabulary ? "    " : "  ";
             const text = q.location.val();
             if (m.asYamlObject) {
                 const obj = JSON.parse(text.trim() || "{}");
-                return acc + (Object.keys(obj).length === 0
-                    ? `  ${m.key}: {}\n`
-                    : `  ${m.key}:\n` + Object.entries(obj).map(([k, v]) => `    ${JSON.stringify(k)}: ${JSON.stringify(v)}\n`).join(""));
+                if (Object.keys(obj).length)
+                    lines.push(`${indent}${m.key}:\n` + Object.entries(obj).map(([k, v]) => `${indent}  ${JSON.stringify(k)}: ${JSON.stringify(v)}\n`).join(""));
+                continue;
             }
+            if ("labelKey" in m)
+                lines.push(`${indent}${m.labelKey}: ${m.label}\n`);
+            if (text === "")
+                continue;
             if ("spillName" in m)
-                return acc + part(m.key, m.spillName, text);
-            return acc + `  ${m.key}: ${JSON.stringify(text)}\n`; // short scalar, quoted
-        }, "") + `  status: ${status}\n`;
-        files[".manifest.yaml"] = { content: "-" + yamlEntry.substring(1) };
+                lines.push(part(indent, m.key, m.spillName, text));
+            else
+                lines.push(`${indent}${m.key}: ${JSON.stringify(text)}\n`); // short scalar, quoted
+        }
+        let context = `"@context":\n` + Manifest.CoreContextURLs.map((url) => `  - ${url}\n`).join("");
+        let scopes = "";
+        for (const [v, lines] of scoped) {
+            // the plugin implementing the vocabulary: registered under its
+            // namespace, or loaded from the file the roll-up names (ShExReduce's
+            // namespace has a # its plugin's id, the semantic-action IRI, lacks)
+            const plugin = ShExPlugins.byId(v.namespace) || (v.plugin === undefined ? undefined
+                : ShExPlugins.all().find((d) => typeof d.baseUrl === "string"
+                    && d.baseUrl.replace(/[?#].*$/, "").endsWith("/" + v.plugin)));
+            const pluginLine = plugin && plugin.baseUrl ? `    pluginURL: ${JSON.stringify(plugin.baseUrl)}\n` : "";
+            if (lines.length === 0 && pluginLine === "")
+                continue;
+            context += `  - ${v.prefix}: ${v.namespace}\n`
+                + `    ${v.prefix}:parms: {"@context": ${v.context}}\n`;
+            scopes += `  ${v.prefix}:parms:\n` + pluginLine + lines.join("");
+        }
+        const entry = core.join("") + scopes + `  status: ${status}\n`;
+        files[".manifest.yaml"] = { content: context + "entries:\n-" + entry.substring(1) };
         return files;
     },
     downloadResults(evt) {

@@ -566,15 +566,30 @@ if (!TEST_browser) {
         nock.cleanAll();
       }
       const manifest = postedBody.files[".manifest.yaml"].content;
+      // the canonical form: the @context binds ShExMap's scope beside the core
+      expect(manifest).to.include('"@context":\n  - https://www.w3.org/ns/shex-manifest.jsonld\n'
+                                  + "  - https://shex.js.org/doc/manifest-context.jsonld\n"
+                                  + "  - map: http://shex.io/extensions/Map/#\n"
+                                  + '    map:parms: {"@context": https://shexspec.github.io/extensions/Map/manifest-context.jsonld}\n'
+                                  + "entries:\n");
       expect(manifest).to.include("- schemaLabel: schema\n");
       expect(manifest).to.include("  queryMap: ");
       // ... plus the shexmap-specific inputs, still holding the ambiguous
-      // example from the preceding tests
-      expect(manifest).to.include("  outputSchema: |\n    PREFIX : <http://a.example/>\n");
-      expect(manifest).to.include('  outputShapeMap: "<tag:card>@<http://a.example/Card>"\n');
+      // example from the preceding tests, inside the scope, which names the
+      // plugin that implements it
+      expect(manifest).to.match(/\n  map:parms:\n    pluginURL: "[^"]*ShExMapPlugin\.js"\n/);
+      expect(manifest).to.include("    outputSchema: |\n      PREFIX : <http://a.example/>\n");
+      expect(manifest).to.include('    outputShapeMap: "<tag:card>@<http://a.example/Card>"\n');
       // the BP statics picked from the examples manifest, recorded back out
-      expect(manifest).to.include('  staticVars:\n    "http://abc.example/someConstant": "\\"123-456\\""\n');
+      expect(manifest).to.include('    staticVars:\n      "http://abc.example/someConstant": "\\"123-456\\""\n');
       expect(manifest).to.include("  status: ");
+      // and it reads back, plainly, into the flat entry the app picks from
+      const Manifest = require("@shexjs/manifest");
+      const doc = require("js-yaml").load(manifest);
+      expect(Manifest.frameCheck(doc)).to.deep.equal({faithful: true, reasons: [], unknown: []});
+      const [entry] = Manifest.entriesFromJson(doc);
+      expect(entry.outputShapeMap).to.equal("<tag:card>@<http://a.example/Card>");
+      expect(entry.plugins[0]).to.match(/ShExMapPlugin\.js$/);
       // bindings are a validation product (a manifest's expectedBindings
       // records them for testing), not a gist input
       expect(manifest).not.to.match(/bindings/i);

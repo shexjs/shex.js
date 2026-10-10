@@ -137,7 +137,22 @@ the prefix), `label`, `description` and `ctor`. These exports are optional
    builtins, extend the webpack `resolve.fallback` the way wikibase did.
 4. **`@shexjs/shex`**: add it to the `Neighborhoods` getter in
    `packages/shex/src/shex.ts`, and add it to that package's README.
-5. `neighborhood-api/test/PaneClaim-test.js` exercises the real modules'
+5. **Manifest vocabulary**: a backend
+   whose manifest entries carry parameters of their own (sparql's
+   `endpoint`, wikibase's `sitematrix`) gets a scope-only
+   `packages/neighborhood-<id>/manifest-context.jsonld` -- the bare names
+   mapped to absolute IRIs under `http://shex.js.org/neighborhoods/<Id>/#`,
+   no prefix (neighborhood-sparql's is the model). Add it to `SCOPES` in
+   `tools/rollup-manifest-contexts.js` and run it (with `--ns` and
+   `--extensions` naming sibling checkouts while those contexts are
+   ahead of what is published), so `@shexjs/manifest`'s static roll-up
+   (`known-contexts.json`) carries it; its test fails until the roll-up
+   agrees with the file. Same rerun after editing one. An attribute every
+   neighborhood shares (`slurp`, `dataBase`) is not scoped: it is a term
+   of shex.js's own top-level context, `doc/manifest-context.jsonld`,
+   which manifests stack on the shared ShEx manifest vocabulary
+   (`https://www.w3.org/ns/shex-manifest.jsonld`).
+6. `neighborhood-api/test/PaneClaim-test.js` exercises the real modules'
    declarations. Add yours there with a plain `require`, not as a
    devDependency: the api package is upstream of every implementation, and
    a devDependency would create a cycle.
