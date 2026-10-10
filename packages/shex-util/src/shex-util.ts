@@ -1753,11 +1753,14 @@ const ShExUtil = {
         return quoted + "^^" + new URL(rel, meta.base).href;
       return quoted;
     }
-    if (!meta)
-      return known!(passedValue) ? passedValue : this.UnknownIRI;
+    // <…> says "an IRI, not a prefixed name": the delimiters come off whether
+    // or not there is a base to resolve against (a query-backed data source
+    // such as a SPARQL endpoint has none)
     const relIRI = passedValue[0] === "<" && passedValue[passedValue.length-1] === ">";
     if (relIRI)
       passedValue = passedValue.substr(1, passedValue.length-2);
+    if (!meta)
+      return known!(passedValue) ? passedValue : this.UnknownIRI;
     const t = new URL(passedValue, (meta.base === "" || !meta.base ? undefined : meta.base)).href; // fall back to base-less mode
     if (known!(t))
       return t;
