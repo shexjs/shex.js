@@ -124,6 +124,8 @@ interface Cmds {
   shape?: string;
   schemaURL: string[];
   json: string[];
+  /** -r: ShExR schemas, ShEx written as RDF; a URL's #fragment names the schema node */
+  shexr: string[];
   dataURL: string[];
   jsonld: string[];
   extension: string[];
@@ -201,6 +203,20 @@ const SchemaOptions: SchemaOpts = {
   collisionPolicy: ShExMerger.warnDuplicates,
 };
 
+/** what reading a schema written as RDF takes, made once: ShExR.shex (the
+ * schema for schemas written as RDF), a validator to check the graph against
+ * it, and a neighborhood over the graph */
+let ShExRGraphParser: { validator: typeof ShExValidator, schema: any, rdfjsdb: typeof RdfJsDb } | null = null;
+function shexrGraphParser () {
+  if (ShExRGraphParser === null)
+    ShExRGraphParser = {
+      validator: ShExValidator,
+      schema: ShExParser.construct("http://www.w3.org/ns/shex", {}, {index: true}).parse(ShExUtil.ShExRSchema),
+      rdfjsdb: RdfJsDb,
+    };
+  return ShExRGraphParser;
+}
+
 // const RunMode = { NORMAL: 0, ERROR: 1, DRYRUN: 2, USAGE: 4, HELP: 6 };
 // the engines that ship with the suite, offered by `--regex-module ?`;
 // getRegexModule also takes any package name or path exporting a RegexpModule
@@ -234,6 +250,7 @@ const CommandLineOptions: CliOption[] = [
   { name: "shape",     alias: "s", type: String, typeLabel: "IRI|Bnode", multiple: false, defaultValue: undefined, description: "shape to validate" },
   { name: "schemaURL", alias: "x", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExC schema" },
   { name: "json",      alias: "j", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExJ schema" },
+  { name: "shexr",     alias: "r", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExR schema: ShEx written as RDF, in Turtle (a URL's #fragment names the schema node)" },
   { name: "dataURL",   alias: "d", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle data", defaultOption: true },
   { name: "jsonld",    alias: "l", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD data" },
   // --endpoint, --wikibase etc. are appended from QueryDbModules' dbParams below
@@ -601,6 +618,7 @@ async function findNodesAndValidate (loaded: any, parms: any, options: any, sche
 }
 
 async function loadSchemaAndData (valParms: any, validatorOptions: any, schemaOptions: any, cmds: Cmds) {
+  valParms.shexr = valParms.shexr || []; // a manifest's entry or a suite's test may not say
   if (valParms.schemaURL.length > 1 && valParms.dataURL.length === 0) {
     valParms.dataURL = valParms.schemaURL.splice(1); // push all but first into data
   }
@@ -608,7 +626,7 @@ async function loadSchemaAndData (valParms: any, validatorOptions: any, schemaOp
     valParms.dataURL = valParms.json.splice(1); // push all but first into data
   }
   if (!valParms.serve && !valParms["dry-run"]) {
-    if (valParms.schemaURL.length === 0 && valParms.json.length === 0) abort("No schemaURL specified", ExitCode.bad_argument);
+    if (valParms.schemaURL.length === 0 && valParms.json.length === 0 && valParms.shexr.length === 0) abort("No schemaURL specified", ExitCode.bad_argument);
     if (!valParms.diagnose) {
       if (valParms.dataURL.length === 0 && valParms.jsonld.length === 0 && !selectedQueryDbModule(valParms))
         abort("No dataURL specified", ExitCode.bad_argument);
@@ -624,16 +642,21 @@ async function loadSchemaAndData (valParms: any, validatorOptions: any, schemaOp
     ? {
       index: true,
       collisionPolicy: storeDuplicatesInstance,
-      loadController: new ProgressLoadController(valParms.schemaURL.concat(valParms.json)),
+      loadController: new ProgressLoadController(valParms.schemaURL.concat(valParms.json, valParms.shexr)),
       missingReferent: (error: any, yylloc: any) => { errors.push({error, yylloc}); },
       skipCycleCheck: true,
     }
     : {  }
   );
 
+  // a schema written as RDF (-r, or a manifest's Turtle schema) is read by
+  // validating its graph against ShExR.shex
+  if (valParms.shexr.length > 0)
+    loadOptions.graphParser = shexrGraphParser();
+
   // Loaded schema and data.
   const schemaAndDataP = ShExNode.load(
-    {shexc: valParms.schemaURL, json: valParms.json},
+    {shexc: valParms.schemaURL, json: valParms.json, turtle: valParms.shexr},
     {turtle: valParms.dataURL, jsonld: valParms.jsonld},
     loadOptions, undefined
   );
@@ -942,11 +965,12 @@ function getInvocation (parms: any) {
   }
   function shexFileArg (u: string) { return u ? "-x "+shortenFile(u) : ''; }
   function jsonFileArg (u: string) { return u ? "-j "+shortenFile(u) : ''; }
+  function shexrFileArg (u: string) { return u ? "-r "+shortenFile(u) : ''; }
   function dataFileArg (u: string) { return u ? "-d "+shortenFile(u) : ''; }
   function jsonldFileArg (u: string) { return u ? "-l "+shortenFile(u) : ''; }
   const res = [Path.relative(process.cwd(), Argv1),
              parms.schemaURL.map(shexFileArg).join(' '),
-             parms.json.map(jsonFileArg).join(' '),
+             parms.json.map(jsonFileArg).concat((parms.shexr || []).map(shexrFileArg)).join(' '),
              parms.dataURL.map(dataFileArg).join(' '),
              parms.jsonld.map(jsonldFileArg).join(' '),
              parms.shape ? "-s " + parms.shape : '',
@@ -1235,6 +1259,12 @@ async function runExampleEntries (d: any[], manifestUrl: string, cmds: Cmds) {
         if (json.length)
           elt.json = arrayOf(elt.json || []).concat(json);
         found = found.filter(u => !/\.json$/.test(u));
+        // a Turtle one as ShExR -- the schema may be one node, named by a
+        // fragment, of a document that is also the manifest and the data
+        const turtle = found.filter(u => /\.ttl(#.*)?$/.test(u));
+        if (turtle.length)
+          elt.shexr = arrayOf(elt.shexr || []).concat(turtle.map(u => relUrlOrFile(u, manifestUrl)));
+        found = found.filter(u => !turtle.includes(u));
       }
       elt[pair.asUrl] = (texts.map(text => ({ text, url: manifestUrl })) as any[])
         .concat(found.map(u => relUrlOrFile(u, manifestUrl)));

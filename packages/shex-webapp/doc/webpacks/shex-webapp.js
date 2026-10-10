@@ -51178,7 +51178,13 @@ function ShExLoaderCjsModule(config = {}) {
                 const graph = new config.rdfjs.Store();
                 graph.addQuads(x.graph);
                 const graphParser = new schemaOptions.graphParser.validator(schemaOptions.graphParser.schema, schemaOptions.graphParser.rdfjsdb(graph), {});
-                const schemaRoot = graph.getQuads(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
+                // the schema node: the one the URL names (a document holding more than
+                // a schema names it with a fragment), else the first
+                const schemas = graph.getQuads(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema");
+                const named = schemas.find((q) => q.subject.termType === "NamedNode" && q.subject.value === url);
+                if (!named && schemas.length === 0)
+                    throw new ResourceError(`${url} holds no sx:Schema`, url);
+                const schemaRoot = (named || schemas[0]).subject;
                 // (validateNodeShapePair is the validator's API; .validate() went away with the old validator)
                 const val = graphParser.validateNodeShapePair(schemaRoot, schemaOptions.graphParser.validator.Start);
                 if ("errors" in val)

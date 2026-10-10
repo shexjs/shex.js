@@ -1,0 +1,170 @@
+# The "clinical observation" / "the same measurement, in two documents" entry
+# of examples/manifest.yaml, as one RDF graph.  The manifest entry, the schema
+# and the data are all in this document, so a validator can take its schema,
+# its shape map and its data from RDF alone:
+#
+#   - the entry, in the ShEx manifest vocabulary, with the query map
+#     "<http://hl7.example/Obs1>@<ObservationShape>" written as shex:node and
+#     shex:shape;
+#   - the schema, examples/ClinObs.shex as ShExR (what shex-to-turtle writes),
+#     its schema node named <#schema> and its shapes named relative to this
+#     document, where ClinObs.shex names them under BASE <http://schema.example/>;
+#   - the data, the triples of examples/ClinObs-observation.ttl and
+#     examples/ClinObs-patient.ttl with their BASE <http://hl7.example/> resolved.
+#
+# IRIs are relative to this document: <> is the manifest, and also the schema
+# document and the data document the entry names; <#schema> is the schema;
+# <ObservationShape> is the shape, in the entry and in the schema alike.
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX shex: <http://www.w3.org/ns/shex#>
+PREFIX shexMan: <http://www.w3.org/ns/shex-manifest#>
+PREFIX fhir: <http://hl7.org/fhir/>
+PREFIX loinc: <http://loinc.org/rdf#>
+
+# The manifest: one entry.
+
+<> shexMan:entries ( <#clinObs-twoDocs> ) .
+
+<#clinObs-twoDocs>
+  shexMan:schemaLabel "clinical observation" ;
+  shexMan:schema <#schema> ;
+  shexMan:dataLabel "the same measurement, in two documents" ;
+  shexMan:data <> ;
+  shex:node <http://hl7.example/Obs1> ;
+  shex:shape <ObservationShape> ;
+  shex:status "conformant" ;
+  rdfs:comment "A graph is not a file: the observation comes from an instrument, the patient from a registry, and they meet at the IRI one names and the other describes.  The tabs are named after what each document says it is, and hovering a constraint whose match is in the other document brings that document forward to highlight it." .
+
+# The schema, as ShExR.
+
+<#schema> a shex:Schema ;
+    shex:start <ObservationShape> ;
+    shex:shapes ( <ObservationShape> <QuantityShape> <PractitionerShape> <PatientShape> <IdentifierShape> ) .
+
+<ObservationShape> a shex:ShapeDecl ; shex:shapeExpr [ a shex:Shape ;
+    shex:expression [ a shex:EachOf ;
+      shex:expressions ( [ a shex:TripleConstraint ;
+        shex:predicate fhir:status ;
+        shex:valueExpr [ a shex:NodeConstraint ;
+          shex:values ( "preliminary" "final" "amended" ) ] ;
+        shex:min 0 ;
+        shex:max 1 ] [ a shex:TripleConstraint ;
+        shex:predicate fhir:code ;
+        shex:valueExpr [ a shex:NodeConstraint ;
+          shex:nodeKind shex:iri ] ;
+        shex:min 0 ;
+        shex:max 1 ] [ a shex:TripleConstraint ;
+        shex:predicate fhir:effectiveDateTime ;
+        shex:valueExpr [ a shex:NodeConstraint ;
+          shex:datatype xsd:dateTime ] ;
+        shex:min 0 ;
+        shex:max 1 ] [ a shex:TripleConstraint ;
+        shex:predicate fhir:valueQuantity ;
+        shex:valueExpr <QuantityShape> ;
+        shex:min 0 ;
+        shex:max 1 ] [ a shex:TripleConstraint ;
+        shex:predicate fhir:performer ;
+        shex:valueExpr <PractitionerShape> ;
+        shex:min 0 ;
+        shex:max -1 ] [ a shex:TripleConstraint ;
+        shex:predicate fhir:subject ;
+        shex:valueExpr <PatientShape> ] ) ] ] .
+
+<QuantityShape> a shex:ShapeDecl ; shex:shapeExpr [ a shex:Shape ;
+    shex:expression [ a shex:EachOf ;
+      shex:expressions ( [ a shex:TripleConstraint ;
+        shex:predicate fhir:value ;
+        shex:valueExpr [ a shex:NodeConstraint ;
+          shex:datatype xsd:decimal ] ] [ a shex:TripleConstraint ;
+        shex:predicate fhir:unit ;
+        shex:valueExpr [ a shex:NodeConstraint ;
+          shex:datatype xsd:string ] ] [ a shex:EachOf ;
+        shex:expressions ( [ a shex:TripleConstraint ;
+          shex:predicate fhir:code ;
+          shex:valueExpr [ a shex:NodeConstraint ;
+            shex:datatype xsd:string ] ] [ a shex:TripleConstraint ;
+          shex:predicate fhir:system ;
+          shex:valueExpr [ a shex:NodeConstraint ;
+            shex:nodeKind shex:iri ] ;
+          shex:min 0 ;
+          shex:max 1 ] ) ;
+        shex:min 0 ;
+        shex:max 1 ] ) ] ] .
+
+<PractitionerShape> a shex:ShapeDecl ; shex:shapeExpr [ a shex:Shape ;
+    shex:expression [ a shex:TripleConstraint ;
+      shex:predicate fhir:name ;
+      shex:valueExpr [ a shex:NodeConstraint ;
+        shex:datatype xsd:string ] ;
+      shex:min 1 ;
+      shex:max -1 ] ] .
+
+<PatientShape> a shex:ShapeDecl ; shex:shapeExpr [ a shex:Shape ;
+    shex:expression [ a shex:EachOf ;
+      shex:expressions ( [ a shex:TripleConstraint ;
+        shex:predicate fhir:active ;
+        shex:valueExpr [ a shex:NodeConstraint ;
+          shex:datatype xsd:boolean ] ;
+        shex:min 0 ;
+        shex:max 1 ] [ a shex:TripleConstraint ;
+        shex:predicate fhir:name ;
+        shex:valueExpr [ a shex:NodeConstraint ;
+          shex:datatype xsd:string ] ;
+        shex:min 0 ;
+        shex:max -1 ] [ a shex:TripleConstraint ;
+        shex:predicate fhir:gender ;
+        shex:valueExpr [ a shex:NodeConstraint ;
+          shex:values ( "male" "female" "other" "unknown" ) ] ;
+        shex:min 0 ;
+        shex:max 1 ] [ a shex:TripleConstraint ;
+        shex:predicate fhir:birthdate ;
+        shex:valueExpr [ a shex:NodeConstraint ;
+          shex:datatype xsd:date ] ;
+        shex:min 0 ;
+        shex:max 1 ] [ a shex:TripleConstraint ;
+        shex:predicate fhir:identifier ;
+        shex:valueExpr <IdentifierShape> ;
+        shex:min 0 ;
+        shex:max -1 ] ) ] ] .
+
+<IdentifierShape> a shex:ShapeDecl ; shex:shapeExpr [ a shex:Shape ;
+    shex:expression [ a shex:EachOf ;
+      shex:expressions ( [ a shex:TripleConstraint ;
+        shex:predicate fhir:system ;
+        shex:valueExpr [ a shex:NodeConstraint ;
+          shex:nodeKind shex:iri ] ] [ a shex:TripleConstraint ;
+        shex:predicate fhir:value ;
+        shex:valueExpr [ a shex:NodeConstraint ;
+          shex:datatype xsd:string ] ] ) ] ] .
+
+# The data: one graph that arrived as two documents.
+
+# Observation, from ClinObs-observation.ttl
+<http://hl7.example/Obs1>
+  fhir:status            "final" ;
+  fhir:code              loinc:29463-7 ;        # Body weight
+  fhir:effectiveDateTime "2026-08-13T09:41:00Z"^^xsd:dateTime ;
+  fhir:subject           <http://hl7.example/Patient2> ;
+  fhir:performer         <http://hl7.example/Practitioner7> ;
+  fhir:valueQuantity     [
+    fhir:value  81.2 ;
+    fhir:unit   "kg" ;
+    fhir:system <http://unitsofmeasure.org> ;
+    fhir:code   "kg"
+  ] .
+
+<http://hl7.example/Practitioner7>
+  fhir:name "Dr. Alice Chen" .
+
+# Patient, from ClinObs-patient.ttl
+<http://hl7.example/Patient2>
+  fhir:active     true ;
+  fhir:name       "Bob" , "Robert Smith" ;
+  fhir:gender     "male" ;
+  fhir:birthdate  "1999-12-31"^^xsd:date ;
+  fhir:identifier [
+    fhir:system <http://hospital.example/mrn> ;
+    fhir:value  "MRN-40281"
+  ] .
