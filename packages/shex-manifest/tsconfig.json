@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "forceConsistentCasingInFileNames": true,
+        "module": "commonjs",
+        "esModuleInterop": true,
+        "outDir": "./lib",
+        "sourceMap": true,
+        "rootDir": "./src",
+        "target": "es2019",
+        "skipLibCheck": true,
+        "strict": true,
+        "noUnusedParameters": true,
+        "lib": [
+            "ES2021",
+            "DOM"
+        ]
+    }
+}

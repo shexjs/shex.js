@@ -1,0 +1,318 @@
+{
+  "core": [
+    "https://www.w3.org/ns/shex-manifest.jsonld",
+    "https://shex.js.org/doc/manifest-context.jsonld"
+  ],
+  "tops": [
+    "https://www.w3.org/ns/shex-manifest.jsonld",
+    "https://shex.js.org/doc/manifest-context.jsonld",
+    "https://www.w3.org/ns/shex-test.jsonld"
+  ],
+  "contexts": {
+    "https://www.w3.org/ns/shex-manifest.jsonld": {
+      "@context": {
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "shex": "http://www.w3.org/ns/shex#",
+        "shexMan": "http://www.w3.org/ns/shex-manifest#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#",
+        "comment": "rdfs:comment",
+        "dataURL": {
+          "@id": "shexMan:data",
+          "@container": "@set",
+          "@type": "@id"
+        },
+        "node": {
+          "@id": "shex:node",
+          "@type": "@id"
+        },
+        "queryMapURL": {
+          "@id": "shexMan:queryMap",
+          "@type": "@id"
+        },
+        "schemaURL": {
+          "@id": "shexMan:schema",
+          "@type": "@id"
+        },
+        "shape": {
+          "@id": "shex:shape",
+          "@type": "@id"
+        },
+        "status": "shex:status",
+        "Entry": "shexMan:Entry",
+        "Manifest": "shexMan:Manifest",
+        "data": {
+          "@id": "shexMan:data"
+        },
+        "dataLabel": {
+          "@id": "shexMan:dataLabel",
+          "@language": null
+        },
+        "entries": {
+          "@id": "shexMan:entries",
+          "@type": "@id",
+          "@container": "@list"
+        },
+        "name": {
+          "@id": "shexMan:name",
+          "@language": null
+        },
+        "queryMap": {
+          "@id": "shexMan:queryMap"
+        },
+        "queryMapLabel": {
+          "@id": "shexMan:queryMapLabel",
+          "@language": null
+        },
+        "schema": {
+          "@id": "shexMan:schema"
+        },
+        "schemaLabel": {
+          "@id": "shexMan:schemaLabel",
+          "@language": null
+        }
+      }
+    },
+    "https://shex.js.org/doc/manifest-context.jsonld": {
+      "@context": {
+        "shexjs": "https://shex.js.org/doc/manifest-context.jsonld#",
+        "neighborhood": "shexjs:neighborhood",
+        "pluginURL": {
+          "@id": "shexjs:plugin",
+          "@type": "@id"
+        },
+        "manifestContext": {
+          "@id": "shexjs:manifestContext",
+          "@type": "@id"
+        },
+        "dataBase": {
+          "@id": "shexjs:dataBase",
+          "@type": "@id"
+        },
+        "slurp": "shexjs:slurp",
+        "explain": "shexjs:explain",
+        "regexpEngine": "shexjs:regexpEngine",
+        "meta": "shexjs:meta",
+        "metaURL": {
+          "@id": "shexjs:meta",
+          "@type": "@id"
+        }
+      }
+    },
+    "https://www.w3.org/ns/shex-test.jsonld": {
+      "@context": {
+        "prov": "http://www.w3.org/ns/prov#",
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "shexMan": "http://www.w3.org/ns/shex-manifest#",
+        "shexTest": "http://www.w3.org/ns/shex-test#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#",
+        "resultURL": {
+          "@id": "shexTest:result",
+          "@type": "@id"
+        },
+        "seeAlso": {
+          "@id": "rdfs:seeAlso",
+          "@type": "@id"
+        },
+        "semActsURL": {
+          "@id": "shexTest:semActs",
+          "@type": "@id"
+        },
+        "shapeExternsURL": {
+          "@id": "shexTest:shapeExterns",
+          "@type": "@id"
+        },
+        "shexcURL": {
+          "@id": "shexTest:shexc",
+          "@type": "@id"
+        },
+        "shexjURL": {
+          "@id": "shexTest:shexj",
+          "@type": "@id"
+        },
+        "shexrURL": {
+          "@id": "shexTest:shexr",
+          "@type": "@id"
+        },
+        "wasDerivedFrom": {
+          "@id": "prov:wasDerivedFrom",
+          "@type": "@id"
+        },
+        "approval": {
+          "@id": "shexTest:approval",
+          "@language": null
+        },
+        "endColumn": {
+          "@id": "shexTest:endColumn",
+          "@type": "xsd:integer"
+        },
+        "endRow": {
+          "@id": "shexTest:endRow",
+          "@type": "xsd:integer"
+        },
+        "result": {
+          "@id": "shexTest:result"
+        },
+        "sameSemanticsAs": {
+          "@id": "shexTest:sameSemanticsAs",
+          "@type": "@id"
+        },
+        "schemaError": {
+          "@id": "shexTest:schemaError",
+          "@language": null
+        },
+        "semActs": {
+          "@id": "shexTest:semActs"
+        },
+        "shapeExterns": {
+          "@id": "shexTest:shapeExterns"
+        },
+        "shexc": {
+          "@id": "shexTest:shexc"
+        },
+        "shexj": {
+          "@id": "shexTest:shexj"
+        },
+        "shexr": {
+          "@id": "shexTest:shexr"
+        },
+        "startColumn": {
+          "@id": "shexTest:startColumn",
+          "@type": "xsd:integer"
+        },
+        "startRow": {
+          "@id": "shexTest:startRow",
+          "@type": "xsd:integer"
+        },
+        "trait": {
+          "@id": "shexTest:trait",
+          "@language": null
+        }
+      }
+    },
+    "https://shex.js.org/packages/neighborhood-sparql/manifest-context.jsonld": {
+      "@context": {
+        "endpoint": {
+          "@id": "http://shex.js.org/neighborhoods/Sparql/#endpoint",
+          "@type": "@id"
+        },
+        "allOutgoing": "http://shex.js.org/neighborhoods/Sparql/#allOutgoing"
+      }
+    },
+    "https://shex.js.org/packages/neighborhood-wikibase/manifest-context.jsonld": {
+      "@context": {
+        "base": {
+          "@id": "http://shex.js.org/neighborhoods/Wikibase/#base",
+          "@type": "@id"
+        },
+        "sitematrix": {
+          "@id": "http://shex.js.org/neighborhoods/Wikibase/#sitematrix",
+          "@type": "@id"
+        },
+        "pages": {
+          "@id": "http://shex.js.org/neighborhoods/Wikibase/#pages",
+          "@type": "@id",
+          "@container": "@set"
+        },
+        "cacheDir": "http://shex.js.org/neighborhoods/Wikibase/#cacheDir"
+      }
+    },
+    "https://shexspec.github.io/extensions/Map/manifest-context.jsonld": {
+      "@context": {
+        "outputSchema": "http://shex.io/extensions/Map/#outputSchema",
+        "outputSchemaURL": {
+          "@id": "http://shex.io/extensions/Map/#outputSchema",
+          "@type": "@id"
+        },
+        "outputShapeMap": "http://shex.io/extensions/Map/#outputShapeMap",
+        "outputShapeMapURL": {
+          "@id": "http://shex.io/extensions/Map/#outputShapeMap",
+          "@type": "@id"
+        },
+        "staticVars": "http://shex.io/extensions/Map/#staticVars",
+        "staticVarsURL": {
+          "@id": "http://shex.io/extensions/Map/#staticVars",
+          "@type": "@id"
+        },
+        "expectedBindings": "http://shex.io/extensions/Map/#expectedBindings",
+        "expectedBindingsURL": {
+          "@id": "http://shex.io/extensions/Map/#expectedBindings",
+          "@type": "@id"
+        },
+        "expectedOutputData": "http://shex.io/extensions/Map/#expectedOutputData",
+        "expectedOutputDataURL": {
+          "@id": "http://shex.io/extensions/Map/#expectedOutputData",
+          "@type": "@id"
+        },
+        "threadedOnly": "http://shex.io/extensions/Map/#threadedOnly"
+      }
+    },
+    "https://shexspec.github.io/extensions/Reduce/manifest-context.jsonld": {
+      "@context": {
+        "overlay": "http://shex.io/extensions/Reduce/#overlay",
+        "overlayURL": {
+          "@id": "http://shex.io/extensions/Reduce/#overlay",
+          "@type": "@id"
+        }
+      }
+    },
+    "https://shexspec.github.io/extensions/SHACL-SPARQL/manifest-context.jsonld": {
+      "@context": {}
+    },
+    "https://shexspec.github.io/extensions/Test/manifest-context.jsonld": {
+      "@context": {
+        "prints": {
+          "@id": "http://shex.io/extensions/Test/#prints",
+          "@container": "@list"
+        },
+        "extension": {
+          "@id": "http://shex.io/extensions/Test/#extension",
+          "@type": "@id"
+        },
+        "line": "http://shex.io/extensions/Test/#line"
+      }
+    }
+  },
+  "paths": {
+    "doc/manifest-context.jsonld": "https://shex.js.org/doc/manifest-context.jsonld",
+    "packages/neighborhood-sparql/manifest-context.jsonld": "https://shex.js.org/packages/neighborhood-sparql/manifest-context.jsonld",
+    "packages/neighborhood-wikibase/manifest-context.jsonld": "https://shex.js.org/packages/neighborhood-wikibase/manifest-context.jsonld"
+  },
+  "vocabularies": [
+    {
+      "prefix": "nsp",
+      "namespace": "http://shex.js.org/neighborhoods/Sparql/#",
+      "context": "https://shex.js.org/packages/neighborhood-sparql/manifest-context.jsonld"
+    },
+    {
+      "prefix": "nwb",
+      "namespace": "http://shex.js.org/neighborhoods/Wikibase/#",
+      "context": "https://shex.js.org/packages/neighborhood-wikibase/manifest-context.jsonld"
+    },
+    {
+      "prefix": "map",
+      "namespace": "http://shex.io/extensions/Map/#",
+      "context": "https://shexspec.github.io/extensions/Map/manifest-context.jsonld",
+      "plugin": "ShExMapPlugin.js"
+    },
+    {
+      "prefix": "rdc",
+      "namespace": "http://shex.io/extensions/Reduce/#",
+      "context": "https://shexspec.github.io/extensions/Reduce/manifest-context.jsonld",
+      "plugin": "ShExReducePlugin.js"
+    },
+    {
+      "prefix": "ssp",
+      "namespace": "http://shex.io/extensions/SHACL-SPARQL/",
+      "context": "https://shexspec.github.io/extensions/SHACL-SPARQL/manifest-context.jsonld",
+      "plugin": "ShExShaclSparqlPlugin.js"
+    },
+    {
+      "prefix": "tst",
+      "namespace": "http://shex.io/extensions/Test/#",
+      "context": "https://shexspec.github.io/extensions/Test/manifest-context.jsonld",
+      "plugin": "ShExTestPlugin.js"
+    }
+  ]
+}

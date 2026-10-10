@@ -38,6 +38,7 @@
     "@shexjs/extension-wasi": "^1.0.0-alpha.33",
     "@shexjs/extension-wasi-test": "^1.0.0-alpha.33",
     "@shexjs/loader": "^1.0.0-alpha.33",
+    "@shexjs/manifest": "^1.0.0-alpha.33",
     "@shexjs/neighborhood-api": "^1.0.0-alpha.33",
     "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.33",
     "@shexjs/neighborhood-sparql": "^1.0.0-alpha.33",

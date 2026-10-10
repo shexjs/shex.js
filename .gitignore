@@ -43,6 +43,9 @@ da-web/
 # jquery-ui changes the dialog markup the apps and tests rely on.)
 packages/shex-webapp/doc/webpacks/n3js*.js
 packages/shex-webapp/doc/webpacks/shex-webapp*.js
+# jsonld.js's browser build, copied from node_modules by `npm run webpack`'s
+# postwebpack; the app fetches it only for a manifest it has to read as JSON-LD
+packages/shex-webapp/doc/webpacks/jsonld.min.js
 packages/shex-webapp/doc/webpacks/*.LICENSE.txt
 packages/extension-map/doc/webpacks/
 packages/extension-reduce/doc/webpacks/

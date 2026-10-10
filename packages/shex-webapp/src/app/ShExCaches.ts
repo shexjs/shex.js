@@ -360,6 +360,12 @@ interface DataEntry {
 }
 
 class ManifestCache extends InterfaceCache {
+  /** the manifest as it arrived: its text, where from, and which of YAML,
+   * JSON or Turtle it is.  The entries the app works from are a reading of
+   * this, never a replacement for it: anything that writes the loaded
+   * manifest back out writes this text, in its own media type */
+  source: {text: string, url: string, format: string} | null = null;
+  static jsonldP: Promise<any> | null = null;
   caches: AppCaches;
   resultsWidget: ResultsWidget;
   queryParams: any[] | null;         // the app's QueryParams registry, assigned post-construction
@@ -384,17 +390,7 @@ class ManifestCache extends InterfaceCache {
       }
       try {
         // exceptions pass through to caller (asyncGet)
-        try {
-          textOrObj = JSON.parse(textOrObj);
-        } catch (eJson: any) {
-          try {
-            textOrObj = ShExWebApp.JsYaml.load(textOrObj);
-          } catch (eYaml: any) {
-            throw url.endsWith(".yaml")
-              ? eYaml
-              : eJson;
-          }
-        }
+        textOrObj = await this.readManifestText(textOrObj, url);
       } catch (e: any) {
         $("#inputSchema .manifest").append($("<li/>").text(NO_MANIFEST_LOADED));
         const throwMe: any = Error(e + '\n' + textOrObj);
@@ -488,6 +484,77 @@ class ManifestCache extends InterfaceCache {
     $("#manifestDrop").show(); // may have been hidden if no manifest loaded.
   }
 
+  /** the manifest's text as its entries, through @shexjs/manifest: YAML or
+   * JSON -- the classic list, or the YAML-LD form whose @context binds each
+   * vocabulary's `<prefix>:parms` scope, flattened back to the classic
+   * entries with the plugins collected under `plugins` -- or Turtle, the
+   * same entries read back by predicate, a vocabulary's attributes spelled
+   * through the context the graph names for it.  An entry's `schema`
+   * (data, queryMap, overlay) that resolves to a resource becomes
+   * `schemaURL`; one that does not is the document's text. */
+  async readManifestText (text: string, url: string): Promise<any[]> {
+    const Manifest = ShExWebApp.Manifest;
+    const format = Manifest.detectFormat(text, url);
+    this.source = {text, url, format};
+    const loadContext = (u: string) => this.fetchOK(u).then((t: string) => JSON.parse(t));
+    if (format === "turtle") {
+      const store = new N3js.Store();
+      store.addQuads(new N3js.Parser({baseIRI: url}).parse(text));
+      // a known vocabulary's context comes from the package's roll-up; an
+      // unknown one is fetched
+      return Manifest.entriesFromGraph(store, {base: url, loadContext});
+    }
+    let doc: any;
+    try {
+      doc = JSON.parse(text);
+    } catch (eJson: any) {
+      try {
+        doc = ShExWebApp.JsYaml.load(text);
+      } catch (eYaml: any) {
+        throw url.endsWith(".yaml") ? eYaml : eJson;
+      }
+    }
+    // the test suite's manifests are not examples manifests: their entries
+    // (an `action` apiece) are read by set(), as they always were
+    if (doc && !Array.isArray(doc) && Array.isArray(doc["@graph"])
+        && doc["@graph"][0] && Array.isArray(doc["@graph"][0].entries))
+      return doc["@graph"][0].entries;
+    const isTestEntry = (e: any) => e && typeof e === "object" && "action" in e;
+    if (Array.isArray(doc) ? doc.some(isTestEntry) : isTestEntry(doc))
+      return doc;
+    // an examples manifest: brought up to the canonical form, then read
+    // plainly when that is its JSON-LD reading and as JSON-LD when it is not
+    // (the processor is fetched only then)
+    return Manifest.readJson(doc, {
+      base: url,
+      probe: (u: string) => this.fetchOK(u).then(() => true, () => false),
+      jsonld: () => ManifestCache.loadJsonLd(),
+      loadContext,
+      onCheck: (check: any) => {
+        if (check.unknown.length)
+          console.warn(`manifest ${url}: no context defines ${check.unknown.join(", ")}`);
+      },
+    });
+  }
+
+  /** jsonld.js, fetched from beside the app's bundle the first time a
+   * manifest has to be read as JSON-LD */
+  static loadJsonLd (): Promise<any> {
+    if (ManifestCache.jsonldP === null)
+      ManifestCache.jsonldP = new Promise((resolve, reject) => {
+        const w = window as any;
+        if (w.jsonld)
+          return resolve(w.jsonld);
+        const bundle = document.querySelector('script[src*="webpacks/shex-webapp"]') as HTMLScriptElement | null;
+        const script = document.createElement("script");
+        script.src = new URL("jsonld.min.js", bundle ? bundle.src : new URL("webpacks/", location.href).href).href;
+        script.onload = () => w.jsonld ? resolve(w.jsonld) : reject(Error(script.src + " did not define jsonld"));
+        script.onerror = () => reject(Error("could not load " + script.src));
+        document.head.appendChild(script);
+      });
+    return ManifestCache.jsonldP;
+  }
+
   async parse (text: string, base: string): Promise<any> {
     throw Error("should not try to parse manifest cache");
   }
@@ -534,8 +601,10 @@ class ManifestCache extends InterfaceCache {
       return acc;
     }, {});
     const nesting = demoList.reduce((acc: any, elt: any, idx: number) => {
-      const defaultLabel = "title" in elt
-            ? elt.title
+      // an entry with no label of its own goes by its name, the shared
+      // vocabulary's (@shexjs/manifest reads a classic manifest's title as one)
+      const defaultLabel = "name" in elt
+            ? elt.name
             : `manifest[${idx}]`;
       const schemaLabel = elt.schemaLabel || defaultLabel;
       const key = schemaLabel + "|" + elt.schema;
@@ -583,7 +652,7 @@ class ManifestCache extends InterfaceCache {
       const li = $("<li/>").append(button);
       $(selector).append(li);
       if (entry.text === undefined) {
-        entry.text = await this.fetchOK(entry.url).catch((responseOrError: any) => {
+        entry.text = await this.fetchRepresentation(entry.url).catch((responseOrError: any) => {
           // leave a message in the schema or data block
           return "# " + this.renderErrorMessage(
             responseOrError instanceof Error
@@ -855,6 +924,21 @@ class ManifestCache extends InterfaceCache {
     }
     await this.caches.shapeMap.copyQueryMapToEditMap();
     // callValidator();
+  }
+
+  /** the text at `url` or, for a reference without an extension, which a
+   * server may negotiate, at the first of its representations that answers
+   * (@shexjs/manifest's order: as written, .shex, .json, .ttl) */
+  async fetchRepresentation (url: string): Promise<string> {
+    let failure: any;
+    for (const candidate of ShExWebApp.Manifest.representations(url)) {
+      try {
+        return await this.fetchOK(candidate);
+      } catch (e) {
+        failure = e;
+      }
+    }
+    throw failure;
   }
 
   fetchOK (url: string): Promise<string> {

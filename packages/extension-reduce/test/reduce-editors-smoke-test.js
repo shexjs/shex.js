@@ -536,6 +536,59 @@ if (!TEST_browser) {
         .to.have.members(["{", "}", '"op": "x"', '"xs": [', "]", '"sub": {', "}"]);
     });
 
+    /* A gist says what the entry needs: the overlay is ShExReduce's, so it
+     * is written in ShExReduce's scope, rdc:parms, beside the plugin that
+     * implements the vocabulary -- found by the file the roll-up names,
+     * since the vocabulary's namespace, http://shex.io/extensions/Reduce/#,
+     * has a # the plugin's id does not.  calc-actions.ttl is long enough to
+     * go to a file of its own. */
+    it("should write a gist whose overlay and plugin sit in ShExReduce's scope", async function () {
+      const nock = require("nock");
+      // the examples manifest again, and the entry picked afresh: tests
+      // before this one load manifests of their own and leave the panes
+      // holding what they wrote
+      await shared.Caches.manifest.asyncGet(new URL(MANIFEST, dom.window.location.href).href);
+      await shared.promise;
+      for (const [list, label] of [["#inputSchema .manifest li", "calc, actions in an overlay"],
+                                   ["#inputData .passes li, #inputData .fails li", "(1 + 2) * 3"]]) {
+        const li = $(list).filter((i, li) => $(li).text() === label).first();
+        if (li.hasClass("selected")) {
+          li.trigger("click");
+          await shared.promise;
+        }
+        li.trigger("click");
+        await shared.promise;
+      }
+      expect($("#reduceOverlay textarea").first().val(), "the entry's overlay").to.include("sa:Overlay");
+      dom.window.localStorage.setItem("githubGistToken", "test-token");
+      dom.window.prompt = () => "calc";
+      let posted;
+      nock("https://api.github.com")
+        .post("/gists", body => { posted = body; return true; })
+        .reply(201, {id: "abc123", url: "https://api.github.com/gists/abc123",
+                     html_url: "https://gist.github.com/tester/abc123", owner: {login: "tester"}})
+        .patch("/gists/abc123", () => true)
+        .reply(200, {history: [{version: "sha-2"}]});
+      try {
+        $("#createGist").trigger("click");
+        await shared.promise;
+      } finally {
+        nock.cleanAll();
+      }
+      const manifest = posted.files[".manifest.yaml"].content;
+      expect(manifest).to.include("  - rdc: http://shex.io/extensions/Reduce/#\n"
+                                  + '    rdc:parms: {"@context": https://shexspec.github.io/extensions/Reduce/manifest-context.jsonld}\n');
+      expect(manifest).to.match(/\n  rdc:parms:\n    pluginURL: "[^"]*\/ShExReducePlugin\.js"\n    overlayURL: overlay\.ttl\n/);
+      expect(posted.files["overlay.ttl"].content).to.include("sa:Overlay");
+      // ...and reads back plainly, every key known
+      const Manifest = require("@shexjs/manifest");
+      const doc = require("js-yaml").load(manifest);
+      expect(Manifest.frameCheck(doc)).to.deep.equal({faithful: true, reasons: [], unknown: []});
+      const [entry] = Manifest.entriesFromJson(doc);
+      expect(entry.overlayURL).to.equal("overlay.ttl");
+      expect(entry.plugins[0]).to.match(/ShExReducePlugin\.js$/);
+    });
+
     /* ...and the × on its tab takes it back off, from the screen it is on:
      * the panes it borrowed are the app's own, and go home rather than out
      * with the screen that was holding them.  Last, since nothing of it is

@@ -1,0 +1,23 @@
+{
+  "@context": {
+    "tests": {"@id": "http://www.w3.org/ns/shex-manifest#entries", "@container": "@list"},
+    "s": {"@id": "http://www.w3.org/ns/shex-manifest#schema", "@type": "@id"},
+    "sl": "http://www.w3.org/ns/shex-manifest#schemaLabel",
+    "d": "http://www.w3.org/ns/shex-manifest#data",
+    "dl": "http://www.w3.org/ns/shex-manifest#dataLabel",
+    "q": "http://www.w3.org/ns/shex-manifest#queryMap",
+    "verdict": "http://www.w3.org/ns/shex#status",
+    "note": "http://www.w3.org/2000/01/rdf-schema#comment"
+  },
+  "note": "The same kind of manifest as doc/tests-manifest-ld.yaml, written with somebody else's names: JSON-LD, but not framed the way the web app reads directly, so it can only be read as JSON-LD (manifest-formats-test.js).",
+  "tests": [
+    {
+      "sl": "clinical observation",
+      "s": "../examples/ClinObs.shex",
+      "dl": "the least an Observation can be",
+      "d": "PREFIX : <http://hl7.org/fhir/>\n\n<Obs1> :subject <Patient2> .\n",
+      "q": "<Obs1>@START",
+      "verdict": "conformant"
+    }
+  ]
+}

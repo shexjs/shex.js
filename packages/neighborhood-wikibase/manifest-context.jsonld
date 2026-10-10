@@ -1,0 +1,10 @@
+{
+  "_comment": "@shexjs/neighborhood-wikibase's manifest vocabulary: what an examples manifest may write inside the mapping it binds to this file -- the backend's own parameters, its module's dbParams: base, sitematrix, pages, cacheDir. Bound the way neighborhood-sparql's is (a term of the manifest's choosing, nwb:parms in doc/tests-manifest-ld.yaml, whose property-scoped @context is this file's URL; never imported at the top level), and written bare inside that mapping, beside pluginURL for the module that implements the neighborhood. Each name maps to an absolute IRI under http://shex.js.org/neighborhoods/Wikibase/#, shex.js's own namespace; no prefix and nothing outside the scope is declared, so this cannot collide with another backend's same-shaped attribute (compare neighborhood-sparql's own, differently-typed, endpoint), whatever prefix the manifest chose. Tentative home, as with neighborhood-sparql: this reads Wikibase's own entity-page JSON, not anything ShEx-specific, so a wikidata- or Wikibase-tooling namespace may be a better long-term home for it.",
+
+  "@context": {
+    "base": {"@id": "http://shex.js.org/neighborhoods/Wikibase/#base", "@type": "@id"},
+    "sitematrix": {"@id": "http://shex.js.org/neighborhoods/Wikibase/#sitematrix", "@type": "@id"},
+    "pages": {"@id": "http://shex.js.org/neighborhoods/Wikibase/#pages", "@type": "@id", "@container": "@set"},
+    "cacheDir": "http://shex.js.org/neighborhoods/Wikibase/#cacheDir"
+  }
+}

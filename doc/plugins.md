@@ -47,7 +47,7 @@ uses -- registering the same `id` twice is a no-op:
 | | |
 | --- | --- |
 | `?plugin=<url>` | repeatable; `?pluginURL=<url>` means the same thing and is what a permalink writes |
-| `plugins: [<url>…]` on a manifest entry | loaded, and awaited, before the entry is read -- an entry may name what it needs |
+| `plugins: [<url>…]` on a manifest entry | loaded, and awaited, before the entry is read -- an entry may name what it needs.  In the YAML-LD manifest form (doc/tests-manifest-ld.yaml) the entry writes `pluginURL` inside the `<prefix>:parms` scope of the vocabulary the plugin implements, beside that plugin's own attributes; `@shexjs/manifest` reads either into the same `plugins` list |
 | `<script src=…>` on the page | for a page that always wants it |
 
 Whatever loaded it, the module runs and calls `ShExPlugins.register(…)`.

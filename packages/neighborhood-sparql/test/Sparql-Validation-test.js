@@ -78,7 +78,7 @@ describe("A ShEx validator over SPARQL", function () {
   this.timeout(20000);
 
   const shexParser = ShExParser.construct();
-  let tests = JSON.parse(fs.readFileSync(manifestFile, "utf8"))["@graph"][0]["entries"];
+  let tests = require("../../shex-cli/test/suiteManifest.js")(validationPath);
   if (TESTS)
     tests = tests.filter(t => t["@id"].match(TESTS) || t["@id"].substr(1).match(TESTS) ||
                          t.action.schema.match(TESTS) || t.action.data.match(TESTS));
