@@ -410,10 +410,17 @@ if (!TEST_cli) {
       });
     }
 
-    [{data: "events-ok.ttl", status: X.shape_test_pass, says: "\"ShapeTest\""},
-     {data: "events-bad.ttl", status: X.shape_test_fail, says: "the event ends before it starts"},
-    ].forEach(({data, status, says}) =>
-      it(`should ask the endpoint about ${data}`, async function () {
+    /* The focus and its shape, as a query map or as -n/-s.  An endpoint has
+     * no document base to resolve a node against; the <…> still comes off. */
+    const Focus = {
+      "-m": ["-m", "<http://a.example/conf>@<http://a.example/Event>"],
+      "-n": ["-n", "<http://a.example/conf>", "-s", "<http://a.example/Event>"],
+    };
+    [{data: "events-ok.ttl", focus: "-m", status: X.shape_test_pass, says: "\"ShapeTest\""},
+     {data: "events-bad.ttl", focus: "-m", status: X.shape_test_fail, says: "the event ends before it starts"},
+     {data: "events-ok.ttl", focus: "-n", status: X.shape_test_pass, says: "\"ShapeTest\""},
+    ].forEach(({data, focus, status, says}) =>
+      it(`should ask the endpoint about ${data} with ${focus}`, async function () {
         this.timeout(60000);
         const {startSparqlTestServer} = require("../../neighborhood-sparql/test/sparql-test-server");
         const server = await startSparqlTestServer({});
@@ -421,12 +428,13 @@ if (!TEST_cli) {
           server.store.addQuads(new N3.Parser({baseIRI: "http://a.example/"})
             .parse(Fs.readFileSync(Path.join(fixtures, data), "utf8")));
           const {stdout, stderr, exitCode} = await validate([
-            "-x", Path.join(fixtures, "events.shex"),
-            "-m", "<http://a.example/conf>@<http://a.example/Event>", "--endpoint", server.url,
+            "-x", Path.join(fixtures, "events.shex"), ...Focus[focus], "--endpoint", server.url,
             "--extension", "@shexjs/extension-shacl-sparql"]);
           expect(stderr).to.equal("");
           expect(exitCode).to.equal(status);
           expect(stdout).to.include(says);
+          // the focus went into every query as an IRI, never as <<…>>
+          expect(server.queryLog.join("\n")).to.not.include("<<");
           // the SPARQL action's query reached the endpoint, $this written in
           expect(server.queryLog.some(q => q.includes("<http://a.example/conf>") && q.includes("?message")))
             .to.equal(true);
