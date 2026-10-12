@@ -236,6 +236,7 @@ describe("ShExUtil (extra)", function () {
       expect(parsed("nope", null, known, t => "reported " + t)).to.equal("reported " + P("nope"));
       expect(ShExUtil.parsePassedNode("x", null, null, t => t === "x"), "with no meta the value stands as is").to.equal("x");
       expect(ShExUtil.parsePassedNode("y", null, null, t => t === "x")).to.equal(ShExUtil.UnknownIRI);
+      expect(ShExUtil.parsePassedNode("<x>", null, null, t => t === "x"), "no meta, but the <…> still comes off").to.equal("x");
     });
   });
 
