@@ -289,7 +289,10 @@ if (!TEST_browser) {
         // ...across as well as down: the pane keeps the width the validator
         // gave it, 48.5% of the page, unless the slot says otherwise -- and
         // the slot is half the page already
-        expect($("#inputData").css("width"), "the whole of it").to.equal("auto");
+        // (getComputedStyle: jQuery's .css("width") measures where the
+        // sheet says auto, and jsdom measures nothing)
+        expect(dom.window.getComputedStyle($("#inputData").get(0)).width, "the whole of it")
+          .to.equal("auto");
       } finally {
         // whatever happened, the next test starts where it expects to
         $("#screenTabs button[data-screen='']").trigger("click");
