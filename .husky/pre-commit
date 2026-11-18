@@ -1,1 +1,1 @@
-npm run lint && npm run test && npm run check-branch-deps
+npm run lint && npm run test && npm run check-branch-deps && npm run check-manifests

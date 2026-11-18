@@ -57,6 +57,7 @@ jobs:
       - run: npm run lint
       - run: npm run check-branch-deps
       - run: npm run check-page-scripts
+      - run: npm run check-manifests   # a manifest.yaml and the manifest.json beside it say the same thing
 
   webpack:
     # the doc/webpacks bundles are gitignored and built on demand; make sure

@@ -1,10 +1,42 @@
 [
   {
-    "schemaLabel": "Customer EXTENDS Person and Employee",
-    "schemaURL": "PersonEmployee.shex",
+    "schemaLabel": "Customer ᐃ (∅ OR Person OR Employee)",
+    "schema": "PREFIX foaf: <http://xmlns.com/foaf/0.1/>\nPREFIX : <http://a.example/ns#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nBASE <http://a.example/>\n\n<Empty> CLOSED { }\n<Person> CLOSED { foaf:name xsd:string }\n<Employee> CLOSED { :employeeId xsd:integer }\n<PersonOrEmployee1> (@<Empty> OR @<Person> OR @<Employee>)\n<Customer> EXTENDS @<PersonOrEmployee1> CLOSED { :customerId xsd:integer }",
     "dataLabel": "percust, empcust, xcust",
-    "dataURL": "PersonEmployee.ttl",
-    "queryMap": "<http://a.example/percust>@ <http://a.example/Person>,\n<http://a.example/percust>@!<http://a.example/Employee>,\n<http://a.example/percust>@ <http://a.example/Customer>,\n<http://a.example/empcust>@!<http://a.example/Person>,\n<http://a.example/empcust>@ <http://a.example/Employee>,\n<http://a.example/empcust>@ <http://a.example/Customer>,\n<http://a.example/xcust>  @!<http://a.example/Person>,\n<http://a.example/xcust>  @!<http://a.example/Employee>,\n<http://a.example/xcust>  @ <http://a.example/Customer>",
+    "dataURL": "Person_OR_Employee.ttl",
+    "queryMapURL": "Person_OR_Employee.smap",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "Customer ᐃ (∅ OR ({} AND ᐃ Person) OR Employee)",
+    "schema": "PREFIX foaf: <http://xmlns.com/foaf/0.1/>\nPREFIX : <http://a.example/ns#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nBASE <http://a.example/>\n\n<Empty> CLOSED { }\n<Person> CLOSED { foaf:name xsd:string }\n<Employee> CLOSED { :employeeId xsd:integer }\n<PersonOrEmployee1> (@<Empty> OR ({} AND EXTENDS @<Person> {}) OR @<Employee>)\n<Customer> EXTENDS @<PersonOrEmployee1> CLOSED { :customerId xsd:integer }",
+    "dataLabel": "percust, empcust, xcust",
+    "dataURL": "Person_OR_Employee.ttl",
+    "queryMapURL": "Person_OR_Employee.smap",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "Customer ᐃ ↦(∅ OR Person OR Employee)",
+    "schema": "PREFIX foaf: <http://xmlns.com/foaf/0.1/>\nPREFIX : <http://a.example/ns#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nBASE <http://a.example/>\n\n<Empty> CLOSED { }\n<Person> CLOSED { foaf:name xsd:string }\n<Employee> CLOSED { :employeeId xsd:integer }\n<Customer> EXTENDS @<Empty> OR @<Person> OR @<Employee> CLOSED { :customerId xsd:integer }",
+    "dataLabel": "percust, empcust, xcust",
+    "dataURL": "Person_OR_Employee.ttl",
+    "queryMapURL": "Person_OR_Employee.smap",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "Customer ᐃ ↦(∅ OR ({} AND ᐃ Person) OR Employee)",
+    "schema": "PREFIX foaf: <http://xmlns.com/foaf/0.1/>\nPREFIX : <http://a.example/ns#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nBASE <http://a.example/>\n\n<Empty> CLOSED { }\n<Person> CLOSED { foaf:name xsd:string }\n<Employee> CLOSED { :employeeId xsd:integer }\n<Customer> EXTENDS @<Empty> OR ({} AND EXTENDS @<Person> {}) OR @<Employee> CLOSED { :customerId xsd:integer }",
+    "dataLabel": "percust, empcust, xcust",
+    "dataURL": "Person_OR_Employee.ttl",
+    "queryMapURL": "Person_OR_Employee.smap",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "Customer ᐃ ↦(*∅ OR ({} AND ᐃ Person) OR Employee)",
+    "schema": "PREFIX foaf: <http://xmlns.com/foaf/0.1/>\nPREFIX : <http://a.example/ns#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nBASE <http://a.example/>\n\nABSTRACT <Empty> @<Empty_impl>\n<Empty_impl> CLOSED { }\n<Person> CLOSED { foaf:name xsd:string }\n<Employee> CLOSED { :employeeId xsd:integer }\n<Customer> EXTENDS @<Empty> OR ({} AND EXTENDS @<Person> {}) OR @<Employee> CLOSED { :customerId xsd:integer }",
+    "dataLabel": "percust, empcust, xcust",
+    "dataURL": "Person_OR_Employee.ttl",
+    "queryMapURL": "Person_OR_Employee.smap",
     "status": "conformant"
   },
   {
@@ -98,14 +130,6 @@
   {
     "schemaLabel": "vitals RESTRICTS",
     "schemaURL": "vitals-RESTRICTS.shex",
-    "dataLabel": "data",
-    "dataURL": "vitals.ttl",
-    "queryMapURL": "vitals.smap",
-    "status": "conformant"
-  },
-  {
-    "schemaLabel": "XX - vitals path",
-    "schemaURL": "vitals-path.shex",
     "dataLabel": "data",
     "dataURL": "vitals.ttl",
     "queryMapURL": "vitals.smap",

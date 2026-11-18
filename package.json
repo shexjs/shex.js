@@ -65,6 +65,7 @@
     "lint": "eslint packages/shex-cli/test/findPath.js",
     "check-branch-deps": "./tools/checkBranchDeps.sh",
     "check-page-scripts": "./tools/checkPageScripts.sh",
+    "check-manifests": "node tools/check-manifest-pairs.js",
     "coverage": "c8 npm run test-all",
     "parser-all": "(cd packages/shex-parser/ && npm run parser) && (cd packages/shape-map/ && npm run parser)",
     "webpack": "(cd packages/shex-webapp/ && npm run webpack) && (cd packages/extension-map/ && npm run webpack) && (cd packages/extension-reduce/ && npm run webpack) && (cd packages/extension-wasi/ && npm run webpack) && (cd packages/extension-shacl-sparql/ && npm run webpack) && (cd packages/extension-path-assert/ && npm run webpack)",
