@@ -350,6 +350,10 @@ label {
 .screen > [data-borrow] { display: contents; }
 .screen [data-tabset] .panel,
 .screen [data-tabset] > [data-borrow] > * { width: auto; margin: 0; }
+/* ...and in a column the slot is the box, and the pane takes it: without
+   this the pane keeps the 48.5% of the page the validator gave it, and is
+   half a column wide */
+.screenColumns > [data-borrow] > .panel { width: auto; }
 /* a set of panes taking turns is as much the column as one pane is */
 .screen [data-tabset] { display: flex; flex-direction: column; height: 100%; }
 .screen [data-tabset] > div[id] { flex: 1 1 auto; }

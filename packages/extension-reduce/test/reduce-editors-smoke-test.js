@@ -286,6 +286,13 @@ if (!TEST_browser) {
         expect(slot.css("flex"), "taking its half of the row").to.include("1 1");
         expect($("#inputData").parent().is(slot), "with the pane in it").to.equal(true);
         expect($("#inputData").css("flex"), "and filling it").to.include("1 1");
+        // ...across as well as down: the pane keeps the width the validator
+        // gave it, 48.5% of the page, unless the slot says otherwise -- and
+        // the slot is half the page already
+        // (getComputedStyle: jQuery's .css("width") measures where the
+        // sheet says auto, and jsdom measures nothing)
+        expect(dom.window.getComputedStyle($("#inputData").get(0)).width, "the whole of it")
+          .to.equal("auto");
       } finally {
         // whatever happened, the next test starts where it expects to
         $("#screenTabs button[data-screen='']").trigger("click");
