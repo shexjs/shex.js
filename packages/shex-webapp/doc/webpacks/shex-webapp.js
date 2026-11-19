@@ -61733,7 +61733,12 @@ class ShapeExprValidationContext {
         return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, this.matchTarget, this.subGraph, this.partitionClosed);
     }
     followTripleConstraint() {
-        return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, null, false);
+        // A triple constraint's value is a different focus node validated against
+        // its own shape: the matchTarget (which tracks whether the PARENT node was
+        // validated through the abstract ancestor it is standing in for) is not
+        // about this node, so it must not gate a value's ShapeOr (see the ShapeOr
+        // case in resumeShapeExpr).  Clear it, as subGraph is cleared.
+        return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, null, null, false);
     }
     /**
      * The same, for a branch that will run beside its siblings.
@@ -61746,7 +61751,9 @@ class ShapeExprValidationContext {
      * answer.  Siblings are different paths, so each takes its own copy.
      */
     forkTripleConstraint() {
-        return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, Object.assign({}, this.seen), this.matchTarget, null, false);
+        // See followTripleConstraint: the matchTarget belongs to the parent node,
+        // not to this value, so it is cleared here too.
+        return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, Object.assign({}, this.seen), null, null, false);
     }
     checkExtendsPartition(subGraph, partitionClosed) {
         return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, subGraph, partitionClosed);
