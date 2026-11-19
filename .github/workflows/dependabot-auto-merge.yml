@@ -24,6 +24,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  checks: read
 
 # Merge one PR at a time: each merge moves `main`, so a serialized queue lets the
 # next PR conflict cleanly (Dependabot then rebases it and CI re-runs) instead of
@@ -62,6 +63,18 @@ jobs:
             *) echo "PR #$pr is not a Dependabot PR (author: ${author:-unknown}); leaving it alone."; exit 0 ;;
           esac
 
+          # All green: every check run on this commit (every job of every PR
+          # workflow, matrix legs included) must be finished and passing. If
+          # another workflow is still running, its own completion re-fires this.
+          bad=$(gh api --paginate "repos/$REPO/commits/$HEAD_SHA/check-runs" \
+                  --jq '.check_runs[]
+                        | select(.status != "completed"
+                                 or ((.conclusion // "") | IN("success","skipped","neutral") | not))
+                        | "\(.name)=\(.conclusion // .status)"')
+          if [ -n "$bad" ]; then
+            echo "Not every check on $HEAD_SHA is green yet; not merging:"; echo "$bad"; exit 0
+          fi
+
           # --- To hold semver-major bumps for a human, uncomment this guard: ---
           # title=$(gh pr view "$pr" --repo "$REPO" --json title --jq '.title')
           # fromM=$(printf '%s' "$title" | sed -nE 's/.* from ([0-9]+)\..*/\1/p')
@@ -73,5 +86,7 @@ jobs:
           echo "CI is green on Dependabot PR #$pr; squash-merging."
           # Not-yet-mergeable (a stale branch needing a rebase) is expected and
           # not an error: Dependabot rebases it, CI re-runs, and this fires again.
-          gh pr merge "$pr" --repo "$REPO" --squash --delete-branch \
-            || echo "PR #$pr not merged yet (likely needs a rebase); will retry after Dependabot updates it."
+          # --match-head-commit: never merge a commit CI didn't test (e.g. a rebase
+          # Dependabot pushed while this job was starting).
+          gh pr merge "$pr" --repo "$REPO" --squash --delete-branch --match-head-commit "$HEAD_SHA" \
+            || echo "PR #$pr not merged yet (needs rebase or has a newer commit); will retry after Dependabot updates it."

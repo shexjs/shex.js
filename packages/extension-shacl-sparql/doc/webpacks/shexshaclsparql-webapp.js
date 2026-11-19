@@ -15709,7 +15709,7 @@ exports.ActorQueryOperationNop = ActorQueryOperationNop;
 
 /***/ },
 
-/***/ 76695
+/***/ 99076
 (__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -89596,7 +89596,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActorRdfSerializeN3 = void 0;
 const bus_rdf_serialize_1 = __webpack_require__(71236);
 const context_entries_1 = __webpack_require__(16146);
-const n3_1 = __webpack_require__(19266);
+const n3_1 = __webpack_require__(77947);
 /**
  * A comunica N3 RDF Serialize Actor.
  */
@@ -89670,7 +89670,7 @@ __exportStar(__webpack_require__(905), exports);
 
 /***/ },
 
-/***/ 19266
+/***/ 77947
 (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -89682,8 +89682,734 @@ __webpack_require__.d(__webpack_exports__, {
 
 // UNUSED EXPORTS: BaseIRI, BlankNode, DataFactory, DefaultGraph, EntityIndex, Lexer, Literal, NamedNode, Parser, Quad, Reasoner, Store, StoreFactory, StreamParser, Term, Triple, Util, Variable, Writer, default, getRulesFromDataset, termFromId, termToId
 
+// EXTERNAL MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/internal/streams/add-abort-signal.js
+var add_abort_signal_namespaceFn = () => {
+	return __webpack_require__(46679);
+};
+
+// MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/internal/streams/compose.js
+var compose_namespaceFn = /*#__PURE__*/__webpack_require__.cw((module) => {
+
+
+const { pipeline } = (pipeline_namespaceFn())
+const Duplex = (duplex_namespaceFn())
+const { destroyer } = (destroy_namespaceFn())
+const {
+  isNodeStream,
+  isReadable,
+  isWritable,
+  isWebStream,
+  isTransformStream,
+  isWritableStream,
+  isReadableStream
+} = (utils_namespaceFn())
+const {
+  AbortError,
+  codes: { ERR_INVALID_ARG_VALUE, ERR_MISSING_ARGS }
+} = (errors_namespaceFn())
+const eos = (end_of_stream_namespaceFn())
+module.exports = function compose(...streams) {
+  if (streams.length === 0) {
+    throw new ERR_MISSING_ARGS('streams')
+  }
+  if (streams.length === 1) {
+    return Duplex.from(streams[0])
+  }
+  const orgStreams = [...streams]
+  if (typeof streams[0] === 'function') {
+    streams[0] = Duplex.from(streams[0])
+  }
+  if (typeof streams[streams.length - 1] === 'function') {
+    const idx = streams.length - 1
+    streams[idx] = Duplex.from(streams[idx])
+  }
+  for (let n = 0; n < streams.length; ++n) {
+    if (!isNodeStream(streams[n]) && !isWebStream(streams[n])) {
+      // TODO(ronag): Add checks for non streams.
+      continue
+    }
+    if (
+      n < streams.length - 1 &&
+      !(isReadable(streams[n]) || isReadableStream(streams[n]) || isTransformStream(streams[n]))
+    ) {
+      throw new ERR_INVALID_ARG_VALUE(`streams[${n}]`, orgStreams[n], 'must be readable')
+    }
+    if (n > 0 && !(isWritable(streams[n]) || isWritableStream(streams[n]) || isTransformStream(streams[n]))) {
+      throw new ERR_INVALID_ARG_VALUE(`streams[${n}]`, orgStreams[n], 'must be writable')
+    }
+  }
+  let ondrain
+  let onfinish
+  let onreadable
+  let onclose
+  let d
+  function onfinished(err) {
+    const cb = onclose
+    onclose = null
+    if (cb) {
+      cb(err)
+    } else if (err) {
+      d.destroy(err)
+    } else if (!readable && !writable) {
+      d.destroy()
+    }
+  }
+  const head = streams[0]
+  const tail = pipeline(streams, onfinished)
+  const writable = !!(isWritable(head) || isWritableStream(head) || isTransformStream(head))
+  const readable = !!(isReadable(tail) || isReadableStream(tail) || isTransformStream(tail))
+
+  // TODO(ronag): Avoid double buffering.
+  // Implement Writable/Readable/Duplex traits.
+  // See, https://github.com/nodejs/node/pull/33515.
+  d = new Duplex({
+    // TODO (ronag): highWaterMark?
+    writableObjectMode: !!(head !== null && head !== undefined && head.writableObjectMode),
+    readableObjectMode: !!(tail !== null && tail !== undefined && tail.readableObjectMode),
+    writable,
+    readable
+  })
+  if (writable) {
+    if (isNodeStream(head)) {
+      d._write = function (chunk, encoding, callback) {
+        if (head.write(chunk, encoding)) {
+          callback()
+        } else {
+          ondrain = callback
+        }
+      }
+      d._final = function (callback) {
+        head.end()
+        onfinish = callback
+      }
+      head.on('drain', function () {
+        if (ondrain) {
+          const cb = ondrain
+          ondrain = null
+          cb()
+        }
+      })
+    } else if (isWebStream(head)) {
+      const writable = isTransformStream(head) ? head.writable : head
+      const writer = writable.getWriter()
+      d._write = async function (chunk, encoding, callback) {
+        try {
+          await writer.ready
+          writer.write(chunk).catch(() => {})
+          callback()
+        } catch (err) {
+          callback(err)
+        }
+      }
+      d._final = async function (callback) {
+        try {
+          await writer.ready
+          writer.close().catch(() => {})
+          onfinish = callback
+        } catch (err) {
+          callback(err)
+        }
+      }
+    }
+    const toRead = isTransformStream(tail) ? tail.readable : tail
+    eos(toRead, () => {
+      if (onfinish) {
+        const cb = onfinish
+        onfinish = null
+        cb()
+      }
+    })
+  }
+  if (readable) {
+    if (isNodeStream(tail)) {
+      tail.on('readable', function () {
+        if (onreadable) {
+          const cb = onreadable
+          onreadable = null
+          cb()
+        }
+      })
+      tail.on('end', function () {
+        d.push(null)
+      })
+      d._read = function () {
+        while (true) {
+          const buf = tail.read()
+          if (buf === null) {
+            onreadable = d._read
+            return
+          }
+          if (!d.push(buf)) {
+            return
+          }
+        }
+      }
+    } else if (isWebStream(tail)) {
+      const readable = isTransformStream(tail) ? tail.readable : tail
+      const reader = readable.getReader()
+      d._read = async function () {
+        while (true) {
+          try {
+            const { value, done } = await reader.read()
+            if (!d.push(value)) {
+              return
+            }
+            if (done) {
+              d.push(null)
+              return
+            }
+          } catch {
+            return
+          }
+        }
+      }
+    }
+  }
+  d._destroy = function (err, callback) {
+    if (!err && onclose !== null) {
+      err = new AbortError()
+    }
+    onreadable = null
+    ondrain = null
+    onfinish = null
+    if (onclose === null) {
+      callback(err)
+    } else {
+      onclose = callback
+      if (isNodeStream(tail)) {
+        destroyer(tail, err)
+      }
+    }
+  }
+  return d
+}
+
+});
+
+// EXTERNAL MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/internal/streams/destroy.js
+var destroy_namespaceFn = () => {
+	return __webpack_require__(85484);
+};
+
+// EXTERNAL MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/internal/streams/duplex.js
+var duplex_namespaceFn = () => {
+	return __webpack_require__(52614);
+};
+
+// EXTERNAL MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/internal/streams/end-of-stream.js
+var end_of_stream_namespaceFn = () => {
+	return __webpack_require__(26866);
+};
+
+// EXTERNAL MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/internal/streams/legacy.js
+var legacy_namespaceFn = () => {
+	return __webpack_require__(63815);
+};
+
+// MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/internal/streams/operators.js
+var operators_namespaceFn = /*#__PURE__*/__webpack_require__.cw((module) => {
+
+
+const AbortController = globalThis.AbortController || (browser_namespaceFn().AbortController)
+const {
+  codes: { ERR_INVALID_ARG_VALUE, ERR_INVALID_ARG_TYPE, ERR_MISSING_ARGS, ERR_OUT_OF_RANGE },
+  AbortError
+} = (errors_namespaceFn())
+const { validateAbortSignal, validateInteger, validateObject } = (validators_namespaceFn())
+const kWeakHandler = (primordials_namespaceFn().Symbol)('kWeak')
+const kResistStopPropagation = (primordials_namespaceFn().Symbol)('kResistStopPropagation')
+const { finished } = (end_of_stream_namespaceFn())
+const staticCompose = (compose_namespaceFn())
+const { addAbortSignalNoValidate } = (add_abort_signal_namespaceFn())
+const { isWritable, isNodeStream } = (utils_namespaceFn())
+const { deprecate } = (util_namespaceFn())
+const {
+  ArrayPrototypePush,
+  Boolean,
+  MathFloor,
+  Number,
+  NumberIsNaN,
+  Promise,
+  PromiseReject,
+  PromiseResolve,
+  PromisePrototypeThen,
+  Symbol
+} = (primordials_namespaceFn())
+const kEmpty = Symbol('kEmpty')
+const kEof = Symbol('kEof')
+function compose(stream, options) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  if (isNodeStream(stream) && !isWritable(stream)) {
+    throw new ERR_INVALID_ARG_VALUE('stream', stream, 'must be writable')
+  }
+  const composedStream = staticCompose(this, stream)
+  if (options !== null && options !== undefined && options.signal) {
+    // Not validating as we already validated before
+    addAbortSignalNoValidate(options.signal, composedStream)
+  }
+  return composedStream
+}
+function map(fn, options) {
+  if (typeof fn !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
+  }
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  let concurrency = 1
+  if ((options === null || options === undefined ? undefined : options.concurrency) != null) {
+    concurrency = MathFloor(options.concurrency)
+  }
+  let highWaterMark = concurrency - 1
+  if ((options === null || options === undefined ? undefined : options.highWaterMark) != null) {
+    highWaterMark = MathFloor(options.highWaterMark)
+  }
+  validateInteger(concurrency, 'options.concurrency', 1)
+  validateInteger(highWaterMark, 'options.highWaterMark', 0)
+  highWaterMark += concurrency
+  return async function* map() {
+    const signal = (util_namespaceFn().AbortSignalAny)(
+      [options === null || options === undefined ? undefined : options.signal].filter(Boolean)
+    )
+    const stream = this
+    const queue = []
+    const signalOpt = {
+      signal
+    }
+    let next
+    let resume
+    let done = false
+    let cnt = 0
+    function onCatch() {
+      done = true
+      afterItemProcessed()
+    }
+    function afterItemProcessed() {
+      cnt -= 1
+      maybeResume()
+    }
+    function maybeResume() {
+      if (resume && !done && cnt < concurrency && queue.length < highWaterMark) {
+        resume()
+        resume = null
+      }
+    }
+    async function pump() {
+      try {
+        for await (let val of stream) {
+          if (done) {
+            return
+          }
+          if (signal.aborted) {
+            throw new AbortError()
+          }
+          try {
+            val = fn(val, signalOpt)
+            if (val === kEmpty) {
+              continue
+            }
+            val = PromiseResolve(val)
+          } catch (err) {
+            val = PromiseReject(err)
+          }
+          cnt += 1
+          PromisePrototypeThen(val, afterItemProcessed, onCatch)
+          queue.push(val)
+          if (next) {
+            next()
+            next = null
+          }
+          if (!done && (queue.length >= highWaterMark || cnt >= concurrency)) {
+            await new Promise((resolve) => {
+              resume = resolve
+            })
+          }
+        }
+        queue.push(kEof)
+      } catch (err) {
+        const val = PromiseReject(err)
+        PromisePrototypeThen(val, afterItemProcessed, onCatch)
+        queue.push(val)
+      } finally {
+        done = true
+        if (next) {
+          next()
+          next = null
+        }
+      }
+    }
+    pump()
+    try {
+      while (true) {
+        while (queue.length > 0) {
+          const val = await queue[0]
+          if (val === kEof) {
+            return
+          }
+          if (signal.aborted) {
+            throw new AbortError()
+          }
+          if (val !== kEmpty) {
+            yield val
+          }
+          queue.shift()
+          maybeResume()
+        }
+        await new Promise((resolve) => {
+          next = resolve
+        })
+      }
+    } finally {
+      done = true
+      if (resume) {
+        resume()
+        resume = null
+      }
+    }
+  }.call(this)
+}
+function asIndexedPairs(options = undefined) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  return async function* asIndexedPairs() {
+    let index = 0
+    for await (const val of this) {
+      var _options$signal
+      if (
+        options !== null &&
+        options !== undefined &&
+        (_options$signal = options.signal) !== null &&
+        _options$signal !== undefined &&
+        _options$signal.aborted
+      ) {
+        throw new AbortError({
+          cause: options.signal.reason
+        })
+      }
+      yield [index++, val]
+    }
+  }.call(this)
+}
+async function some(fn, options = undefined) {
+  for await (const unused of filter.call(this, fn, options)) {
+    return true
+  }
+  return false
+}
+async function every(fn, options = undefined) {
+  if (typeof fn !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
+  }
+  // https://en.wikipedia.org/wiki/De_Morgan%27s_laws
+  return !(await some.call(
+    this,
+    async (...args) => {
+      return !(await fn(...args))
+    },
+    options
+  ))
+}
+async function find(fn, options) {
+  for await (const result of filter.call(this, fn, options)) {
+    return result
+  }
+  return undefined
+}
+async function forEach(fn, options) {
+  if (typeof fn !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
+  }
+  async function forEachFn(value, options) {
+    await fn(value, options)
+    return kEmpty
+  }
+  // eslint-disable-next-line no-unused-vars
+  for await (const unused of map.call(this, forEachFn, options));
+}
+function filter(fn, options) {
+  if (typeof fn !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
+  }
+  async function filterFn(value, options) {
+    if (await fn(value, options)) {
+      return value
+    }
+    return kEmpty
+  }
+  return map.call(this, filterFn, options)
+}
+
+// Specific to provide better error to reduce since the argument is only
+// missing if the stream has no items in it - but the code is still appropriate
+class ReduceAwareErrMissingArgs extends ERR_MISSING_ARGS {
+  constructor() {
+    super('reduce')
+    this.message = 'Reduce of an empty stream requires an initial value'
+  }
+}
+async function reduce(reducer, initialValue, options) {
+  var _options$signal2
+  if (typeof reducer !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('reducer', ['Function', 'AsyncFunction'], reducer)
+  }
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  let hasInitialValue = arguments.length > 1
+  if (
+    options !== null &&
+    options !== undefined &&
+    (_options$signal2 = options.signal) !== null &&
+    _options$signal2 !== undefined &&
+    _options$signal2.aborted
+  ) {
+    const err = new AbortError(undefined, {
+      cause: options.signal.reason
+    })
+    this.once('error', () => {}) // The error is already propagated
+    await finished(this.destroy(err))
+    throw err
+  }
+  const ac = new AbortController()
+  const signal = ac.signal
+  if (options !== null && options !== undefined && options.signal) {
+    const opts = {
+      once: true,
+      [kWeakHandler]: this,
+      [kResistStopPropagation]: true
+    }
+    options.signal.addEventListener('abort', () => ac.abort(), opts)
+  }
+  let gotAnyItemFromStream = false
+  try {
+    for await (const value of this) {
+      var _options$signal3
+      gotAnyItemFromStream = true
+      if (
+        options !== null &&
+        options !== undefined &&
+        (_options$signal3 = options.signal) !== null &&
+        _options$signal3 !== undefined &&
+        _options$signal3.aborted
+      ) {
+        throw new AbortError()
+      }
+      if (!hasInitialValue) {
+        initialValue = value
+        hasInitialValue = true
+      } else {
+        initialValue = await reducer(initialValue, value, {
+          signal
+        })
+      }
+    }
+    if (!gotAnyItemFromStream && !hasInitialValue) {
+      throw new ReduceAwareErrMissingArgs()
+    }
+  } finally {
+    ac.abort()
+  }
+  return initialValue
+}
+async function toArray(options) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  const result = []
+  for await (const val of this) {
+    var _options$signal4
+    if (
+      options !== null &&
+      options !== undefined &&
+      (_options$signal4 = options.signal) !== null &&
+      _options$signal4 !== undefined &&
+      _options$signal4.aborted
+    ) {
+      throw new AbortError(undefined, {
+        cause: options.signal.reason
+      })
+    }
+    ArrayPrototypePush(result, val)
+  }
+  return result
+}
+function flatMap(fn, options) {
+  const values = map.call(this, fn, options)
+  return async function* flatMap() {
+    for await (const val of values) {
+      yield* val
+    }
+  }.call(this)
+}
+function toIntegerOrInfinity(number) {
+  // We coerce here to align with the spec
+  // https://github.com/tc39/proposal-iterator-helpers/issues/169
+  number = Number(number)
+  if (NumberIsNaN(number)) {
+    return 0
+  }
+  if (number < 0) {
+    throw new ERR_OUT_OF_RANGE('number', '>= 0', number)
+  }
+  return number
+}
+function drop(number, options = undefined) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  number = toIntegerOrInfinity(number)
+  return async function* drop() {
+    var _options$signal5
+    if (
+      options !== null &&
+      options !== undefined &&
+      (_options$signal5 = options.signal) !== null &&
+      _options$signal5 !== undefined &&
+      _options$signal5.aborted
+    ) {
+      throw new AbortError()
+    }
+    for await (const val of this) {
+      var _options$signal6
+      if (
+        options !== null &&
+        options !== undefined &&
+        (_options$signal6 = options.signal) !== null &&
+        _options$signal6 !== undefined &&
+        _options$signal6.aborted
+      ) {
+        throw new AbortError()
+      }
+      if (number-- <= 0) {
+        yield val
+      }
+    }
+  }.call(this)
+}
+function take(number, options = undefined) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  number = toIntegerOrInfinity(number)
+  return async function* take() {
+    var _options$signal7
+    if (
+      options !== null &&
+      options !== undefined &&
+      (_options$signal7 = options.signal) !== null &&
+      _options$signal7 !== undefined &&
+      _options$signal7.aborted
+    ) {
+      throw new AbortError()
+    }
+    for await (const val of this) {
+      var _options$signal8
+      if (
+        options !== null &&
+        options !== undefined &&
+        (_options$signal8 = options.signal) !== null &&
+        _options$signal8 !== undefined &&
+        _options$signal8.aborted
+      ) {
+        throw new AbortError()
+      }
+      if (number-- > 0) {
+        yield val
+      }
+
+      // Don't get another item from iterator in case we reached the end
+      if (number <= 0) {
+        return
+      }
+    }
+  }.call(this)
+}
+module.exports.streamReturningOperators = {
+  asIndexedPairs: deprecate(asIndexedPairs, 'readable.asIndexedPairs will be removed in a future version.'),
+  drop,
+  filter,
+  flatMap,
+  map,
+  take,
+  compose
+}
+module.exports.promiseReturningOperators = {
+  every,
+  forEach,
+  reduce,
+  toArray,
+  some,
+  find
+}
+
+});
+
+// EXTERNAL MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/internal/streams/passthrough.js
+var passthrough_namespaceFn = () => {
+	return __webpack_require__(65168);
+};
+
+// EXTERNAL MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/internal/streams/pipeline.js
+var pipeline_namespaceFn = () => {
+	return __webpack_require__(30442);
+};
+
+// EXTERNAL MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/internal/streams/readable.js
+var readable_namespaceFn = () => {
+	return __webpack_require__(2436);
+};
+
+// EXTERNAL MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/internal/streams/state.js
+var state_namespaceFn = () => {
+	return __webpack_require__(50487);
+};
+
+// EXTERNAL MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/internal/streams/transform.js
+var transform_namespaceFn = () => {
+	return __webpack_require__(46578);
+};
+
+// EXTERNAL MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/internal/streams/utils.js
+var utils_namespaceFn = () => {
+	return __webpack_require__(32556);
+};
+
+// EXTERNAL MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/internal/streams/writable.js
+var writable_namespaceFn = () => {
+	return __webpack_require__(56836);
+};
+
+// EXTERNAL MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/internal/validators.js
+var validators_namespaceFn = () => {
+	return __webpack_require__(10905);
+};
+
 // MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/ours/browser.js
-var browser_namespaceFn = /*#__PURE__*/__webpack_require__.cw(function(module, exports) {
+var ours_browser_namespaceFn = /*#__PURE__*/__webpack_require__.cw((module) => {
 
 
 const CustomStream = (stream_namespaceFn())
@@ -89722,18 +90448,229 @@ module.exports["default"] = module.exports
 
 });
 
-// EXTERNAL MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/stream.js
-var stream_namespaceFn = () => {
-	return __webpack_require__(39166);
+// EXTERNAL MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/ours/errors.js
+var errors_namespaceFn = () => {
+	return __webpack_require__(90231);
 };
 
-// EXTERNAL MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/stream/promises.js
-var promises_namespaceFn = () => {
-	return __webpack_require__(7019);
+// EXTERNAL MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/ours/primordials.js
+var primordials_namespaceFn = () => {
+	return __webpack_require__(19282);
+};
+
+// EXTERNAL MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/ours/util.js
+var util_namespaceFn = () => {
+	return __webpack_require__(3756);
+};
+
+// MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/stream.js
+var stream_namespaceFn = /*#__PURE__*/__webpack_require__.cw((module) => {
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+
+/* replacement start */
+
+const { Buffer } = (buffer_namespaceFn())
+
+/* replacement end */
+
+const { ObjectDefineProperty, ObjectKeys, ReflectApply } = (primordials_namespaceFn())
+const {
+  promisify: { custom: customPromisify }
+} = (util_namespaceFn())
+const { streamReturningOperators, promiseReturningOperators } = (operators_namespaceFn())
+const {
+  codes: { ERR_ILLEGAL_CONSTRUCTOR }
+} = (errors_namespaceFn())
+const compose = (compose_namespaceFn())
+const { setDefaultHighWaterMark, getDefaultHighWaterMark } = (state_namespaceFn())
+const { pipeline } = (pipeline_namespaceFn())
+const { destroyer } = (destroy_namespaceFn())
+const eos = (end_of_stream_namespaceFn())
+const internalBuffer = (/* unused pure expression or super */ null && ({}))
+const promises = (promises_namespaceFn())
+const utils = (utils_namespaceFn())
+const Stream = (module.exports = (legacy_namespaceFn().Stream))
+Stream.isDestroyed = utils.isDestroyed
+Stream.isDisturbed = utils.isDisturbed
+Stream.isErrored = utils.isErrored
+Stream.isReadable = utils.isReadable
+Stream.isWritable = utils.isWritable
+Stream.Readable = (readable_namespaceFn())
+for (const key of ObjectKeys(streamReturningOperators)) {
+  const op = streamReturningOperators[key]
+  function fn(...args) {
+    if (new.target) {
+      throw ERR_ILLEGAL_CONSTRUCTOR()
+    }
+    return Stream.Readable.from(ReflectApply(op, this, args))
+  }
+  ObjectDefineProperty(fn, 'name', {
+    __proto__: null,
+    value: op.name
+  })
+  ObjectDefineProperty(fn, 'length', {
+    __proto__: null,
+    value: op.length
+  })
+  ObjectDefineProperty(Stream.Readable.prototype, key, {
+    __proto__: null,
+    value: fn,
+    enumerable: false,
+    configurable: true,
+    writable: true
+  })
+}
+for (const key of ObjectKeys(promiseReturningOperators)) {
+  const op = promiseReturningOperators[key]
+  function fn(...args) {
+    if (new.target) {
+      throw ERR_ILLEGAL_CONSTRUCTOR()
+    }
+    return ReflectApply(op, this, args)
+  }
+  ObjectDefineProperty(fn, 'name', {
+    __proto__: null,
+    value: op.name
+  })
+  ObjectDefineProperty(fn, 'length', {
+    __proto__: null,
+    value: op.length
+  })
+  ObjectDefineProperty(Stream.Readable.prototype, key, {
+    __proto__: null,
+    value: fn,
+    enumerable: false,
+    configurable: true,
+    writable: true
+  })
+}
+Stream.Writable = (writable_namespaceFn())
+Stream.Duplex = (duplex_namespaceFn())
+Stream.Transform = (transform_namespaceFn())
+Stream.PassThrough = (passthrough_namespaceFn())
+Stream.pipeline = pipeline
+const { addAbortSignal } = (add_abort_signal_namespaceFn())
+Stream.addAbortSignal = addAbortSignal
+Stream.finished = eos
+Stream.destroy = destroyer
+Stream.compose = compose
+Stream.setDefaultHighWaterMark = setDefaultHighWaterMark
+Stream.getDefaultHighWaterMark = getDefaultHighWaterMark
+ObjectDefineProperty(Stream, 'promises', {
+  __proto__: null,
+  configurable: true,
+  enumerable: true,
+  get() {
+    return promises
+  }
+})
+ObjectDefineProperty(pipeline, customPromisify, {
+  __proto__: null,
+  enumerable: true,
+  get() {
+    return promises.pipeline
+  }
+})
+ObjectDefineProperty(eos, customPromisify, {
+  __proto__: null,
+  enumerable: true,
+  get() {
+    return promises.finished
+  }
+})
+
+// Backwards-compat with node 0.4.x
+Stream.Stream = Stream
+Stream._isUint8Array = function isUint8Array(value) {
+  return value instanceof Uint8Array
+}
+Stream._uint8ArrayToBuffer = function _uint8ArrayToBuffer(chunk) {
+  return Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength)
+}
+
+});
+
+// MODULE: ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/stream/promises.js
+var promises_namespaceFn = /*#__PURE__*/__webpack_require__.cw((module) => {
+
+
+const { ArrayPrototypePop, Promise } = (primordials_namespaceFn())
+const { isIterable, isNodeStream, isWebStream } = (utils_namespaceFn())
+const { pipelineImpl: pl } = (pipeline_namespaceFn())
+const { finished } = (end_of_stream_namespaceFn())
+;(stream_namespaceFn())
+function pipeline(...streams) {
+  return new Promise((resolve, reject) => {
+    let signal
+    let end
+    const lastArg = streams[streams.length - 1]
+    if (
+      lastArg &&
+      typeof lastArg === 'object' &&
+      !isNodeStream(lastArg) &&
+      !isIterable(lastArg) &&
+      !isWebStream(lastArg)
+    ) {
+      const options = ArrayPrototypePop(streams)
+      signal = options.signal
+      end = options.end
+    }
+    pl(
+      streams,
+      (err, value) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(value)
+        }
+      },
+      {
+        signal,
+        end
+      }
+    )
+  })
+}
+module.exports = {
+  finished,
+  pipeline
+}
+
+});
+
+// EXTERNAL MODULE: ../../node_modules/abort-controller/browser.js
+var browser_namespaceFn = () => {
+	return __webpack_require__(67083);
+};
+
+// EXTERNAL MODULE: ../../node_modules/buffer/index.js
+var buffer_namespaceFn = () => {
+	return __webpack_require__(1048);
 };
 
 ;// ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/readable-stream/lib/ours/browser.js
-browser_namespaceFn();
+ours_browser_namespaceFn();
 
 ;// ../../node_modules/@comunica/actor-rdf-serialize-n3/node_modules/n3/src/IRIs.js
 const RDF  = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
@@ -90870,7 +91807,7 @@ const MIN_CHUNK_SIZE = 16 * 1024;
 const DEFAULT_FLUSH_DELAY_MS = 20;
 
 // ## Constructor
-class N3StreamWriter extends (browser_namespaceFn().Transform) {
+class N3StreamWriter extends (ours_browser_namespaceFn().Transform) {
   constructor(options) {
     super({ encoding: 'utf8', writableObjectMode: true });
 
@@ -91245,208 +92182,6 @@ module.exports = class BufferList {
       customInspect: false
     })
   }
-}
-
-
-/***/ },
-
-/***/ 39514
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-const { pipeline } = __webpack_require__(30442)
-const Duplex = __webpack_require__(52614)
-const { destroyer } = __webpack_require__(85484)
-const {
-  isNodeStream,
-  isReadable,
-  isWritable,
-  isWebStream,
-  isTransformStream,
-  isWritableStream,
-  isReadableStream
-} = __webpack_require__(32556)
-const {
-  AbortError,
-  codes: { ERR_INVALID_ARG_VALUE, ERR_MISSING_ARGS }
-} = __webpack_require__(90231)
-const eos = __webpack_require__(26866)
-module.exports = function compose(...streams) {
-  if (streams.length === 0) {
-    throw new ERR_MISSING_ARGS('streams')
-  }
-  if (streams.length === 1) {
-    return Duplex.from(streams[0])
-  }
-  const orgStreams = [...streams]
-  if (typeof streams[0] === 'function') {
-    streams[0] = Duplex.from(streams[0])
-  }
-  if (typeof streams[streams.length - 1] === 'function') {
-    const idx = streams.length - 1
-    streams[idx] = Duplex.from(streams[idx])
-  }
-  for (let n = 0; n < streams.length; ++n) {
-    if (!isNodeStream(streams[n]) && !isWebStream(streams[n])) {
-      // TODO(ronag): Add checks for non streams.
-      continue
-    }
-    if (
-      n < streams.length - 1 &&
-      !(isReadable(streams[n]) || isReadableStream(streams[n]) || isTransformStream(streams[n]))
-    ) {
-      throw new ERR_INVALID_ARG_VALUE(`streams[${n}]`, orgStreams[n], 'must be readable')
-    }
-    if (n > 0 && !(isWritable(streams[n]) || isWritableStream(streams[n]) || isTransformStream(streams[n]))) {
-      throw new ERR_INVALID_ARG_VALUE(`streams[${n}]`, orgStreams[n], 'must be writable')
-    }
-  }
-  let ondrain
-  let onfinish
-  let onreadable
-  let onclose
-  let d
-  function onfinished(err) {
-    const cb = onclose
-    onclose = null
-    if (cb) {
-      cb(err)
-    } else if (err) {
-      d.destroy(err)
-    } else if (!readable && !writable) {
-      d.destroy()
-    }
-  }
-  const head = streams[0]
-  const tail = pipeline(streams, onfinished)
-  const writable = !!(isWritable(head) || isWritableStream(head) || isTransformStream(head))
-  const readable = !!(isReadable(tail) || isReadableStream(tail) || isTransformStream(tail))
-
-  // TODO(ronag): Avoid double buffering.
-  // Implement Writable/Readable/Duplex traits.
-  // See, https://github.com/nodejs/node/pull/33515.
-  d = new Duplex({
-    // TODO (ronag): highWaterMark?
-    writableObjectMode: !!(head !== null && head !== undefined && head.writableObjectMode),
-    readableObjectMode: !!(tail !== null && tail !== undefined && tail.readableObjectMode),
-    writable,
-    readable
-  })
-  if (writable) {
-    if (isNodeStream(head)) {
-      d._write = function (chunk, encoding, callback) {
-        if (head.write(chunk, encoding)) {
-          callback()
-        } else {
-          ondrain = callback
-        }
-      }
-      d._final = function (callback) {
-        head.end()
-        onfinish = callback
-      }
-      head.on('drain', function () {
-        if (ondrain) {
-          const cb = ondrain
-          ondrain = null
-          cb()
-        }
-      })
-    } else if (isWebStream(head)) {
-      const writable = isTransformStream(head) ? head.writable : head
-      const writer = writable.getWriter()
-      d._write = async function (chunk, encoding, callback) {
-        try {
-          await writer.ready
-          writer.write(chunk).catch(() => {})
-          callback()
-        } catch (err) {
-          callback(err)
-        }
-      }
-      d._final = async function (callback) {
-        try {
-          await writer.ready
-          writer.close().catch(() => {})
-          onfinish = callback
-        } catch (err) {
-          callback(err)
-        }
-      }
-    }
-    const toRead = isTransformStream(tail) ? tail.readable : tail
-    eos(toRead, () => {
-      if (onfinish) {
-        const cb = onfinish
-        onfinish = null
-        cb()
-      }
-    })
-  }
-  if (readable) {
-    if (isNodeStream(tail)) {
-      tail.on('readable', function () {
-        if (onreadable) {
-          const cb = onreadable
-          onreadable = null
-          cb()
-        }
-      })
-      tail.on('end', function () {
-        d.push(null)
-      })
-      d._read = function () {
-        while (true) {
-          const buf = tail.read()
-          if (buf === null) {
-            onreadable = d._read
-            return
-          }
-          if (!d.push(buf)) {
-            return
-          }
-        }
-      }
-    } else if (isWebStream(tail)) {
-      const readable = isTransformStream(tail) ? tail.readable : tail
-      const reader = readable.getReader()
-      d._read = async function () {
-        while (true) {
-          try {
-            const { value, done } = await reader.read()
-            if (!d.push(value)) {
-              return
-            }
-            if (done) {
-              d.push(null)
-              return
-            }
-          } catch {
-            return
-          }
-        }
-      }
-    }
-  }
-  d._destroy = function (err, callback) {
-    if (!err && onclose !== null) {
-      err = new AbortError()
-    }
-    onreadable = null
-    ondrain = null
-    onfinish = null
-    if (onclose === null) {
-      callback(err)
-    } else {
-      onclose = callback
-      if (isNodeStream(tail)) {
-        destroyer(tail, err)
-      }
-    }
-  }
-  return d
 }
 
 
@@ -92778,471 +93513,6 @@ function prependListener(emitter, event, fn) {
 module.exports = {
   Stream,
   prependListener
-}
-
-
-/***/ },
-
-/***/ 22011
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-const AbortController = globalThis.AbortController || (__webpack_require__(67083).AbortController)
-const {
-  codes: { ERR_INVALID_ARG_VALUE, ERR_INVALID_ARG_TYPE, ERR_MISSING_ARGS, ERR_OUT_OF_RANGE },
-  AbortError
-} = __webpack_require__(90231)
-const { validateAbortSignal, validateInteger, validateObject } = __webpack_require__(10905)
-const kWeakHandler = (__webpack_require__(19282).Symbol)('kWeak')
-const kResistStopPropagation = (__webpack_require__(19282).Symbol)('kResistStopPropagation')
-const { finished } = __webpack_require__(26866)
-const staticCompose = __webpack_require__(39514)
-const { addAbortSignalNoValidate } = __webpack_require__(46679)
-const { isWritable, isNodeStream } = __webpack_require__(32556)
-const { deprecate } = __webpack_require__(3756)
-const {
-  ArrayPrototypePush,
-  Boolean,
-  MathFloor,
-  Number,
-  NumberIsNaN,
-  Promise,
-  PromiseReject,
-  PromiseResolve,
-  PromisePrototypeThen,
-  Symbol
-} = __webpack_require__(19282)
-const kEmpty = Symbol('kEmpty')
-const kEof = Symbol('kEof')
-function compose(stream, options) {
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  if (isNodeStream(stream) && !isWritable(stream)) {
-    throw new ERR_INVALID_ARG_VALUE('stream', stream, 'must be writable')
-  }
-  const composedStream = staticCompose(this, stream)
-  if (options !== null && options !== undefined && options.signal) {
-    // Not validating as we already validated before
-    addAbortSignalNoValidate(options.signal, composedStream)
-  }
-  return composedStream
-}
-function map(fn, options) {
-  if (typeof fn !== 'function') {
-    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
-  }
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  let concurrency = 1
-  if ((options === null || options === undefined ? undefined : options.concurrency) != null) {
-    concurrency = MathFloor(options.concurrency)
-  }
-  let highWaterMark = concurrency - 1
-  if ((options === null || options === undefined ? undefined : options.highWaterMark) != null) {
-    highWaterMark = MathFloor(options.highWaterMark)
-  }
-  validateInteger(concurrency, 'options.concurrency', 1)
-  validateInteger(highWaterMark, 'options.highWaterMark', 0)
-  highWaterMark += concurrency
-  return async function* map() {
-    const signal = (__webpack_require__(3756).AbortSignalAny)(
-      [options === null || options === undefined ? undefined : options.signal].filter(Boolean)
-    )
-    const stream = this
-    const queue = []
-    const signalOpt = {
-      signal
-    }
-    let next
-    let resume
-    let done = false
-    let cnt = 0
-    function onCatch() {
-      done = true
-      afterItemProcessed()
-    }
-    function afterItemProcessed() {
-      cnt -= 1
-      maybeResume()
-    }
-    function maybeResume() {
-      if (resume && !done && cnt < concurrency && queue.length < highWaterMark) {
-        resume()
-        resume = null
-      }
-    }
-    async function pump() {
-      try {
-        for await (let val of stream) {
-          if (done) {
-            return
-          }
-          if (signal.aborted) {
-            throw new AbortError()
-          }
-          try {
-            val = fn(val, signalOpt)
-            if (val === kEmpty) {
-              continue
-            }
-            val = PromiseResolve(val)
-          } catch (err) {
-            val = PromiseReject(err)
-          }
-          cnt += 1
-          PromisePrototypeThen(val, afterItemProcessed, onCatch)
-          queue.push(val)
-          if (next) {
-            next()
-            next = null
-          }
-          if (!done && (queue.length >= highWaterMark || cnt >= concurrency)) {
-            await new Promise((resolve) => {
-              resume = resolve
-            })
-          }
-        }
-        queue.push(kEof)
-      } catch (err) {
-        const val = PromiseReject(err)
-        PromisePrototypeThen(val, afterItemProcessed, onCatch)
-        queue.push(val)
-      } finally {
-        done = true
-        if (next) {
-          next()
-          next = null
-        }
-      }
-    }
-    pump()
-    try {
-      while (true) {
-        while (queue.length > 0) {
-          const val = await queue[0]
-          if (val === kEof) {
-            return
-          }
-          if (signal.aborted) {
-            throw new AbortError()
-          }
-          if (val !== kEmpty) {
-            yield val
-          }
-          queue.shift()
-          maybeResume()
-        }
-        await new Promise((resolve) => {
-          next = resolve
-        })
-      }
-    } finally {
-      done = true
-      if (resume) {
-        resume()
-        resume = null
-      }
-    }
-  }.call(this)
-}
-function asIndexedPairs(options = undefined) {
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  return async function* asIndexedPairs() {
-    let index = 0
-    for await (const val of this) {
-      var _options$signal
-      if (
-        options !== null &&
-        options !== undefined &&
-        (_options$signal = options.signal) !== null &&
-        _options$signal !== undefined &&
-        _options$signal.aborted
-      ) {
-        throw new AbortError({
-          cause: options.signal.reason
-        })
-      }
-      yield [index++, val]
-    }
-  }.call(this)
-}
-async function some(fn, options = undefined) {
-  for await (const unused of filter.call(this, fn, options)) {
-    return true
-  }
-  return false
-}
-async function every(fn, options = undefined) {
-  if (typeof fn !== 'function') {
-    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
-  }
-  // https://en.wikipedia.org/wiki/De_Morgan%27s_laws
-  return !(await some.call(
-    this,
-    async (...args) => {
-      return !(await fn(...args))
-    },
-    options
-  ))
-}
-async function find(fn, options) {
-  for await (const result of filter.call(this, fn, options)) {
-    return result
-  }
-  return undefined
-}
-async function forEach(fn, options) {
-  if (typeof fn !== 'function') {
-    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
-  }
-  async function forEachFn(value, options) {
-    await fn(value, options)
-    return kEmpty
-  }
-  // eslint-disable-next-line no-unused-vars
-  for await (const unused of map.call(this, forEachFn, options));
-}
-function filter(fn, options) {
-  if (typeof fn !== 'function') {
-    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
-  }
-  async function filterFn(value, options) {
-    if (await fn(value, options)) {
-      return value
-    }
-    return kEmpty
-  }
-  return map.call(this, filterFn, options)
-}
-
-// Specific to provide better error to reduce since the argument is only
-// missing if the stream has no items in it - but the code is still appropriate
-class ReduceAwareErrMissingArgs extends ERR_MISSING_ARGS {
-  constructor() {
-    super('reduce')
-    this.message = 'Reduce of an empty stream requires an initial value'
-  }
-}
-async function reduce(reducer, initialValue, options) {
-  var _options$signal2
-  if (typeof reducer !== 'function') {
-    throw new ERR_INVALID_ARG_TYPE('reducer', ['Function', 'AsyncFunction'], reducer)
-  }
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  let hasInitialValue = arguments.length > 1
-  if (
-    options !== null &&
-    options !== undefined &&
-    (_options$signal2 = options.signal) !== null &&
-    _options$signal2 !== undefined &&
-    _options$signal2.aborted
-  ) {
-    const err = new AbortError(undefined, {
-      cause: options.signal.reason
-    })
-    this.once('error', () => {}) // The error is already propagated
-    await finished(this.destroy(err))
-    throw err
-  }
-  const ac = new AbortController()
-  const signal = ac.signal
-  if (options !== null && options !== undefined && options.signal) {
-    const opts = {
-      once: true,
-      [kWeakHandler]: this,
-      [kResistStopPropagation]: true
-    }
-    options.signal.addEventListener('abort', () => ac.abort(), opts)
-  }
-  let gotAnyItemFromStream = false
-  try {
-    for await (const value of this) {
-      var _options$signal3
-      gotAnyItemFromStream = true
-      if (
-        options !== null &&
-        options !== undefined &&
-        (_options$signal3 = options.signal) !== null &&
-        _options$signal3 !== undefined &&
-        _options$signal3.aborted
-      ) {
-        throw new AbortError()
-      }
-      if (!hasInitialValue) {
-        initialValue = value
-        hasInitialValue = true
-      } else {
-        initialValue = await reducer(initialValue, value, {
-          signal
-        })
-      }
-    }
-    if (!gotAnyItemFromStream && !hasInitialValue) {
-      throw new ReduceAwareErrMissingArgs()
-    }
-  } finally {
-    ac.abort()
-  }
-  return initialValue
-}
-async function toArray(options) {
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  const result = []
-  for await (const val of this) {
-    var _options$signal4
-    if (
-      options !== null &&
-      options !== undefined &&
-      (_options$signal4 = options.signal) !== null &&
-      _options$signal4 !== undefined &&
-      _options$signal4.aborted
-    ) {
-      throw new AbortError(undefined, {
-        cause: options.signal.reason
-      })
-    }
-    ArrayPrototypePush(result, val)
-  }
-  return result
-}
-function flatMap(fn, options) {
-  const values = map.call(this, fn, options)
-  return async function* flatMap() {
-    for await (const val of values) {
-      yield* val
-    }
-  }.call(this)
-}
-function toIntegerOrInfinity(number) {
-  // We coerce here to align with the spec
-  // https://github.com/tc39/proposal-iterator-helpers/issues/169
-  number = Number(number)
-  if (NumberIsNaN(number)) {
-    return 0
-  }
-  if (number < 0) {
-    throw new ERR_OUT_OF_RANGE('number', '>= 0', number)
-  }
-  return number
-}
-function drop(number, options = undefined) {
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  number = toIntegerOrInfinity(number)
-  return async function* drop() {
-    var _options$signal5
-    if (
-      options !== null &&
-      options !== undefined &&
-      (_options$signal5 = options.signal) !== null &&
-      _options$signal5 !== undefined &&
-      _options$signal5.aborted
-    ) {
-      throw new AbortError()
-    }
-    for await (const val of this) {
-      var _options$signal6
-      if (
-        options !== null &&
-        options !== undefined &&
-        (_options$signal6 = options.signal) !== null &&
-        _options$signal6 !== undefined &&
-        _options$signal6.aborted
-      ) {
-        throw new AbortError()
-      }
-      if (number-- <= 0) {
-        yield val
-      }
-    }
-  }.call(this)
-}
-function take(number, options = undefined) {
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  number = toIntegerOrInfinity(number)
-  return async function* take() {
-    var _options$signal7
-    if (
-      options !== null &&
-      options !== undefined &&
-      (_options$signal7 = options.signal) !== null &&
-      _options$signal7 !== undefined &&
-      _options$signal7.aborted
-    ) {
-      throw new AbortError()
-    }
-    for await (const val of this) {
-      var _options$signal8
-      if (
-        options !== null &&
-        options !== undefined &&
-        (_options$signal8 = options.signal) !== null &&
-        _options$signal8 !== undefined &&
-        _options$signal8.aborted
-      ) {
-        throw new AbortError()
-      }
-      if (number-- > 0) {
-        yield val
-      }
-
-      // Don't get another item from iterator in case we reached the end
-      if (number <= 0) {
-        return
-      }
-    }
-  }.call(this)
-}
-module.exports.streamReturningOperators = {
-  asIndexedPairs: deprecate(asIndexedPairs, 'readable.asIndexedPairs will be removed in a future version.'),
-  drop,
-  filter,
-  flatMap,
-  map,
-  take,
-  compose
-}
-module.exports.promiseReturningOperators = {
-  every,
-  forEach,
-  reduce,
-  toArray,
-  some,
-  find
 }
 
 
@@ -97703,208 +97973,6 @@ module.exports = {
         return '{}'
     }
   }
-}
-
-
-/***/ },
-
-/***/ 39166
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-
-/* replacement start */
-
-const { Buffer } = __webpack_require__(1048)
-
-/* replacement end */
-
-const { ObjectDefineProperty, ObjectKeys, ReflectApply } = __webpack_require__(19282)
-const {
-  promisify: { custom: customPromisify }
-} = __webpack_require__(3756)
-const { streamReturningOperators, promiseReturningOperators } = __webpack_require__(22011)
-const {
-  codes: { ERR_ILLEGAL_CONSTRUCTOR }
-} = __webpack_require__(90231)
-const compose = __webpack_require__(39514)
-const { setDefaultHighWaterMark, getDefaultHighWaterMark } = __webpack_require__(50487)
-const { pipeline } = __webpack_require__(30442)
-const { destroyer } = __webpack_require__(85484)
-const eos = __webpack_require__(26866)
-const internalBuffer = (/* unused pure expression or super */ null && ({}))
-const promises = __webpack_require__(7019)
-const utils = __webpack_require__(32556)
-const Stream = (module.exports = __webpack_require__(63815).Stream)
-Stream.isDestroyed = utils.isDestroyed
-Stream.isDisturbed = utils.isDisturbed
-Stream.isErrored = utils.isErrored
-Stream.isReadable = utils.isReadable
-Stream.isWritable = utils.isWritable
-Stream.Readable = __webpack_require__(2436)
-for (const key of ObjectKeys(streamReturningOperators)) {
-  const op = streamReturningOperators[key]
-  function fn(...args) {
-    if (new.target) {
-      throw ERR_ILLEGAL_CONSTRUCTOR()
-    }
-    return Stream.Readable.from(ReflectApply(op, this, args))
-  }
-  ObjectDefineProperty(fn, 'name', {
-    __proto__: null,
-    value: op.name
-  })
-  ObjectDefineProperty(fn, 'length', {
-    __proto__: null,
-    value: op.length
-  })
-  ObjectDefineProperty(Stream.Readable.prototype, key, {
-    __proto__: null,
-    value: fn,
-    enumerable: false,
-    configurable: true,
-    writable: true
-  })
-}
-for (const key of ObjectKeys(promiseReturningOperators)) {
-  const op = promiseReturningOperators[key]
-  function fn(...args) {
-    if (new.target) {
-      throw ERR_ILLEGAL_CONSTRUCTOR()
-    }
-    return ReflectApply(op, this, args)
-  }
-  ObjectDefineProperty(fn, 'name', {
-    __proto__: null,
-    value: op.name
-  })
-  ObjectDefineProperty(fn, 'length', {
-    __proto__: null,
-    value: op.length
-  })
-  ObjectDefineProperty(Stream.Readable.prototype, key, {
-    __proto__: null,
-    value: fn,
-    enumerable: false,
-    configurable: true,
-    writable: true
-  })
-}
-Stream.Writable = __webpack_require__(56836)
-Stream.Duplex = __webpack_require__(52614)
-Stream.Transform = __webpack_require__(46578)
-Stream.PassThrough = __webpack_require__(65168)
-Stream.pipeline = pipeline
-const { addAbortSignal } = __webpack_require__(46679)
-Stream.addAbortSignal = addAbortSignal
-Stream.finished = eos
-Stream.destroy = destroyer
-Stream.compose = compose
-Stream.setDefaultHighWaterMark = setDefaultHighWaterMark
-Stream.getDefaultHighWaterMark = getDefaultHighWaterMark
-ObjectDefineProperty(Stream, 'promises', {
-  __proto__: null,
-  configurable: true,
-  enumerable: true,
-  get() {
-    return promises
-  }
-})
-ObjectDefineProperty(pipeline, customPromisify, {
-  __proto__: null,
-  enumerable: true,
-  get() {
-    return promises.pipeline
-  }
-})
-ObjectDefineProperty(eos, customPromisify, {
-  __proto__: null,
-  enumerable: true,
-  get() {
-    return promises.finished
-  }
-})
-
-// Backwards-compat with node 0.4.x
-Stream.Stream = Stream
-Stream._isUint8Array = function isUint8Array(value) {
-  return value instanceof Uint8Array
-}
-Stream._uint8ArrayToBuffer = function _uint8ArrayToBuffer(chunk) {
-  return Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength)
-}
-
-
-/***/ },
-
-/***/ 7019
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-const { ArrayPrototypePop, Promise } = __webpack_require__(19282)
-const { isIterable, isNodeStream, isWebStream } = __webpack_require__(32556)
-const { pipelineImpl: pl } = __webpack_require__(30442)
-const { finished } = __webpack_require__(26866)
-__webpack_require__(39166)
-function pipeline(...streams) {
-  return new Promise((resolve, reject) => {
-    let signal
-    let end
-    const lastArg = streams[streams.length - 1]
-    if (
-      lastArg &&
-      typeof lastArg === 'object' &&
-      !isNodeStream(lastArg) &&
-      !isIterable(lastArg) &&
-      !isWebStream(lastArg)
-    ) {
-      const options = ArrayPrototypePop(streams)
-      signal = options.signal
-      end = options.end
-    }
-    pl(
-      streams,
-      (err, value) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(value)
-        }
-      },
-      {
-        signal,
-        end
-      }
-    )
-  })
-}
-module.exports = {
-  finished,
-  pipeline
 }
 
 
@@ -111854,7 +111922,7 @@ const urn_comunica_default_query_operation_actors_group = new ((__webpack_requir
   'bus': https___linkedsoftwaredependencies_org_bundles_npm__comunica_bus_query_operation__5_0_0_components_ActorQueryOperation_jsonld_ActorQueryOperation_default_bus,
   'busFailMessage': 'Query operation processing failed: none of the configured actors were able to handle the operation type ${action.operation.type}'
 });
-const urn_comunica_default_query_operation_actors_nop = new ((__webpack_require__(76695).ActorQueryOperationNop))({
+const urn_comunica_default_query_operation_actors_nop = new ((__webpack_require__(99076).ActorQueryOperationNop))({
   'mediatorMergeBindingsContext': urn_comunica_default_merge_bindings_context_mediators_main,
   'mediatorQueryOperation': urn_comunica_default_query_operation_mediators_main,
   'name': 'urn:comunica:default:query-operation/actors#nop',
@@ -124280,7 +124348,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SparqlEndpointFetcher = void 0;
 const parser_sparql_1_2_1 = __webpack_require__(43216);
-const n3_1 = __webpack_require__(82457);
+const n3_1 = __webpack_require__(1827);
 const readable_from_web_1 = __webpack_require__(33523);
 const sparqljson_parse_1 = __webpack_require__(21451);
 const sparqlxml_parse_1 = __webpack_require__(52666);
@@ -124558,7 +124626,7 @@ SparqlEndpointFetcher.REGEX_VERSION_HEADER = /version=([^ ;]*)/u;
 
 /***/ },
 
-/***/ 82457
+/***/ 1827
 (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -124570,8 +124638,744 @@ __webpack_require__.d(__webpack_exports__, {
 
 // UNUSED EXPORTS: BaseIRI, BlankNode, DataFactory, DefaultGraph, EntityIndex, Lexer, Literal, NamedNode, Parser, Quad, Reasoner, Store, StoreFactory, StreamWriter, Term, Triple, Util, Variable, Writer, default, getRulesFromDataset, termFromId, termToId
 
+// EXTERNAL MODULE: ../../node_modules/abort-controller/browser.js
+var browser_namespaceFn = () => {
+	return __webpack_require__(67083);
+};
+
+// EXTERNAL MODULE: ../../node_modules/buffer/index.js
+var buffer_namespaceFn = () => {
+	return __webpack_require__(1048);
+};
+
+// EXTERNAL MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/internal/streams/add-abort-signal.js
+var add_abort_signal_namespaceFn = () => {
+	return __webpack_require__(63582);
+};
+
+// MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/internal/streams/compose.js
+var compose_namespaceFn = /*#__PURE__*/__webpack_require__.cw((module) => {
+
+
+const { pipeline } = (pipeline_namespaceFn())
+const Duplex = (duplex_namespaceFn())
+const { destroyer } = (destroy_namespaceFn())
+const {
+  isNodeStream,
+  isReadable,
+  isWritable,
+  isWebStream,
+  isTransformStream,
+  isWritableStream,
+  isReadableStream
+} = (utils_namespaceFn())
+const {
+  AbortError,
+  codes: { ERR_INVALID_ARG_VALUE, ERR_MISSING_ARGS }
+} = (errors_namespaceFn())
+const eos = (end_of_stream_namespaceFn())
+module.exports = function compose(...streams) {
+  if (streams.length === 0) {
+    throw new ERR_MISSING_ARGS('streams')
+  }
+  if (streams.length === 1) {
+    return Duplex.from(streams[0])
+  }
+  const orgStreams = [...streams]
+  if (typeof streams[0] === 'function') {
+    streams[0] = Duplex.from(streams[0])
+  }
+  if (typeof streams[streams.length - 1] === 'function') {
+    const idx = streams.length - 1
+    streams[idx] = Duplex.from(streams[idx])
+  }
+  for (let n = 0; n < streams.length; ++n) {
+    if (!isNodeStream(streams[n]) && !isWebStream(streams[n])) {
+      // TODO(ronag): Add checks for non streams.
+      continue
+    }
+    if (
+      n < streams.length - 1 &&
+      !(isReadable(streams[n]) || isReadableStream(streams[n]) || isTransformStream(streams[n]))
+    ) {
+      throw new ERR_INVALID_ARG_VALUE(`streams[${n}]`, orgStreams[n], 'must be readable')
+    }
+    if (n > 0 && !(isWritable(streams[n]) || isWritableStream(streams[n]) || isTransformStream(streams[n]))) {
+      throw new ERR_INVALID_ARG_VALUE(`streams[${n}]`, orgStreams[n], 'must be writable')
+    }
+  }
+  let ondrain
+  let onfinish
+  let onreadable
+  let onclose
+  let d
+  function onfinished(err) {
+    const cb = onclose
+    onclose = null
+    if (cb) {
+      cb(err)
+    } else if (err) {
+      d.destroy(err)
+    } else if (!readable && !writable) {
+      d.destroy()
+    }
+  }
+  const head = streams[0]
+  const tail = pipeline(streams, onfinished)
+  const writable = !!(isWritable(head) || isWritableStream(head) || isTransformStream(head))
+  const readable = !!(isReadable(tail) || isReadableStream(tail) || isTransformStream(tail))
+
+  // TODO(ronag): Avoid double buffering.
+  // Implement Writable/Readable/Duplex traits.
+  // See, https://github.com/nodejs/node/pull/33515.
+  d = new Duplex({
+    // TODO (ronag): highWaterMark?
+    writableObjectMode: !!(head !== null && head !== undefined && head.writableObjectMode),
+    readableObjectMode: !!(tail !== null && tail !== undefined && tail.readableObjectMode),
+    writable,
+    readable
+  })
+  if (writable) {
+    if (isNodeStream(head)) {
+      d._write = function (chunk, encoding, callback) {
+        if (head.write(chunk, encoding)) {
+          callback()
+        } else {
+          ondrain = callback
+        }
+      }
+      d._final = function (callback) {
+        head.end()
+        onfinish = callback
+      }
+      head.on('drain', function () {
+        if (ondrain) {
+          const cb = ondrain
+          ondrain = null
+          cb()
+        }
+      })
+    } else if (isWebStream(head)) {
+      const writable = isTransformStream(head) ? head.writable : head
+      const writer = writable.getWriter()
+      d._write = async function (chunk, encoding, callback) {
+        try {
+          await writer.ready
+          writer.write(chunk).catch(() => {})
+          callback()
+        } catch (err) {
+          callback(err)
+        }
+      }
+      d._final = async function (callback) {
+        try {
+          await writer.ready
+          writer.close().catch(() => {})
+          onfinish = callback
+        } catch (err) {
+          callback(err)
+        }
+      }
+    }
+    const toRead = isTransformStream(tail) ? tail.readable : tail
+    eos(toRead, () => {
+      if (onfinish) {
+        const cb = onfinish
+        onfinish = null
+        cb()
+      }
+    })
+  }
+  if (readable) {
+    if (isNodeStream(tail)) {
+      tail.on('readable', function () {
+        if (onreadable) {
+          const cb = onreadable
+          onreadable = null
+          cb()
+        }
+      })
+      tail.on('end', function () {
+        d.push(null)
+      })
+      d._read = function () {
+        while (true) {
+          const buf = tail.read()
+          if (buf === null) {
+            onreadable = d._read
+            return
+          }
+          if (!d.push(buf)) {
+            return
+          }
+        }
+      }
+    } else if (isWebStream(tail)) {
+      const readable = isTransformStream(tail) ? tail.readable : tail
+      const reader = readable.getReader()
+      d._read = async function () {
+        while (true) {
+          try {
+            const { value, done } = await reader.read()
+            if (!d.push(value)) {
+              return
+            }
+            if (done) {
+              d.push(null)
+              return
+            }
+          } catch {
+            return
+          }
+        }
+      }
+    }
+  }
+  d._destroy = function (err, callback) {
+    if (!err && onclose !== null) {
+      err = new AbortError()
+    }
+    onreadable = null
+    ondrain = null
+    onfinish = null
+    if (onclose === null) {
+      callback(err)
+    } else {
+      onclose = callback
+      if (isNodeStream(tail)) {
+        destroyer(tail, err)
+      }
+    }
+  }
+  return d
+}
+
+});
+
+// EXTERNAL MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/internal/streams/destroy.js
+var destroy_namespaceFn = () => {
+	return __webpack_require__(53699);
+};
+
+// EXTERNAL MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/internal/streams/duplex.js
+var duplex_namespaceFn = () => {
+	return __webpack_require__(57379);
+};
+
+// EXTERNAL MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/internal/streams/end-of-stream.js
+var end_of_stream_namespaceFn = () => {
+	return __webpack_require__(9177);
+};
+
+// EXTERNAL MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/internal/streams/legacy.js
+var legacy_namespaceFn = () => {
+	return __webpack_require__(30690);
+};
+
+// MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/internal/streams/operators.js
+var operators_namespaceFn = /*#__PURE__*/__webpack_require__.cw((module) => {
+
+
+const AbortController = globalThis.AbortController || (browser_namespaceFn().AbortController)
+const {
+  codes: { ERR_INVALID_ARG_VALUE, ERR_INVALID_ARG_TYPE, ERR_MISSING_ARGS, ERR_OUT_OF_RANGE },
+  AbortError
+} = (errors_namespaceFn())
+const { validateAbortSignal, validateInteger, validateObject } = (validators_namespaceFn())
+const kWeakHandler = (primordials_namespaceFn().Symbol)('kWeak')
+const kResistStopPropagation = (primordials_namespaceFn().Symbol)('kResistStopPropagation')
+const { finished } = (end_of_stream_namespaceFn())
+const staticCompose = (compose_namespaceFn())
+const { addAbortSignalNoValidate } = (add_abort_signal_namespaceFn())
+const { isWritable, isNodeStream } = (utils_namespaceFn())
+const { deprecate } = (util_namespaceFn())
+const {
+  ArrayPrototypePush,
+  Boolean,
+  MathFloor,
+  Number,
+  NumberIsNaN,
+  Promise,
+  PromiseReject,
+  PromiseResolve,
+  PromisePrototypeThen,
+  Symbol
+} = (primordials_namespaceFn())
+const kEmpty = Symbol('kEmpty')
+const kEof = Symbol('kEof')
+function compose(stream, options) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  if (isNodeStream(stream) && !isWritable(stream)) {
+    throw new ERR_INVALID_ARG_VALUE('stream', stream, 'must be writable')
+  }
+  const composedStream = staticCompose(this, stream)
+  if (options !== null && options !== undefined && options.signal) {
+    // Not validating as we already validated before
+    addAbortSignalNoValidate(options.signal, composedStream)
+  }
+  return composedStream
+}
+function map(fn, options) {
+  if (typeof fn !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
+  }
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  let concurrency = 1
+  if ((options === null || options === undefined ? undefined : options.concurrency) != null) {
+    concurrency = MathFloor(options.concurrency)
+  }
+  let highWaterMark = concurrency - 1
+  if ((options === null || options === undefined ? undefined : options.highWaterMark) != null) {
+    highWaterMark = MathFloor(options.highWaterMark)
+  }
+  validateInteger(concurrency, 'options.concurrency', 1)
+  validateInteger(highWaterMark, 'options.highWaterMark', 0)
+  highWaterMark += concurrency
+  return async function* map() {
+    const signal = (util_namespaceFn().AbortSignalAny)(
+      [options === null || options === undefined ? undefined : options.signal].filter(Boolean)
+    )
+    const stream = this
+    const queue = []
+    const signalOpt = {
+      signal
+    }
+    let next
+    let resume
+    let done = false
+    let cnt = 0
+    function onCatch() {
+      done = true
+      afterItemProcessed()
+    }
+    function afterItemProcessed() {
+      cnt -= 1
+      maybeResume()
+    }
+    function maybeResume() {
+      if (resume && !done && cnt < concurrency && queue.length < highWaterMark) {
+        resume()
+        resume = null
+      }
+    }
+    async function pump() {
+      try {
+        for await (let val of stream) {
+          if (done) {
+            return
+          }
+          if (signal.aborted) {
+            throw new AbortError()
+          }
+          try {
+            val = fn(val, signalOpt)
+            if (val === kEmpty) {
+              continue
+            }
+            val = PromiseResolve(val)
+          } catch (err) {
+            val = PromiseReject(err)
+          }
+          cnt += 1
+          PromisePrototypeThen(val, afterItemProcessed, onCatch)
+          queue.push(val)
+          if (next) {
+            next()
+            next = null
+          }
+          if (!done && (queue.length >= highWaterMark || cnt >= concurrency)) {
+            await new Promise((resolve) => {
+              resume = resolve
+            })
+          }
+        }
+        queue.push(kEof)
+      } catch (err) {
+        const val = PromiseReject(err)
+        PromisePrototypeThen(val, afterItemProcessed, onCatch)
+        queue.push(val)
+      } finally {
+        done = true
+        if (next) {
+          next()
+          next = null
+        }
+      }
+    }
+    pump()
+    try {
+      while (true) {
+        while (queue.length > 0) {
+          const val = await queue[0]
+          if (val === kEof) {
+            return
+          }
+          if (signal.aborted) {
+            throw new AbortError()
+          }
+          if (val !== kEmpty) {
+            yield val
+          }
+          queue.shift()
+          maybeResume()
+        }
+        await new Promise((resolve) => {
+          next = resolve
+        })
+      }
+    } finally {
+      done = true
+      if (resume) {
+        resume()
+        resume = null
+      }
+    }
+  }.call(this)
+}
+function asIndexedPairs(options = undefined) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  return async function* asIndexedPairs() {
+    let index = 0
+    for await (const val of this) {
+      var _options$signal
+      if (
+        options !== null &&
+        options !== undefined &&
+        (_options$signal = options.signal) !== null &&
+        _options$signal !== undefined &&
+        _options$signal.aborted
+      ) {
+        throw new AbortError({
+          cause: options.signal.reason
+        })
+      }
+      yield [index++, val]
+    }
+  }.call(this)
+}
+async function some(fn, options = undefined) {
+  for await (const unused of filter.call(this, fn, options)) {
+    return true
+  }
+  return false
+}
+async function every(fn, options = undefined) {
+  if (typeof fn !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
+  }
+  // https://en.wikipedia.org/wiki/De_Morgan%27s_laws
+  return !(await some.call(
+    this,
+    async (...args) => {
+      return !(await fn(...args))
+    },
+    options
+  ))
+}
+async function find(fn, options) {
+  for await (const result of filter.call(this, fn, options)) {
+    return result
+  }
+  return undefined
+}
+async function forEach(fn, options) {
+  if (typeof fn !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
+  }
+  async function forEachFn(value, options) {
+    await fn(value, options)
+    return kEmpty
+  }
+  // eslint-disable-next-line no-unused-vars
+  for await (const unused of map.call(this, forEachFn, options));
+}
+function filter(fn, options) {
+  if (typeof fn !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
+  }
+  async function filterFn(value, options) {
+    if (await fn(value, options)) {
+      return value
+    }
+    return kEmpty
+  }
+  return map.call(this, filterFn, options)
+}
+
+// Specific to provide better error to reduce since the argument is only
+// missing if the stream has no items in it - but the code is still appropriate
+class ReduceAwareErrMissingArgs extends ERR_MISSING_ARGS {
+  constructor() {
+    super('reduce')
+    this.message = 'Reduce of an empty stream requires an initial value'
+  }
+}
+async function reduce(reducer, initialValue, options) {
+  var _options$signal2
+  if (typeof reducer !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('reducer', ['Function', 'AsyncFunction'], reducer)
+  }
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  let hasInitialValue = arguments.length > 1
+  if (
+    options !== null &&
+    options !== undefined &&
+    (_options$signal2 = options.signal) !== null &&
+    _options$signal2 !== undefined &&
+    _options$signal2.aborted
+  ) {
+    const err = new AbortError(undefined, {
+      cause: options.signal.reason
+    })
+    this.once('error', () => {}) // The error is already propagated
+    await finished(this.destroy(err))
+    throw err
+  }
+  const ac = new AbortController()
+  const signal = ac.signal
+  if (options !== null && options !== undefined && options.signal) {
+    const opts = {
+      once: true,
+      [kWeakHandler]: this,
+      [kResistStopPropagation]: true
+    }
+    options.signal.addEventListener('abort', () => ac.abort(), opts)
+  }
+  let gotAnyItemFromStream = false
+  try {
+    for await (const value of this) {
+      var _options$signal3
+      gotAnyItemFromStream = true
+      if (
+        options !== null &&
+        options !== undefined &&
+        (_options$signal3 = options.signal) !== null &&
+        _options$signal3 !== undefined &&
+        _options$signal3.aborted
+      ) {
+        throw new AbortError()
+      }
+      if (!hasInitialValue) {
+        initialValue = value
+        hasInitialValue = true
+      } else {
+        initialValue = await reducer(initialValue, value, {
+          signal
+        })
+      }
+    }
+    if (!gotAnyItemFromStream && !hasInitialValue) {
+      throw new ReduceAwareErrMissingArgs()
+    }
+  } finally {
+    ac.abort()
+  }
+  return initialValue
+}
+async function toArray(options) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  const result = []
+  for await (const val of this) {
+    var _options$signal4
+    if (
+      options !== null &&
+      options !== undefined &&
+      (_options$signal4 = options.signal) !== null &&
+      _options$signal4 !== undefined &&
+      _options$signal4.aborted
+    ) {
+      throw new AbortError(undefined, {
+        cause: options.signal.reason
+      })
+    }
+    ArrayPrototypePush(result, val)
+  }
+  return result
+}
+function flatMap(fn, options) {
+  const values = map.call(this, fn, options)
+  return async function* flatMap() {
+    for await (const val of values) {
+      yield* val
+    }
+  }.call(this)
+}
+function toIntegerOrInfinity(number) {
+  // We coerce here to align with the spec
+  // https://github.com/tc39/proposal-iterator-helpers/issues/169
+  number = Number(number)
+  if (NumberIsNaN(number)) {
+    return 0
+  }
+  if (number < 0) {
+    throw new ERR_OUT_OF_RANGE('number', '>= 0', number)
+  }
+  return number
+}
+function drop(number, options = undefined) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  number = toIntegerOrInfinity(number)
+  return async function* drop() {
+    var _options$signal5
+    if (
+      options !== null &&
+      options !== undefined &&
+      (_options$signal5 = options.signal) !== null &&
+      _options$signal5 !== undefined &&
+      _options$signal5.aborted
+    ) {
+      throw new AbortError()
+    }
+    for await (const val of this) {
+      var _options$signal6
+      if (
+        options !== null &&
+        options !== undefined &&
+        (_options$signal6 = options.signal) !== null &&
+        _options$signal6 !== undefined &&
+        _options$signal6.aborted
+      ) {
+        throw new AbortError()
+      }
+      if (number-- <= 0) {
+        yield val
+      }
+    }
+  }.call(this)
+}
+function take(number, options = undefined) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  number = toIntegerOrInfinity(number)
+  return async function* take() {
+    var _options$signal7
+    if (
+      options !== null &&
+      options !== undefined &&
+      (_options$signal7 = options.signal) !== null &&
+      _options$signal7 !== undefined &&
+      _options$signal7.aborted
+    ) {
+      throw new AbortError()
+    }
+    for await (const val of this) {
+      var _options$signal8
+      if (
+        options !== null &&
+        options !== undefined &&
+        (_options$signal8 = options.signal) !== null &&
+        _options$signal8 !== undefined &&
+        _options$signal8.aborted
+      ) {
+        throw new AbortError()
+      }
+      if (number-- > 0) {
+        yield val
+      }
+
+      // Don't get another item from iterator in case we reached the end
+      if (number <= 0) {
+        return
+      }
+    }
+  }.call(this)
+}
+module.exports.streamReturningOperators = {
+  asIndexedPairs: deprecate(asIndexedPairs, 'readable.asIndexedPairs will be removed in a future version.'),
+  drop,
+  filter,
+  flatMap,
+  map,
+  take,
+  compose
+}
+module.exports.promiseReturningOperators = {
+  every,
+  forEach,
+  reduce,
+  toArray,
+  some,
+  find
+}
+
+});
+
+// EXTERNAL MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/internal/streams/passthrough.js
+var passthrough_namespaceFn = () => {
+	return __webpack_require__(96495);
+};
+
+// EXTERNAL MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/internal/streams/pipeline.js
+var pipeline_namespaceFn = () => {
+	return __webpack_require__(44667);
+};
+
+// EXTERNAL MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/internal/streams/readable.js
+var readable_namespaceFn = () => {
+	return __webpack_require__(12177);
+};
+
+// EXTERNAL MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/internal/streams/state.js
+var state_namespaceFn = () => {
+	return __webpack_require__(56972);
+};
+
+// EXTERNAL MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/internal/streams/transform.js
+var transform_namespaceFn = () => {
+	return __webpack_require__(74373);
+};
+
+// EXTERNAL MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/internal/streams/utils.js
+var utils_namespaceFn = () => {
+	return __webpack_require__(69668);
+};
+
+// EXTERNAL MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/internal/streams/writable.js
+var writable_namespaceFn = () => {
+	return __webpack_require__(17265);
+};
+
+// EXTERNAL MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/internal/validators.js
+var validators_namespaceFn = () => {
+	return __webpack_require__(84244);
+};
+
 // MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/ours/browser.js
-var browser_namespaceFn = /*#__PURE__*/__webpack_require__.cw(function(module, exports) {
+var ours_browser_namespaceFn = /*#__PURE__*/__webpack_require__.cw((module) => {
 
 
 const CustomStream = (stream_namespaceFn())
@@ -124610,21 +125414,223 @@ module.exports["default"] = module.exports
 
 });
 
-// EXTERNAL MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/stream.js
-var stream_namespaceFn = () => {
-	return __webpack_require__(16645);
+// EXTERNAL MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/ours/errors.js
+var errors_namespaceFn = () => {
+	return __webpack_require__(46994);
 };
 
-// EXTERNAL MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/stream/promises.js
-var promises_namespaceFn = () => {
-	return __webpack_require__(61774);
+// EXTERNAL MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/ours/primordials.js
+var primordials_namespaceFn = () => {
+	return __webpack_require__(54349);
 };
+
+// EXTERNAL MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/ours/util.js
+var util_namespaceFn = () => {
+	return __webpack_require__(63437);
+};
+
+// MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/stream.js
+var stream_namespaceFn = /*#__PURE__*/__webpack_require__.cw((module) => {
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+
+/* replacement start */
+
+const { Buffer } = (buffer_namespaceFn())
+
+/* replacement end */
+
+const { ObjectDefineProperty, ObjectKeys, ReflectApply } = (primordials_namespaceFn())
+const {
+  promisify: { custom: customPromisify }
+} = (util_namespaceFn())
+const { streamReturningOperators, promiseReturningOperators } = (operators_namespaceFn())
+const {
+  codes: { ERR_ILLEGAL_CONSTRUCTOR }
+} = (errors_namespaceFn())
+const compose = (compose_namespaceFn())
+const { setDefaultHighWaterMark, getDefaultHighWaterMark } = (state_namespaceFn())
+const { pipeline } = (pipeline_namespaceFn())
+const { destroyer } = (destroy_namespaceFn())
+const eos = (end_of_stream_namespaceFn())
+const internalBuffer = (/* unused pure expression or super */ null && ({}))
+const promises = (promises_namespaceFn())
+const utils = (utils_namespaceFn())
+const Stream = (module.exports = (legacy_namespaceFn().Stream))
+Stream.isDestroyed = utils.isDestroyed
+Stream.isDisturbed = utils.isDisturbed
+Stream.isErrored = utils.isErrored
+Stream.isReadable = utils.isReadable
+Stream.isWritable = utils.isWritable
+Stream.Readable = (readable_namespaceFn())
+for (const key of ObjectKeys(streamReturningOperators)) {
+  const op = streamReturningOperators[key]
+  function fn(...args) {
+    if (new.target) {
+      throw ERR_ILLEGAL_CONSTRUCTOR()
+    }
+    return Stream.Readable.from(ReflectApply(op, this, args))
+  }
+  ObjectDefineProperty(fn, 'name', {
+    __proto__: null,
+    value: op.name
+  })
+  ObjectDefineProperty(fn, 'length', {
+    __proto__: null,
+    value: op.length
+  })
+  ObjectDefineProperty(Stream.Readable.prototype, key, {
+    __proto__: null,
+    value: fn,
+    enumerable: false,
+    configurable: true,
+    writable: true
+  })
+}
+for (const key of ObjectKeys(promiseReturningOperators)) {
+  const op = promiseReturningOperators[key]
+  function fn(...args) {
+    if (new.target) {
+      throw ERR_ILLEGAL_CONSTRUCTOR()
+    }
+    return ReflectApply(op, this, args)
+  }
+  ObjectDefineProperty(fn, 'name', {
+    __proto__: null,
+    value: op.name
+  })
+  ObjectDefineProperty(fn, 'length', {
+    __proto__: null,
+    value: op.length
+  })
+  ObjectDefineProperty(Stream.Readable.prototype, key, {
+    __proto__: null,
+    value: fn,
+    enumerable: false,
+    configurable: true,
+    writable: true
+  })
+}
+Stream.Writable = (writable_namespaceFn())
+Stream.Duplex = (duplex_namespaceFn())
+Stream.Transform = (transform_namespaceFn())
+Stream.PassThrough = (passthrough_namespaceFn())
+Stream.pipeline = pipeline
+const { addAbortSignal } = (add_abort_signal_namespaceFn())
+Stream.addAbortSignal = addAbortSignal
+Stream.finished = eos
+Stream.destroy = destroyer
+Stream.compose = compose
+Stream.setDefaultHighWaterMark = setDefaultHighWaterMark
+Stream.getDefaultHighWaterMark = getDefaultHighWaterMark
+ObjectDefineProperty(Stream, 'promises', {
+  __proto__: null,
+  configurable: true,
+  enumerable: true,
+  get() {
+    return promises
+  }
+})
+ObjectDefineProperty(pipeline, customPromisify, {
+  __proto__: null,
+  enumerable: true,
+  get() {
+    return promises.pipeline
+  }
+})
+ObjectDefineProperty(eos, customPromisify, {
+  __proto__: null,
+  enumerable: true,
+  get() {
+    return promises.finished
+  }
+})
+
+// Backwards-compat with node 0.4.x
+Stream.Stream = Stream
+Stream._isUint8Array = function isUint8Array(value) {
+  return value instanceof Uint8Array
+}
+Stream._uint8ArrayToBuffer = function _uint8ArrayToBuffer(chunk) {
+  return Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength)
+}
+
+});
+
+// MODULE: ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/stream/promises.js
+var promises_namespaceFn = /*#__PURE__*/__webpack_require__.cw((module) => {
+
+
+const { ArrayPrototypePop, Promise } = (primordials_namespaceFn())
+const { isIterable, isNodeStream, isWebStream } = (utils_namespaceFn())
+const { pipelineImpl: pl } = (pipeline_namespaceFn())
+const { finished } = (end_of_stream_namespaceFn())
+;(stream_namespaceFn())
+function pipeline(...streams) {
+  return new Promise((resolve, reject) => {
+    let signal
+    let end
+    const lastArg = streams[streams.length - 1]
+    if (
+      lastArg &&
+      typeof lastArg === 'object' &&
+      !isNodeStream(lastArg) &&
+      !isIterable(lastArg) &&
+      !isWebStream(lastArg)
+    ) {
+      const options = ArrayPrototypePop(streams)
+      signal = options.signal
+      end = options.end
+    }
+    pl(
+      streams,
+      (err, value) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(value)
+        }
+      },
+      {
+        signal,
+        end
+      }
+    )
+  })
+}
+module.exports = {
+  finished,
+  pipeline
+}
+
+});
+
+;// EXTERNAL MODULE: ../../node_modules/buffer/index.js
+buffer_namespaceFn();
 
 ;// ../../node_modules/fetch-sparql-endpoint/node_modules/readable-stream/lib/ours/browser.js
-browser_namespaceFn();
+ours_browser_namespaceFn();
 
-// EXTERNAL MODULE: ../../node_modules/buffer/index.js
-var buffer = __webpack_require__(1048);
 ;// ../../node_modules/fetch-sparql-endpoint/node_modules/n3/src/IRIs.js
 const RDF  = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
     XSD  = 'http://www.w3.org/2001/XMLSchema#',
@@ -125367,7 +126373,7 @@ class N3Lexer {
         if (this._tokenization === tokenization && this._input !== null && data.length !== 0) {
           // Prepend any previous pending writes
           if (this._pendingBuffer) {
-            data = buffer.Buffer.concat([this._pendingBuffer, data]);
+            data = (buffer_namespaceFn().Buffer).concat([this._pendingBuffer, data]);
             this._pendingBuffer = null;
           }
           // Hold if the buffer ends in an incomplete unicode sequence
@@ -127573,7 +128579,7 @@ initDataFactory(N3Parser.prototype, N3DataFactory);
 
 
 // ## Constructor
-class N3StreamParser extends (browser_namespaceFn().Transform) {
+class N3StreamParser extends (ours_browser_namespaceFn().Transform) {
   constructor(options) {
     super({ decodeStrings: true, readableObjectMode: true });
 
@@ -127909,208 +128915,6 @@ module.exports = class BufferList {
       customInspect: false
     })
   }
-}
-
-
-/***/ },
-
-/***/ 64973
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-const { pipeline } = __webpack_require__(44667)
-const Duplex = __webpack_require__(57379)
-const { destroyer } = __webpack_require__(53699)
-const {
-  isNodeStream,
-  isReadable,
-  isWritable,
-  isWebStream,
-  isTransformStream,
-  isWritableStream,
-  isReadableStream
-} = __webpack_require__(69668)
-const {
-  AbortError,
-  codes: { ERR_INVALID_ARG_VALUE, ERR_MISSING_ARGS }
-} = __webpack_require__(46994)
-const eos = __webpack_require__(9177)
-module.exports = function compose(...streams) {
-  if (streams.length === 0) {
-    throw new ERR_MISSING_ARGS('streams')
-  }
-  if (streams.length === 1) {
-    return Duplex.from(streams[0])
-  }
-  const orgStreams = [...streams]
-  if (typeof streams[0] === 'function') {
-    streams[0] = Duplex.from(streams[0])
-  }
-  if (typeof streams[streams.length - 1] === 'function') {
-    const idx = streams.length - 1
-    streams[idx] = Duplex.from(streams[idx])
-  }
-  for (let n = 0; n < streams.length; ++n) {
-    if (!isNodeStream(streams[n]) && !isWebStream(streams[n])) {
-      // TODO(ronag): Add checks for non streams.
-      continue
-    }
-    if (
-      n < streams.length - 1 &&
-      !(isReadable(streams[n]) || isReadableStream(streams[n]) || isTransformStream(streams[n]))
-    ) {
-      throw new ERR_INVALID_ARG_VALUE(`streams[${n}]`, orgStreams[n], 'must be readable')
-    }
-    if (n > 0 && !(isWritable(streams[n]) || isWritableStream(streams[n]) || isTransformStream(streams[n]))) {
-      throw new ERR_INVALID_ARG_VALUE(`streams[${n}]`, orgStreams[n], 'must be writable')
-    }
-  }
-  let ondrain
-  let onfinish
-  let onreadable
-  let onclose
-  let d
-  function onfinished(err) {
-    const cb = onclose
-    onclose = null
-    if (cb) {
-      cb(err)
-    } else if (err) {
-      d.destroy(err)
-    } else if (!readable && !writable) {
-      d.destroy()
-    }
-  }
-  const head = streams[0]
-  const tail = pipeline(streams, onfinished)
-  const writable = !!(isWritable(head) || isWritableStream(head) || isTransformStream(head))
-  const readable = !!(isReadable(tail) || isReadableStream(tail) || isTransformStream(tail))
-
-  // TODO(ronag): Avoid double buffering.
-  // Implement Writable/Readable/Duplex traits.
-  // See, https://github.com/nodejs/node/pull/33515.
-  d = new Duplex({
-    // TODO (ronag): highWaterMark?
-    writableObjectMode: !!(head !== null && head !== undefined && head.writableObjectMode),
-    readableObjectMode: !!(tail !== null && tail !== undefined && tail.readableObjectMode),
-    writable,
-    readable
-  })
-  if (writable) {
-    if (isNodeStream(head)) {
-      d._write = function (chunk, encoding, callback) {
-        if (head.write(chunk, encoding)) {
-          callback()
-        } else {
-          ondrain = callback
-        }
-      }
-      d._final = function (callback) {
-        head.end()
-        onfinish = callback
-      }
-      head.on('drain', function () {
-        if (ondrain) {
-          const cb = ondrain
-          ondrain = null
-          cb()
-        }
-      })
-    } else if (isWebStream(head)) {
-      const writable = isTransformStream(head) ? head.writable : head
-      const writer = writable.getWriter()
-      d._write = async function (chunk, encoding, callback) {
-        try {
-          await writer.ready
-          writer.write(chunk).catch(() => {})
-          callback()
-        } catch (err) {
-          callback(err)
-        }
-      }
-      d._final = async function (callback) {
-        try {
-          await writer.ready
-          writer.close().catch(() => {})
-          onfinish = callback
-        } catch (err) {
-          callback(err)
-        }
-      }
-    }
-    const toRead = isTransformStream(tail) ? tail.readable : tail
-    eos(toRead, () => {
-      if (onfinish) {
-        const cb = onfinish
-        onfinish = null
-        cb()
-      }
-    })
-  }
-  if (readable) {
-    if (isNodeStream(tail)) {
-      tail.on('readable', function () {
-        if (onreadable) {
-          const cb = onreadable
-          onreadable = null
-          cb()
-        }
-      })
-      tail.on('end', function () {
-        d.push(null)
-      })
-      d._read = function () {
-        while (true) {
-          const buf = tail.read()
-          if (buf === null) {
-            onreadable = d._read
-            return
-          }
-          if (!d.push(buf)) {
-            return
-          }
-        }
-      }
-    } else if (isWebStream(tail)) {
-      const readable = isTransformStream(tail) ? tail.readable : tail
-      const reader = readable.getReader()
-      d._read = async function () {
-        while (true) {
-          try {
-            const { value, done } = await reader.read()
-            if (!d.push(value)) {
-              return
-            }
-            if (done) {
-              d.push(null)
-              return
-            }
-          } catch {
-            return
-          }
-        }
-      }
-    }
-  }
-  d._destroy = function (err, callback) {
-    if (!err && onclose !== null) {
-      err = new AbortError()
-    }
-    onreadable = null
-    ondrain = null
-    onfinish = null
-    if (onclose === null) {
-      callback(err)
-    } else {
-      onclose = callback
-      if (isNodeStream(tail)) {
-        destroyer(tail, err)
-      }
-    }
-  }
-  return d
 }
 
 
@@ -129442,471 +130246,6 @@ function prependListener(emitter, event, fn) {
 module.exports = {
   Stream,
   prependListener
-}
-
-
-/***/ },
-
-/***/ 84728
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-const AbortController = globalThis.AbortController || (__webpack_require__(67083).AbortController)
-const {
-  codes: { ERR_INVALID_ARG_VALUE, ERR_INVALID_ARG_TYPE, ERR_MISSING_ARGS, ERR_OUT_OF_RANGE },
-  AbortError
-} = __webpack_require__(46994)
-const { validateAbortSignal, validateInteger, validateObject } = __webpack_require__(84244)
-const kWeakHandler = (__webpack_require__(54349).Symbol)('kWeak')
-const kResistStopPropagation = (__webpack_require__(54349).Symbol)('kResistStopPropagation')
-const { finished } = __webpack_require__(9177)
-const staticCompose = __webpack_require__(64973)
-const { addAbortSignalNoValidate } = __webpack_require__(63582)
-const { isWritable, isNodeStream } = __webpack_require__(69668)
-const { deprecate } = __webpack_require__(63437)
-const {
-  ArrayPrototypePush,
-  Boolean,
-  MathFloor,
-  Number,
-  NumberIsNaN,
-  Promise,
-  PromiseReject,
-  PromiseResolve,
-  PromisePrototypeThen,
-  Symbol
-} = __webpack_require__(54349)
-const kEmpty = Symbol('kEmpty')
-const kEof = Symbol('kEof')
-function compose(stream, options) {
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  if (isNodeStream(stream) && !isWritable(stream)) {
-    throw new ERR_INVALID_ARG_VALUE('stream', stream, 'must be writable')
-  }
-  const composedStream = staticCompose(this, stream)
-  if (options !== null && options !== undefined && options.signal) {
-    // Not validating as we already validated before
-    addAbortSignalNoValidate(options.signal, composedStream)
-  }
-  return composedStream
-}
-function map(fn, options) {
-  if (typeof fn !== 'function') {
-    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
-  }
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  let concurrency = 1
-  if ((options === null || options === undefined ? undefined : options.concurrency) != null) {
-    concurrency = MathFloor(options.concurrency)
-  }
-  let highWaterMark = concurrency - 1
-  if ((options === null || options === undefined ? undefined : options.highWaterMark) != null) {
-    highWaterMark = MathFloor(options.highWaterMark)
-  }
-  validateInteger(concurrency, 'options.concurrency', 1)
-  validateInteger(highWaterMark, 'options.highWaterMark', 0)
-  highWaterMark += concurrency
-  return async function* map() {
-    const signal = (__webpack_require__(63437).AbortSignalAny)(
-      [options === null || options === undefined ? undefined : options.signal].filter(Boolean)
-    )
-    const stream = this
-    const queue = []
-    const signalOpt = {
-      signal
-    }
-    let next
-    let resume
-    let done = false
-    let cnt = 0
-    function onCatch() {
-      done = true
-      afterItemProcessed()
-    }
-    function afterItemProcessed() {
-      cnt -= 1
-      maybeResume()
-    }
-    function maybeResume() {
-      if (resume && !done && cnt < concurrency && queue.length < highWaterMark) {
-        resume()
-        resume = null
-      }
-    }
-    async function pump() {
-      try {
-        for await (let val of stream) {
-          if (done) {
-            return
-          }
-          if (signal.aborted) {
-            throw new AbortError()
-          }
-          try {
-            val = fn(val, signalOpt)
-            if (val === kEmpty) {
-              continue
-            }
-            val = PromiseResolve(val)
-          } catch (err) {
-            val = PromiseReject(err)
-          }
-          cnt += 1
-          PromisePrototypeThen(val, afterItemProcessed, onCatch)
-          queue.push(val)
-          if (next) {
-            next()
-            next = null
-          }
-          if (!done && (queue.length >= highWaterMark || cnt >= concurrency)) {
-            await new Promise((resolve) => {
-              resume = resolve
-            })
-          }
-        }
-        queue.push(kEof)
-      } catch (err) {
-        const val = PromiseReject(err)
-        PromisePrototypeThen(val, afterItemProcessed, onCatch)
-        queue.push(val)
-      } finally {
-        done = true
-        if (next) {
-          next()
-          next = null
-        }
-      }
-    }
-    pump()
-    try {
-      while (true) {
-        while (queue.length > 0) {
-          const val = await queue[0]
-          if (val === kEof) {
-            return
-          }
-          if (signal.aborted) {
-            throw new AbortError()
-          }
-          if (val !== kEmpty) {
-            yield val
-          }
-          queue.shift()
-          maybeResume()
-        }
-        await new Promise((resolve) => {
-          next = resolve
-        })
-      }
-    } finally {
-      done = true
-      if (resume) {
-        resume()
-        resume = null
-      }
-    }
-  }.call(this)
-}
-function asIndexedPairs(options = undefined) {
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  return async function* asIndexedPairs() {
-    let index = 0
-    for await (const val of this) {
-      var _options$signal
-      if (
-        options !== null &&
-        options !== undefined &&
-        (_options$signal = options.signal) !== null &&
-        _options$signal !== undefined &&
-        _options$signal.aborted
-      ) {
-        throw new AbortError({
-          cause: options.signal.reason
-        })
-      }
-      yield [index++, val]
-    }
-  }.call(this)
-}
-async function some(fn, options = undefined) {
-  for await (const unused of filter.call(this, fn, options)) {
-    return true
-  }
-  return false
-}
-async function every(fn, options = undefined) {
-  if (typeof fn !== 'function') {
-    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
-  }
-  // https://en.wikipedia.org/wiki/De_Morgan%27s_laws
-  return !(await some.call(
-    this,
-    async (...args) => {
-      return !(await fn(...args))
-    },
-    options
-  ))
-}
-async function find(fn, options) {
-  for await (const result of filter.call(this, fn, options)) {
-    return result
-  }
-  return undefined
-}
-async function forEach(fn, options) {
-  if (typeof fn !== 'function') {
-    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
-  }
-  async function forEachFn(value, options) {
-    await fn(value, options)
-    return kEmpty
-  }
-  // eslint-disable-next-line no-unused-vars
-  for await (const unused of map.call(this, forEachFn, options));
-}
-function filter(fn, options) {
-  if (typeof fn !== 'function') {
-    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
-  }
-  async function filterFn(value, options) {
-    if (await fn(value, options)) {
-      return value
-    }
-    return kEmpty
-  }
-  return map.call(this, filterFn, options)
-}
-
-// Specific to provide better error to reduce since the argument is only
-// missing if the stream has no items in it - but the code is still appropriate
-class ReduceAwareErrMissingArgs extends ERR_MISSING_ARGS {
-  constructor() {
-    super('reduce')
-    this.message = 'Reduce of an empty stream requires an initial value'
-  }
-}
-async function reduce(reducer, initialValue, options) {
-  var _options$signal2
-  if (typeof reducer !== 'function') {
-    throw new ERR_INVALID_ARG_TYPE('reducer', ['Function', 'AsyncFunction'], reducer)
-  }
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  let hasInitialValue = arguments.length > 1
-  if (
-    options !== null &&
-    options !== undefined &&
-    (_options$signal2 = options.signal) !== null &&
-    _options$signal2 !== undefined &&
-    _options$signal2.aborted
-  ) {
-    const err = new AbortError(undefined, {
-      cause: options.signal.reason
-    })
-    this.once('error', () => {}) // The error is already propagated
-    await finished(this.destroy(err))
-    throw err
-  }
-  const ac = new AbortController()
-  const signal = ac.signal
-  if (options !== null && options !== undefined && options.signal) {
-    const opts = {
-      once: true,
-      [kWeakHandler]: this,
-      [kResistStopPropagation]: true
-    }
-    options.signal.addEventListener('abort', () => ac.abort(), opts)
-  }
-  let gotAnyItemFromStream = false
-  try {
-    for await (const value of this) {
-      var _options$signal3
-      gotAnyItemFromStream = true
-      if (
-        options !== null &&
-        options !== undefined &&
-        (_options$signal3 = options.signal) !== null &&
-        _options$signal3 !== undefined &&
-        _options$signal3.aborted
-      ) {
-        throw new AbortError()
-      }
-      if (!hasInitialValue) {
-        initialValue = value
-        hasInitialValue = true
-      } else {
-        initialValue = await reducer(initialValue, value, {
-          signal
-        })
-      }
-    }
-    if (!gotAnyItemFromStream && !hasInitialValue) {
-      throw new ReduceAwareErrMissingArgs()
-    }
-  } finally {
-    ac.abort()
-  }
-  return initialValue
-}
-async function toArray(options) {
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  const result = []
-  for await (const val of this) {
-    var _options$signal4
-    if (
-      options !== null &&
-      options !== undefined &&
-      (_options$signal4 = options.signal) !== null &&
-      _options$signal4 !== undefined &&
-      _options$signal4.aborted
-    ) {
-      throw new AbortError(undefined, {
-        cause: options.signal.reason
-      })
-    }
-    ArrayPrototypePush(result, val)
-  }
-  return result
-}
-function flatMap(fn, options) {
-  const values = map.call(this, fn, options)
-  return async function* flatMap() {
-    for await (const val of values) {
-      yield* val
-    }
-  }.call(this)
-}
-function toIntegerOrInfinity(number) {
-  // We coerce here to align with the spec
-  // https://github.com/tc39/proposal-iterator-helpers/issues/169
-  number = Number(number)
-  if (NumberIsNaN(number)) {
-    return 0
-  }
-  if (number < 0) {
-    throw new ERR_OUT_OF_RANGE('number', '>= 0', number)
-  }
-  return number
-}
-function drop(number, options = undefined) {
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  number = toIntegerOrInfinity(number)
-  return async function* drop() {
-    var _options$signal5
-    if (
-      options !== null &&
-      options !== undefined &&
-      (_options$signal5 = options.signal) !== null &&
-      _options$signal5 !== undefined &&
-      _options$signal5.aborted
-    ) {
-      throw new AbortError()
-    }
-    for await (const val of this) {
-      var _options$signal6
-      if (
-        options !== null &&
-        options !== undefined &&
-        (_options$signal6 = options.signal) !== null &&
-        _options$signal6 !== undefined &&
-        _options$signal6.aborted
-      ) {
-        throw new AbortError()
-      }
-      if (number-- <= 0) {
-        yield val
-      }
-    }
-  }.call(this)
-}
-function take(number, options = undefined) {
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  number = toIntegerOrInfinity(number)
-  return async function* take() {
-    var _options$signal7
-    if (
-      options !== null &&
-      options !== undefined &&
-      (_options$signal7 = options.signal) !== null &&
-      _options$signal7 !== undefined &&
-      _options$signal7.aborted
-    ) {
-      throw new AbortError()
-    }
-    for await (const val of this) {
-      var _options$signal8
-      if (
-        options !== null &&
-        options !== undefined &&
-        (_options$signal8 = options.signal) !== null &&
-        _options$signal8 !== undefined &&
-        _options$signal8.aborted
-      ) {
-        throw new AbortError()
-      }
-      if (number-- > 0) {
-        yield val
-      }
-
-      // Don't get another item from iterator in case we reached the end
-      if (number <= 0) {
-        return
-      }
-    }
-  }.call(this)
-}
-module.exports.streamReturningOperators = {
-  asIndexedPairs: deprecate(asIndexedPairs, 'readable.asIndexedPairs will be removed in a future version.'),
-  drop,
-  filter,
-  flatMap,
-  map,
-  take,
-  compose
-}
-module.exports.promiseReturningOperators = {
-  every,
-  forEach,
-  reduce,
-  toArray,
-  some,
-  find
 }
 
 
@@ -134367,208 +134706,6 @@ module.exports = {
         return '{}'
     }
   }
-}
-
-
-/***/ },
-
-/***/ 16645
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-
-/* replacement start */
-
-const { Buffer } = __webpack_require__(1048)
-
-/* replacement end */
-
-const { ObjectDefineProperty, ObjectKeys, ReflectApply } = __webpack_require__(54349)
-const {
-  promisify: { custom: customPromisify }
-} = __webpack_require__(63437)
-const { streamReturningOperators, promiseReturningOperators } = __webpack_require__(84728)
-const {
-  codes: { ERR_ILLEGAL_CONSTRUCTOR }
-} = __webpack_require__(46994)
-const compose = __webpack_require__(64973)
-const { setDefaultHighWaterMark, getDefaultHighWaterMark } = __webpack_require__(56972)
-const { pipeline } = __webpack_require__(44667)
-const { destroyer } = __webpack_require__(53699)
-const eos = __webpack_require__(9177)
-const internalBuffer = (/* unused pure expression or super */ null && ({}))
-const promises = __webpack_require__(61774)
-const utils = __webpack_require__(69668)
-const Stream = (module.exports = __webpack_require__(30690).Stream)
-Stream.isDestroyed = utils.isDestroyed
-Stream.isDisturbed = utils.isDisturbed
-Stream.isErrored = utils.isErrored
-Stream.isReadable = utils.isReadable
-Stream.isWritable = utils.isWritable
-Stream.Readable = __webpack_require__(12177)
-for (const key of ObjectKeys(streamReturningOperators)) {
-  const op = streamReturningOperators[key]
-  function fn(...args) {
-    if (new.target) {
-      throw ERR_ILLEGAL_CONSTRUCTOR()
-    }
-    return Stream.Readable.from(ReflectApply(op, this, args))
-  }
-  ObjectDefineProperty(fn, 'name', {
-    __proto__: null,
-    value: op.name
-  })
-  ObjectDefineProperty(fn, 'length', {
-    __proto__: null,
-    value: op.length
-  })
-  ObjectDefineProperty(Stream.Readable.prototype, key, {
-    __proto__: null,
-    value: fn,
-    enumerable: false,
-    configurable: true,
-    writable: true
-  })
-}
-for (const key of ObjectKeys(promiseReturningOperators)) {
-  const op = promiseReturningOperators[key]
-  function fn(...args) {
-    if (new.target) {
-      throw ERR_ILLEGAL_CONSTRUCTOR()
-    }
-    return ReflectApply(op, this, args)
-  }
-  ObjectDefineProperty(fn, 'name', {
-    __proto__: null,
-    value: op.name
-  })
-  ObjectDefineProperty(fn, 'length', {
-    __proto__: null,
-    value: op.length
-  })
-  ObjectDefineProperty(Stream.Readable.prototype, key, {
-    __proto__: null,
-    value: fn,
-    enumerable: false,
-    configurable: true,
-    writable: true
-  })
-}
-Stream.Writable = __webpack_require__(17265)
-Stream.Duplex = __webpack_require__(57379)
-Stream.Transform = __webpack_require__(74373)
-Stream.PassThrough = __webpack_require__(96495)
-Stream.pipeline = pipeline
-const { addAbortSignal } = __webpack_require__(63582)
-Stream.addAbortSignal = addAbortSignal
-Stream.finished = eos
-Stream.destroy = destroyer
-Stream.compose = compose
-Stream.setDefaultHighWaterMark = setDefaultHighWaterMark
-Stream.getDefaultHighWaterMark = getDefaultHighWaterMark
-ObjectDefineProperty(Stream, 'promises', {
-  __proto__: null,
-  configurable: true,
-  enumerable: true,
-  get() {
-    return promises
-  }
-})
-ObjectDefineProperty(pipeline, customPromisify, {
-  __proto__: null,
-  enumerable: true,
-  get() {
-    return promises.pipeline
-  }
-})
-ObjectDefineProperty(eos, customPromisify, {
-  __proto__: null,
-  enumerable: true,
-  get() {
-    return promises.finished
-  }
-})
-
-// Backwards-compat with node 0.4.x
-Stream.Stream = Stream
-Stream._isUint8Array = function isUint8Array(value) {
-  return value instanceof Uint8Array
-}
-Stream._uint8ArrayToBuffer = function _uint8ArrayToBuffer(chunk) {
-  return Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength)
-}
-
-
-/***/ },
-
-/***/ 61774
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-const { ArrayPrototypePop, Promise } = __webpack_require__(54349)
-const { isIterable, isNodeStream, isWebStream } = __webpack_require__(69668)
-const { pipelineImpl: pl } = __webpack_require__(44667)
-const { finished } = __webpack_require__(9177)
-__webpack_require__(16645)
-function pipeline(...streams) {
-  return new Promise((resolve, reject) => {
-    let signal
-    let end
-    const lastArg = streams[streams.length - 1]
-    if (
-      lastArg &&
-      typeof lastArg === 'object' &&
-      !isNodeStream(lastArg) &&
-      !isIterable(lastArg) &&
-      !isWebStream(lastArg)
-    ) {
-      const options = ArrayPrototypePop(streams)
-      signal = options.signal
-      end = options.end
-    }
-    pl(
-      streams,
-      (err, value) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(value)
-        }
-      },
-      {
-        signal,
-        end
-      }
-    )
-  })
-}
-module.exports = {
-  finished,
-  pipeline
 }
 
 
@@ -156873,14 +157010,14 @@ var __webpack_unused_export__;
 __webpack_unused_export__ = ({ value: true });
 exports.termToString = __webpack_unused_export__ = __webpack_unused_export__ = __webpack_unused_export__ = __webpack_unused_export__ = __webpack_unused_export__ = __webpack_unused_export__ = __webpack_unused_export__ = void 0;
 const TermUtil_1 = __webpack_require__(91379);
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return TermUtil_1.getLiteralLanguage; } });
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return TermUtil_1.getLiteralDirection; } });
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return TermUtil_1.getLiteralType; } });
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return TermUtil_1.getLiteralValue; } });
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return TermUtil_1.quadToStringQuad; } });
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return TermUtil_1.stringQuadToQuad; } });
-__webpack_unused_export__ = ({ enumerable: true, get: function () { return TermUtil_1.stringToTerm; } });
-Object.defineProperty(exports, "termToString", ({ enumerable: true, get: function () { return TermUtil_1.termToString; } }));
+/* unused reexport */ 0;
+/* unused reexport */ 0;
+/* unused reexport */ 0;
+/* unused reexport */ 0;
+/* unused reexport */ 0;
+/* unused reexport */ 0;
+/* unused reexport */ 0;
+Object.defineProperty(exports, "termToString", { enumerable: true, get: function () { return TermUtil_1.termToString; } });
 //# sourceMappingURL=index.js.map
 
 /***/ },
@@ -156893,13 +157030,13 @@ var __webpack_unused_export__;
 
 __webpack_unused_export__ = ({ value: true });
 exports.termToString = termToString;
-exports.getLiteralValue = getLiteralValue;
-exports.getLiteralType = getLiteralType;
-exports.getLiteralLanguage = getLiteralLanguage;
-exports.getLiteralDirection = getLiteralDirection;
-exports.stringToTerm = stringToTerm;
-exports.quadToStringQuad = quadToStringQuad;
-exports.stringQuadToQuad = stringQuadToQuad;
+__webpack_unused_export__ = getLiteralValue;
+__webpack_unused_export__ = getLiteralType;
+__webpack_unused_export__ = getLiteralLanguage;
+__webpack_unused_export__ = getLiteralDirection;
+__webpack_unused_export__ = stringToTerm;
+__webpack_unused_export__ = quadToStringQuad;
+__webpack_unused_export__ = stringQuadToQuad;
 const rdf_data_factory_1 = __webpack_require__(18050);
 const FACTORY = new rdf_data_factory_1.DataFactory();
 /**
@@ -157147,14 +157284,14 @@ function replaceEscapedCharacter(character) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.termToString = exports.stringToTerm = exports.stringQuadToQuad = exports.quadToStringQuad = exports.getLiteralValue = exports.getLiteralType = exports.getLiteralDirection = exports.getLiteralLanguage = void 0;
 const TermUtil_1 = __webpack_require__(48244);
-Object.defineProperty(exports, "getLiteralLanguage", ({ enumerable: true, get: function () { return TermUtil_1.getLiteralLanguage; } }));
-Object.defineProperty(exports, "getLiteralDirection", ({ enumerable: true, get: function () { return TermUtil_1.getLiteralDirection; } }));
-Object.defineProperty(exports, "getLiteralType", ({ enumerable: true, get: function () { return TermUtil_1.getLiteralType; } }));
-Object.defineProperty(exports, "getLiteralValue", ({ enumerable: true, get: function () { return TermUtil_1.getLiteralValue; } }));
-Object.defineProperty(exports, "quadToStringQuad", ({ enumerable: true, get: function () { return TermUtil_1.quadToStringQuad; } }));
-Object.defineProperty(exports, "stringQuadToQuad", ({ enumerable: true, get: function () { return TermUtil_1.stringQuadToQuad; } }));
-Object.defineProperty(exports, "stringToTerm", ({ enumerable: true, get: function () { return TermUtil_1.stringToTerm; } }));
-Object.defineProperty(exports, "termToString", ({ enumerable: true, get: function () { return TermUtil_1.termToString; } }));
+Object.defineProperty(exports, "getLiteralLanguage", { enumerable: true, get: function () { return TermUtil_1.getLiteralLanguage; } });
+Object.defineProperty(exports, "getLiteralDirection", { enumerable: true, get: function () { return TermUtil_1.getLiteralDirection; } });
+Object.defineProperty(exports, "getLiteralType", { enumerable: true, get: function () { return TermUtil_1.getLiteralType; } });
+Object.defineProperty(exports, "getLiteralValue", { enumerable: true, get: function () { return TermUtil_1.getLiteralValue; } });
+Object.defineProperty(exports, "quadToStringQuad", { enumerable: true, get: function () { return TermUtil_1.quadToStringQuad; } });
+Object.defineProperty(exports, "stringQuadToQuad", { enumerable: true, get: function () { return TermUtil_1.stringQuadToQuad; } });
+Object.defineProperty(exports, "stringToTerm", { enumerable: true, get: function () { return TermUtil_1.stringToTerm; } });
+Object.defineProperty(exports, "termToString", { enumerable: true, get: function () { return TermUtil_1.termToString; } });
 //# sourceMappingURL=index.js.map
 
 /***/ },
@@ -165622,7 +165759,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
  * lossy with respect to N3, a stream of quads that could not be
  * written is also output.
  */
-const n3_1 = __webpack_require__(99076);
+const n3_1 = __webpack_require__(81393);
 const prefixcc_1 = __webpack_require__(37669);
 const rdf_string_ttl_1 = __webpack_require__(64817);
 const utils_1 = __webpack_require__(98118);
@@ -166408,7 +166545,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.write = write;
-const n3_1 = __webpack_require__(99076);
+const n3_1 = __webpack_require__(81393);
 const ShaclcGenerator_1 = __importDefault(__webpack_require__(23344));
 const writer_1 = __importDefault(__webpack_require__(29908));
 const volatile_store_1 = __importDefault(__webpack_require__(23187));
@@ -166571,7 +166708,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
  * Convenience class that extends the n3 store API that deletes
  * quads as they are extracted from the store
  */
-const n3_1 = __webpack_require__(99076);
+const n3_1 = __webpack_require__(81393);
 class VolitileStore extends n3_1.Store {
     getQuadsOnce(s, p, o, g) {
         const quads = this.getQuads(s, p, o, g);
@@ -166630,7 +166767,7 @@ exports["default"] = Writer;
 
 /***/ },
 
-/***/ 99076
+/***/ 81393
 (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -166645,8 +166782,744 @@ __webpack_require__.d(__webpack_exports__, {
 
 // UNUSED EXPORTS: BaseIRI, BlankNode, DefaultGraph, EntityIndex, Lexer, Literal, Parser, Quad, Reasoner, StoreFactory, StreamParser, StreamWriter, Term, Triple, Util, Variable, default, getRulesFromDataset, termFromId, termToId
 
+// EXTERNAL MODULE: ../../node_modules/abort-controller/browser.js
+var browser_namespaceFn = () => {
+	return __webpack_require__(67083);
+};
+
+// EXTERNAL MODULE: ../../node_modules/buffer/index.js
+var buffer_namespaceFn = () => {
+	return __webpack_require__(1048);
+};
+
+// EXTERNAL MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/internal/streams/add-abort-signal.js
+var add_abort_signal_namespaceFn = () => {
+	return __webpack_require__(92766);
+};
+
+// MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/internal/streams/compose.js
+var compose_namespaceFn = /*#__PURE__*/__webpack_require__.cw((module) => {
+
+
+const { pipeline } = (pipeline_namespaceFn())
+const Duplex = (duplex_namespaceFn())
+const { destroyer } = (destroy_namespaceFn())
+const {
+  isNodeStream,
+  isReadable,
+  isWritable,
+  isWebStream,
+  isTransformStream,
+  isWritableStream,
+  isReadableStream
+} = (utils_namespaceFn())
+const {
+  AbortError,
+  codes: { ERR_INVALID_ARG_VALUE, ERR_MISSING_ARGS }
+} = (errors_namespaceFn())
+const eos = (end_of_stream_namespaceFn())
+module.exports = function compose(...streams) {
+  if (streams.length === 0) {
+    throw new ERR_MISSING_ARGS('streams')
+  }
+  if (streams.length === 1) {
+    return Duplex.from(streams[0])
+  }
+  const orgStreams = [...streams]
+  if (typeof streams[0] === 'function') {
+    streams[0] = Duplex.from(streams[0])
+  }
+  if (typeof streams[streams.length - 1] === 'function') {
+    const idx = streams.length - 1
+    streams[idx] = Duplex.from(streams[idx])
+  }
+  for (let n = 0; n < streams.length; ++n) {
+    if (!isNodeStream(streams[n]) && !isWebStream(streams[n])) {
+      // TODO(ronag): Add checks for non streams.
+      continue
+    }
+    if (
+      n < streams.length - 1 &&
+      !(isReadable(streams[n]) || isReadableStream(streams[n]) || isTransformStream(streams[n]))
+    ) {
+      throw new ERR_INVALID_ARG_VALUE(`streams[${n}]`, orgStreams[n], 'must be readable')
+    }
+    if (n > 0 && !(isWritable(streams[n]) || isWritableStream(streams[n]) || isTransformStream(streams[n]))) {
+      throw new ERR_INVALID_ARG_VALUE(`streams[${n}]`, orgStreams[n], 'must be writable')
+    }
+  }
+  let ondrain
+  let onfinish
+  let onreadable
+  let onclose
+  let d
+  function onfinished(err) {
+    const cb = onclose
+    onclose = null
+    if (cb) {
+      cb(err)
+    } else if (err) {
+      d.destroy(err)
+    } else if (!readable && !writable) {
+      d.destroy()
+    }
+  }
+  const head = streams[0]
+  const tail = pipeline(streams, onfinished)
+  const writable = !!(isWritable(head) || isWritableStream(head) || isTransformStream(head))
+  const readable = !!(isReadable(tail) || isReadableStream(tail) || isTransformStream(tail))
+
+  // TODO(ronag): Avoid double buffering.
+  // Implement Writable/Readable/Duplex traits.
+  // See, https://github.com/nodejs/node/pull/33515.
+  d = new Duplex({
+    // TODO (ronag): highWaterMark?
+    writableObjectMode: !!(head !== null && head !== undefined && head.writableObjectMode),
+    readableObjectMode: !!(tail !== null && tail !== undefined && tail.readableObjectMode),
+    writable,
+    readable
+  })
+  if (writable) {
+    if (isNodeStream(head)) {
+      d._write = function (chunk, encoding, callback) {
+        if (head.write(chunk, encoding)) {
+          callback()
+        } else {
+          ondrain = callback
+        }
+      }
+      d._final = function (callback) {
+        head.end()
+        onfinish = callback
+      }
+      head.on('drain', function () {
+        if (ondrain) {
+          const cb = ondrain
+          ondrain = null
+          cb()
+        }
+      })
+    } else if (isWebStream(head)) {
+      const writable = isTransformStream(head) ? head.writable : head
+      const writer = writable.getWriter()
+      d._write = async function (chunk, encoding, callback) {
+        try {
+          await writer.ready
+          writer.write(chunk).catch(() => {})
+          callback()
+        } catch (err) {
+          callback(err)
+        }
+      }
+      d._final = async function (callback) {
+        try {
+          await writer.ready
+          writer.close().catch(() => {})
+          onfinish = callback
+        } catch (err) {
+          callback(err)
+        }
+      }
+    }
+    const toRead = isTransformStream(tail) ? tail.readable : tail
+    eos(toRead, () => {
+      if (onfinish) {
+        const cb = onfinish
+        onfinish = null
+        cb()
+      }
+    })
+  }
+  if (readable) {
+    if (isNodeStream(tail)) {
+      tail.on('readable', function () {
+        if (onreadable) {
+          const cb = onreadable
+          onreadable = null
+          cb()
+        }
+      })
+      tail.on('end', function () {
+        d.push(null)
+      })
+      d._read = function () {
+        while (true) {
+          const buf = tail.read()
+          if (buf === null) {
+            onreadable = d._read
+            return
+          }
+          if (!d.push(buf)) {
+            return
+          }
+        }
+      }
+    } else if (isWebStream(tail)) {
+      const readable = isTransformStream(tail) ? tail.readable : tail
+      const reader = readable.getReader()
+      d._read = async function () {
+        while (true) {
+          try {
+            const { value, done } = await reader.read()
+            if (!d.push(value)) {
+              return
+            }
+            if (done) {
+              d.push(null)
+              return
+            }
+          } catch {
+            return
+          }
+        }
+      }
+    }
+  }
+  d._destroy = function (err, callback) {
+    if (!err && onclose !== null) {
+      err = new AbortError()
+    }
+    onreadable = null
+    ondrain = null
+    onfinish = null
+    if (onclose === null) {
+      callback(err)
+    } else {
+      onclose = callback
+      if (isNodeStream(tail)) {
+        destroyer(tail, err)
+      }
+    }
+  }
+  return d
+}
+
+});
+
+// EXTERNAL MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/internal/streams/destroy.js
+var destroy_namespaceFn = () => {
+	return __webpack_require__(35107);
+};
+
+// EXTERNAL MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/internal/streams/duplex.js
+var duplex_namespaceFn = () => {
+	return __webpack_require__(99427);
+};
+
+// EXTERNAL MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/internal/streams/end-of-stream.js
+var end_of_stream_namespaceFn = () => {
+	return __webpack_require__(22425);
+};
+
+// EXTERNAL MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/internal/streams/legacy.js
+var legacy_namespaceFn = () => {
+	return __webpack_require__(73762);
+};
+
+// MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/internal/streams/operators.js
+var operators_namespaceFn = /*#__PURE__*/__webpack_require__.cw((module) => {
+
+
+const AbortController = globalThis.AbortController || (browser_namespaceFn().AbortController)
+const {
+  codes: { ERR_INVALID_ARG_VALUE, ERR_INVALID_ARG_TYPE, ERR_MISSING_ARGS, ERR_OUT_OF_RANGE },
+  AbortError
+} = (errors_namespaceFn())
+const { validateAbortSignal, validateInteger, validateObject } = (validators_namespaceFn())
+const kWeakHandler = (primordials_namespaceFn().Symbol)('kWeak')
+const kResistStopPropagation = (primordials_namespaceFn().Symbol)('kResistStopPropagation')
+const { finished } = (end_of_stream_namespaceFn())
+const staticCompose = (compose_namespaceFn())
+const { addAbortSignalNoValidate } = (add_abort_signal_namespaceFn())
+const { isWritable, isNodeStream } = (utils_namespaceFn())
+const { deprecate } = (util_namespaceFn())
+const {
+  ArrayPrototypePush,
+  Boolean,
+  MathFloor,
+  Number,
+  NumberIsNaN,
+  Promise,
+  PromiseReject,
+  PromiseResolve,
+  PromisePrototypeThen,
+  Symbol
+} = (primordials_namespaceFn())
+const kEmpty = Symbol('kEmpty')
+const kEof = Symbol('kEof')
+function compose(stream, options) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  if (isNodeStream(stream) && !isWritable(stream)) {
+    throw new ERR_INVALID_ARG_VALUE('stream', stream, 'must be writable')
+  }
+  const composedStream = staticCompose(this, stream)
+  if (options !== null && options !== undefined && options.signal) {
+    // Not validating as we already validated before
+    addAbortSignalNoValidate(options.signal, composedStream)
+  }
+  return composedStream
+}
+function map(fn, options) {
+  if (typeof fn !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
+  }
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  let concurrency = 1
+  if ((options === null || options === undefined ? undefined : options.concurrency) != null) {
+    concurrency = MathFloor(options.concurrency)
+  }
+  let highWaterMark = concurrency - 1
+  if ((options === null || options === undefined ? undefined : options.highWaterMark) != null) {
+    highWaterMark = MathFloor(options.highWaterMark)
+  }
+  validateInteger(concurrency, 'options.concurrency', 1)
+  validateInteger(highWaterMark, 'options.highWaterMark', 0)
+  highWaterMark += concurrency
+  return async function* map() {
+    const signal = (util_namespaceFn().AbortSignalAny)(
+      [options === null || options === undefined ? undefined : options.signal].filter(Boolean)
+    )
+    const stream = this
+    const queue = []
+    const signalOpt = {
+      signal
+    }
+    let next
+    let resume
+    let done = false
+    let cnt = 0
+    function onCatch() {
+      done = true
+      afterItemProcessed()
+    }
+    function afterItemProcessed() {
+      cnt -= 1
+      maybeResume()
+    }
+    function maybeResume() {
+      if (resume && !done && cnt < concurrency && queue.length < highWaterMark) {
+        resume()
+        resume = null
+      }
+    }
+    async function pump() {
+      try {
+        for await (let val of stream) {
+          if (done) {
+            return
+          }
+          if (signal.aborted) {
+            throw new AbortError()
+          }
+          try {
+            val = fn(val, signalOpt)
+            if (val === kEmpty) {
+              continue
+            }
+            val = PromiseResolve(val)
+          } catch (err) {
+            val = PromiseReject(err)
+          }
+          cnt += 1
+          PromisePrototypeThen(val, afterItemProcessed, onCatch)
+          queue.push(val)
+          if (next) {
+            next()
+            next = null
+          }
+          if (!done && (queue.length >= highWaterMark || cnt >= concurrency)) {
+            await new Promise((resolve) => {
+              resume = resolve
+            })
+          }
+        }
+        queue.push(kEof)
+      } catch (err) {
+        const val = PromiseReject(err)
+        PromisePrototypeThen(val, afterItemProcessed, onCatch)
+        queue.push(val)
+      } finally {
+        done = true
+        if (next) {
+          next()
+          next = null
+        }
+      }
+    }
+    pump()
+    try {
+      while (true) {
+        while (queue.length > 0) {
+          const val = await queue[0]
+          if (val === kEof) {
+            return
+          }
+          if (signal.aborted) {
+            throw new AbortError()
+          }
+          if (val !== kEmpty) {
+            yield val
+          }
+          queue.shift()
+          maybeResume()
+        }
+        await new Promise((resolve) => {
+          next = resolve
+        })
+      }
+    } finally {
+      done = true
+      if (resume) {
+        resume()
+        resume = null
+      }
+    }
+  }.call(this)
+}
+function asIndexedPairs(options = undefined) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  return async function* asIndexedPairs() {
+    let index = 0
+    for await (const val of this) {
+      var _options$signal
+      if (
+        options !== null &&
+        options !== undefined &&
+        (_options$signal = options.signal) !== null &&
+        _options$signal !== undefined &&
+        _options$signal.aborted
+      ) {
+        throw new AbortError({
+          cause: options.signal.reason
+        })
+      }
+      yield [index++, val]
+    }
+  }.call(this)
+}
+async function some(fn, options = undefined) {
+  for await (const unused of filter.call(this, fn, options)) {
+    return true
+  }
+  return false
+}
+async function every(fn, options = undefined) {
+  if (typeof fn !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
+  }
+  // https://en.wikipedia.org/wiki/De_Morgan%27s_laws
+  return !(await some.call(
+    this,
+    async (...args) => {
+      return !(await fn(...args))
+    },
+    options
+  ))
+}
+async function find(fn, options) {
+  for await (const result of filter.call(this, fn, options)) {
+    return result
+  }
+  return undefined
+}
+async function forEach(fn, options) {
+  if (typeof fn !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
+  }
+  async function forEachFn(value, options) {
+    await fn(value, options)
+    return kEmpty
+  }
+  // eslint-disable-next-line no-unused-vars
+  for await (const unused of map.call(this, forEachFn, options));
+}
+function filter(fn, options) {
+  if (typeof fn !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
+  }
+  async function filterFn(value, options) {
+    if (await fn(value, options)) {
+      return value
+    }
+    return kEmpty
+  }
+  return map.call(this, filterFn, options)
+}
+
+// Specific to provide better error to reduce since the argument is only
+// missing if the stream has no items in it - but the code is still appropriate
+class ReduceAwareErrMissingArgs extends ERR_MISSING_ARGS {
+  constructor() {
+    super('reduce')
+    this.message = 'Reduce of an empty stream requires an initial value'
+  }
+}
+async function reduce(reducer, initialValue, options) {
+  var _options$signal2
+  if (typeof reducer !== 'function') {
+    throw new ERR_INVALID_ARG_TYPE('reducer', ['Function', 'AsyncFunction'], reducer)
+  }
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  let hasInitialValue = arguments.length > 1
+  if (
+    options !== null &&
+    options !== undefined &&
+    (_options$signal2 = options.signal) !== null &&
+    _options$signal2 !== undefined &&
+    _options$signal2.aborted
+  ) {
+    const err = new AbortError(undefined, {
+      cause: options.signal.reason
+    })
+    this.once('error', () => {}) // The error is already propagated
+    await finished(this.destroy(err))
+    throw err
+  }
+  const ac = new AbortController()
+  const signal = ac.signal
+  if (options !== null && options !== undefined && options.signal) {
+    const opts = {
+      once: true,
+      [kWeakHandler]: this,
+      [kResistStopPropagation]: true
+    }
+    options.signal.addEventListener('abort', () => ac.abort(), opts)
+  }
+  let gotAnyItemFromStream = false
+  try {
+    for await (const value of this) {
+      var _options$signal3
+      gotAnyItemFromStream = true
+      if (
+        options !== null &&
+        options !== undefined &&
+        (_options$signal3 = options.signal) !== null &&
+        _options$signal3 !== undefined &&
+        _options$signal3.aborted
+      ) {
+        throw new AbortError()
+      }
+      if (!hasInitialValue) {
+        initialValue = value
+        hasInitialValue = true
+      } else {
+        initialValue = await reducer(initialValue, value, {
+          signal
+        })
+      }
+    }
+    if (!gotAnyItemFromStream && !hasInitialValue) {
+      throw new ReduceAwareErrMissingArgs()
+    }
+  } finally {
+    ac.abort()
+  }
+  return initialValue
+}
+async function toArray(options) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  const result = []
+  for await (const val of this) {
+    var _options$signal4
+    if (
+      options !== null &&
+      options !== undefined &&
+      (_options$signal4 = options.signal) !== null &&
+      _options$signal4 !== undefined &&
+      _options$signal4.aborted
+    ) {
+      throw new AbortError(undefined, {
+        cause: options.signal.reason
+      })
+    }
+    ArrayPrototypePush(result, val)
+  }
+  return result
+}
+function flatMap(fn, options) {
+  const values = map.call(this, fn, options)
+  return async function* flatMap() {
+    for await (const val of values) {
+      yield* val
+    }
+  }.call(this)
+}
+function toIntegerOrInfinity(number) {
+  // We coerce here to align with the spec
+  // https://github.com/tc39/proposal-iterator-helpers/issues/169
+  number = Number(number)
+  if (NumberIsNaN(number)) {
+    return 0
+  }
+  if (number < 0) {
+    throw new ERR_OUT_OF_RANGE('number', '>= 0', number)
+  }
+  return number
+}
+function drop(number, options = undefined) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  number = toIntegerOrInfinity(number)
+  return async function* drop() {
+    var _options$signal5
+    if (
+      options !== null &&
+      options !== undefined &&
+      (_options$signal5 = options.signal) !== null &&
+      _options$signal5 !== undefined &&
+      _options$signal5.aborted
+    ) {
+      throw new AbortError()
+    }
+    for await (const val of this) {
+      var _options$signal6
+      if (
+        options !== null &&
+        options !== undefined &&
+        (_options$signal6 = options.signal) !== null &&
+        _options$signal6 !== undefined &&
+        _options$signal6.aborted
+      ) {
+        throw new AbortError()
+      }
+      if (number-- <= 0) {
+        yield val
+      }
+    }
+  }.call(this)
+}
+function take(number, options = undefined) {
+  if (options != null) {
+    validateObject(options, 'options')
+  }
+  if ((options === null || options === undefined ? undefined : options.signal) != null) {
+    validateAbortSignal(options.signal, 'options.signal')
+  }
+  number = toIntegerOrInfinity(number)
+  return async function* take() {
+    var _options$signal7
+    if (
+      options !== null &&
+      options !== undefined &&
+      (_options$signal7 = options.signal) !== null &&
+      _options$signal7 !== undefined &&
+      _options$signal7.aborted
+    ) {
+      throw new AbortError()
+    }
+    for await (const val of this) {
+      var _options$signal8
+      if (
+        options !== null &&
+        options !== undefined &&
+        (_options$signal8 = options.signal) !== null &&
+        _options$signal8 !== undefined &&
+        _options$signal8.aborted
+      ) {
+        throw new AbortError()
+      }
+      if (number-- > 0) {
+        yield val
+      }
+
+      // Don't get another item from iterator in case we reached the end
+      if (number <= 0) {
+        return
+      }
+    }
+  }.call(this)
+}
+module.exports.streamReturningOperators = {
+  asIndexedPairs: deprecate(asIndexedPairs, 'readable.asIndexedPairs will be removed in a future version.'),
+  drop,
+  filter,
+  flatMap,
+  map,
+  take,
+  compose
+}
+module.exports.promiseReturningOperators = {
+  every,
+  forEach,
+  reduce,
+  toArray,
+  some,
+  find
+}
+
+});
+
+// EXTERNAL MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/internal/streams/passthrough.js
+var passthrough_namespaceFn = () => {
+	return __webpack_require__(43983);
+};
+
+// EXTERNAL MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/internal/streams/pipeline.js
+var pipeline_namespaceFn = () => {
+	return __webpack_require__(5083);
+};
+
+// EXTERNAL MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/internal/streams/readable.js
+var readable_namespaceFn = () => {
+	return __webpack_require__(83665);
+};
+
+// EXTERNAL MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/internal/streams/state.js
+var state_namespaceFn = () => {
+	return __webpack_require__(50924);
+};
+
+// EXTERNAL MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/internal/streams/transform.js
+var transform_namespaceFn = () => {
+	return __webpack_require__(4389);
+};
+
+// EXTERNAL MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/internal/streams/utils.js
+var utils_namespaceFn = () => {
+	return __webpack_require__(74372);
+};
+
+// EXTERNAL MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/internal/streams/writable.js
+var writable_namespaceFn = () => {
+	return __webpack_require__(28593);
+};
+
+// EXTERNAL MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/internal/validators.js
+var validators_namespaceFn = () => {
+	return __webpack_require__(67700);
+};
+
 // MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/ours/browser.js
-var browser_namespaceFn = /*#__PURE__*/__webpack_require__.cw(function(module, exports) {
+var ours_browser_namespaceFn = /*#__PURE__*/__webpack_require__.cw((module) => {
 
 
 const CustomStream = (stream_namespaceFn())
@@ -166685,15 +167558,216 @@ module.exports["default"] = module.exports
 
 });
 
-// EXTERNAL MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/stream.js
-var stream_namespaceFn = () => {
-	return __webpack_require__(26725);
+// EXTERNAL MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/ours/errors.js
+var errors_namespaceFn = () => {
+	return __webpack_require__(27026);
 };
 
-// EXTERNAL MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/stream/promises.js
-var promises_namespaceFn = () => {
-	return __webpack_require__(23086);
+// EXTERNAL MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/ours/primordials.js
+var primordials_namespaceFn = () => {
+	return __webpack_require__(17293);
 };
+
+// EXTERNAL MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/ours/util.js
+var util_namespaceFn = () => {
+	return __webpack_require__(67277);
+};
+
+// MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/stream.js
+var stream_namespaceFn = /*#__PURE__*/__webpack_require__.cw((module) => {
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+
+/* replacement start */
+
+const { Buffer } = (buffer_namespaceFn())
+
+/* replacement end */
+
+const { ObjectDefineProperty, ObjectKeys, ReflectApply } = (primordials_namespaceFn())
+const {
+  promisify: { custom: customPromisify }
+} = (util_namespaceFn())
+const { streamReturningOperators, promiseReturningOperators } = (operators_namespaceFn())
+const {
+  codes: { ERR_ILLEGAL_CONSTRUCTOR }
+} = (errors_namespaceFn())
+const compose = (compose_namespaceFn())
+const { setDefaultHighWaterMark, getDefaultHighWaterMark } = (state_namespaceFn())
+const { pipeline } = (pipeline_namespaceFn())
+const { destroyer } = (destroy_namespaceFn())
+const eos = (end_of_stream_namespaceFn())
+const internalBuffer = (/* unused pure expression or super */ null && ({}))
+const promises = (promises_namespaceFn())
+const utils = (utils_namespaceFn())
+const Stream = (module.exports = (legacy_namespaceFn().Stream))
+Stream.isDestroyed = utils.isDestroyed
+Stream.isDisturbed = utils.isDisturbed
+Stream.isErrored = utils.isErrored
+Stream.isReadable = utils.isReadable
+Stream.isWritable = utils.isWritable
+Stream.Readable = (readable_namespaceFn())
+for (const key of ObjectKeys(streamReturningOperators)) {
+  const op = streamReturningOperators[key]
+  function fn(...args) {
+    if (new.target) {
+      throw ERR_ILLEGAL_CONSTRUCTOR()
+    }
+    return Stream.Readable.from(ReflectApply(op, this, args))
+  }
+  ObjectDefineProperty(fn, 'name', {
+    __proto__: null,
+    value: op.name
+  })
+  ObjectDefineProperty(fn, 'length', {
+    __proto__: null,
+    value: op.length
+  })
+  ObjectDefineProperty(Stream.Readable.prototype, key, {
+    __proto__: null,
+    value: fn,
+    enumerable: false,
+    configurable: true,
+    writable: true
+  })
+}
+for (const key of ObjectKeys(promiseReturningOperators)) {
+  const op = promiseReturningOperators[key]
+  function fn(...args) {
+    if (new.target) {
+      throw ERR_ILLEGAL_CONSTRUCTOR()
+    }
+    return ReflectApply(op, this, args)
+  }
+  ObjectDefineProperty(fn, 'name', {
+    __proto__: null,
+    value: op.name
+  })
+  ObjectDefineProperty(fn, 'length', {
+    __proto__: null,
+    value: op.length
+  })
+  ObjectDefineProperty(Stream.Readable.prototype, key, {
+    __proto__: null,
+    value: fn,
+    enumerable: false,
+    configurable: true,
+    writable: true
+  })
+}
+Stream.Writable = (writable_namespaceFn())
+Stream.Duplex = (duplex_namespaceFn())
+Stream.Transform = (transform_namespaceFn())
+Stream.PassThrough = (passthrough_namespaceFn())
+Stream.pipeline = pipeline
+const { addAbortSignal } = (add_abort_signal_namespaceFn())
+Stream.addAbortSignal = addAbortSignal
+Stream.finished = eos
+Stream.destroy = destroyer
+Stream.compose = compose
+Stream.setDefaultHighWaterMark = setDefaultHighWaterMark
+Stream.getDefaultHighWaterMark = getDefaultHighWaterMark
+ObjectDefineProperty(Stream, 'promises', {
+  __proto__: null,
+  configurable: true,
+  enumerable: true,
+  get() {
+    return promises
+  }
+})
+ObjectDefineProperty(pipeline, customPromisify, {
+  __proto__: null,
+  enumerable: true,
+  get() {
+    return promises.pipeline
+  }
+})
+ObjectDefineProperty(eos, customPromisify, {
+  __proto__: null,
+  enumerable: true,
+  get() {
+    return promises.finished
+  }
+})
+
+// Backwards-compat with node 0.4.x
+Stream.Stream = Stream
+Stream._isUint8Array = function isUint8Array(value) {
+  return value instanceof Uint8Array
+}
+Stream._uint8ArrayToBuffer = function _uint8ArrayToBuffer(chunk) {
+  return Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength)
+}
+
+});
+
+// MODULE: ../../node_modules/shaclc-write/node_modules/readable-stream/lib/stream/promises.js
+var promises_namespaceFn = /*#__PURE__*/__webpack_require__.cw((module) => {
+
+
+const { ArrayPrototypePop, Promise } = (primordials_namespaceFn())
+const { isIterable, isNodeStream, isWebStream } = (utils_namespaceFn())
+const { pipelineImpl: pl } = (pipeline_namespaceFn())
+const { finished } = (end_of_stream_namespaceFn())
+;(stream_namespaceFn())
+function pipeline(...streams) {
+  return new Promise((resolve, reject) => {
+    let signal
+    let end
+    const lastArg = streams[streams.length - 1]
+    if (
+      lastArg &&
+      typeof lastArg === 'object' &&
+      !isNodeStream(lastArg) &&
+      !isIterable(lastArg) &&
+      !isWebStream(lastArg)
+    ) {
+      const options = ArrayPrototypePop(streams)
+      signal = options.signal
+      end = options.end
+    }
+    pl(
+      streams,
+      (err, value) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(value)
+        }
+      },
+      {
+        signal,
+        end
+      }
+    )
+  })
+}
+module.exports = {
+  finished,
+  pipeline
+}
+
+});
 
 ;// ../../node_modules/shaclc-write/node_modules/n3/src/IRIs.js
 const RDF  = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
@@ -167822,7 +168896,7 @@ function characterReplacer(character) {
 }
 
 ;// ../../node_modules/shaclc-write/node_modules/readable-stream/lib/ours/browser.js
-browser_namespaceFn();
+ours_browser_namespaceFn();
 
 ;// ../../node_modules/shaclc-write/node_modules/n3/src/N3Store.js
 // **N3Store** objects store N3 quads by graph in memory.
@@ -167841,15 +168915,15 @@ function hasInIndex(index0, key0, key1, key2) {
   return !!index2 && key2 in index2;
 }
 
-function merge(target, source, depth = 4) {
+function N3Store_merge(target, source, depth = 4) {
   let size = target[SIZE] || 0;
   for (const key in source) {
     if (!(key in target)) {
       size++;
-      target[key] = depth === 0 ? null : merge(Object.create(null), source[key], depth - 1);
+      target[key] = depth === 0 ? null : N3Store_merge(Object.create(null), source[key], depth - 1);
     }
     else if (depth !== 0)
-      target[key] = merge(target[key], source[key], depth - 1);
+      target[key] = N3Store_merge(target[key], source[key], depth - 1);
   }
   // Depth 2 is the level of the `subjects`, `predicates`, and `objects` indexes.
   if (depth <= 2)
@@ -167909,7 +168983,7 @@ function difference(s1, s2, depth = 4) {
     // in s2 and so we want to copy them over to the resultant store.
     if (!(key in s2)) {
       target = target || Object.create(null);
-      target[key] = depth === 0 ? null : merge({}, s1[key], depth - 1);
+      target[key] = depth === 0 ? null : N3Store_merge({}, s1[key], depth - 1);
       size++;
     }
     else if (depth !== 0) {
@@ -168375,7 +169449,7 @@ class N3Store {
   // ### `removeMatches` removes all matching quads from the store
   // Setting any field to `undefined` or `null` indicates a wildcard.
   removeMatches(subject, predicate, object, graph) {
-    const stream = new (browser_namespaceFn().Readable)({ objectMode: true });
+    const stream = new (ours_browser_namespaceFn().Readable)({ objectMode: true });
 
     const iterable = this.readQuads(subject, predicate, object, graph);
     stream._read = size => {
@@ -168786,7 +169860,7 @@ class N3Store {
       this.addQuads(quads);
     else if (quads instanceof N3Store && quads._entityIndex === this._entityIndex) {
       if (quads._size !== 0) {
-        this._graphs = merge(this._graphs, quads._graphs);
+        this._graphs = N3Store_merge(this._graphs, quads._graphs);
         this._size = null; // Invalidate the cached size
       }
     }
@@ -168904,7 +169978,7 @@ class N3Store {
 
     if (other === this) {
       const store = new N3Store({ entityIndex: this._entityIndex });
-      store._graphs = merge(Object.create(null), this._graphs);
+      store._graphs = N3Store_merge(Object.create(null), this._graphs);
       store._size = this._size;
       return store;
     }
@@ -168988,7 +170062,7 @@ class N3Store {
    */
   union(quads) {
     const store = new N3Store({ entityIndex: this._entityIndex });
-    store._graphs = merge(Object.create(null), this._graphs);
+    store._graphs = N3Store_merge(Object.create(null), this._graphs);
     store._size = this._size;
 
     store.addAll(quads);
@@ -169033,7 +170107,7 @@ function indexMatch(index, ids, depth = 0) {
 /**
  * A class that implements both DatasetCore and Readable.
  */
-class DatasetCoreAndReadableStream extends (browser_namespaceFn().Readable) {
+class DatasetCoreAndReadableStream extends (ours_browser_namespaceFn().Readable) {
   constructor(n3Store, subject, predicate, object, graph, options) {
     super({ objectMode: true });
     Object.assign(this, { n3Store, subject, predicate, object, graph, options });
@@ -169489,208 +170563,6 @@ module.exports = class BufferList {
       customInspect: false
     })
   }
-}
-
-
-/***/ },
-
-/***/ 19469
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-const { pipeline } = __webpack_require__(5083)
-const Duplex = __webpack_require__(99427)
-const { destroyer } = __webpack_require__(35107)
-const {
-  isNodeStream,
-  isReadable,
-  isWritable,
-  isWebStream,
-  isTransformStream,
-  isWritableStream,
-  isReadableStream
-} = __webpack_require__(74372)
-const {
-  AbortError,
-  codes: { ERR_INVALID_ARG_VALUE, ERR_MISSING_ARGS }
-} = __webpack_require__(27026)
-const eos = __webpack_require__(22425)
-module.exports = function compose(...streams) {
-  if (streams.length === 0) {
-    throw new ERR_MISSING_ARGS('streams')
-  }
-  if (streams.length === 1) {
-    return Duplex.from(streams[0])
-  }
-  const orgStreams = [...streams]
-  if (typeof streams[0] === 'function') {
-    streams[0] = Duplex.from(streams[0])
-  }
-  if (typeof streams[streams.length - 1] === 'function') {
-    const idx = streams.length - 1
-    streams[idx] = Duplex.from(streams[idx])
-  }
-  for (let n = 0; n < streams.length; ++n) {
-    if (!isNodeStream(streams[n]) && !isWebStream(streams[n])) {
-      // TODO(ronag): Add checks for non streams.
-      continue
-    }
-    if (
-      n < streams.length - 1 &&
-      !(isReadable(streams[n]) || isReadableStream(streams[n]) || isTransformStream(streams[n]))
-    ) {
-      throw new ERR_INVALID_ARG_VALUE(`streams[${n}]`, orgStreams[n], 'must be readable')
-    }
-    if (n > 0 && !(isWritable(streams[n]) || isWritableStream(streams[n]) || isTransformStream(streams[n]))) {
-      throw new ERR_INVALID_ARG_VALUE(`streams[${n}]`, orgStreams[n], 'must be writable')
-    }
-  }
-  let ondrain
-  let onfinish
-  let onreadable
-  let onclose
-  let d
-  function onfinished(err) {
-    const cb = onclose
-    onclose = null
-    if (cb) {
-      cb(err)
-    } else if (err) {
-      d.destroy(err)
-    } else if (!readable && !writable) {
-      d.destroy()
-    }
-  }
-  const head = streams[0]
-  const tail = pipeline(streams, onfinished)
-  const writable = !!(isWritable(head) || isWritableStream(head) || isTransformStream(head))
-  const readable = !!(isReadable(tail) || isReadableStream(tail) || isTransformStream(tail))
-
-  // TODO(ronag): Avoid double buffering.
-  // Implement Writable/Readable/Duplex traits.
-  // See, https://github.com/nodejs/node/pull/33515.
-  d = new Duplex({
-    // TODO (ronag): highWaterMark?
-    writableObjectMode: !!(head !== null && head !== undefined && head.writableObjectMode),
-    readableObjectMode: !!(tail !== null && tail !== undefined && tail.readableObjectMode),
-    writable,
-    readable
-  })
-  if (writable) {
-    if (isNodeStream(head)) {
-      d._write = function (chunk, encoding, callback) {
-        if (head.write(chunk, encoding)) {
-          callback()
-        } else {
-          ondrain = callback
-        }
-      }
-      d._final = function (callback) {
-        head.end()
-        onfinish = callback
-      }
-      head.on('drain', function () {
-        if (ondrain) {
-          const cb = ondrain
-          ondrain = null
-          cb()
-        }
-      })
-    } else if (isWebStream(head)) {
-      const writable = isTransformStream(head) ? head.writable : head
-      const writer = writable.getWriter()
-      d._write = async function (chunk, encoding, callback) {
-        try {
-          await writer.ready
-          writer.write(chunk).catch(() => {})
-          callback()
-        } catch (err) {
-          callback(err)
-        }
-      }
-      d._final = async function (callback) {
-        try {
-          await writer.ready
-          writer.close().catch(() => {})
-          onfinish = callback
-        } catch (err) {
-          callback(err)
-        }
-      }
-    }
-    const toRead = isTransformStream(tail) ? tail.readable : tail
-    eos(toRead, () => {
-      if (onfinish) {
-        const cb = onfinish
-        onfinish = null
-        cb()
-      }
-    })
-  }
-  if (readable) {
-    if (isNodeStream(tail)) {
-      tail.on('readable', function () {
-        if (onreadable) {
-          const cb = onreadable
-          onreadable = null
-          cb()
-        }
-      })
-      tail.on('end', function () {
-        d.push(null)
-      })
-      d._read = function () {
-        while (true) {
-          const buf = tail.read()
-          if (buf === null) {
-            onreadable = d._read
-            return
-          }
-          if (!d.push(buf)) {
-            return
-          }
-        }
-      }
-    } else if (isWebStream(tail)) {
-      const readable = isTransformStream(tail) ? tail.readable : tail
-      const reader = readable.getReader()
-      d._read = async function () {
-        while (true) {
-          try {
-            const { value, done } = await reader.read()
-            if (!d.push(value)) {
-              return
-            }
-            if (done) {
-              d.push(null)
-              return
-            }
-          } catch {
-            return
-          }
-        }
-      }
-    }
-  }
-  d._destroy = function (err, callback) {
-    if (!err && onclose !== null) {
-      err = new AbortError()
-    }
-    onreadable = null
-    ondrain = null
-    onfinish = null
-    if (onclose === null) {
-      callback(err)
-    } else {
-      onclose = callback
-      if (isNodeStream(tail)) {
-        destroyer(tail, err)
-      }
-    }
-  }
-  return d
 }
 
 
@@ -171022,471 +171894,6 @@ function prependListener(emitter, event, fn) {
 module.exports = {
   Stream,
   prependListener
-}
-
-
-/***/ },
-
-/***/ 36184
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-const AbortController = globalThis.AbortController || (__webpack_require__(67083).AbortController)
-const {
-  codes: { ERR_INVALID_ARG_VALUE, ERR_INVALID_ARG_TYPE, ERR_MISSING_ARGS, ERR_OUT_OF_RANGE },
-  AbortError
-} = __webpack_require__(27026)
-const { validateAbortSignal, validateInteger, validateObject } = __webpack_require__(67700)
-const kWeakHandler = (__webpack_require__(17293).Symbol)('kWeak')
-const kResistStopPropagation = (__webpack_require__(17293).Symbol)('kResistStopPropagation')
-const { finished } = __webpack_require__(22425)
-const staticCompose = __webpack_require__(19469)
-const { addAbortSignalNoValidate } = __webpack_require__(92766)
-const { isWritable, isNodeStream } = __webpack_require__(74372)
-const { deprecate } = __webpack_require__(67277)
-const {
-  ArrayPrototypePush,
-  Boolean,
-  MathFloor,
-  Number,
-  NumberIsNaN,
-  Promise,
-  PromiseReject,
-  PromiseResolve,
-  PromisePrototypeThen,
-  Symbol
-} = __webpack_require__(17293)
-const kEmpty = Symbol('kEmpty')
-const kEof = Symbol('kEof')
-function compose(stream, options) {
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  if (isNodeStream(stream) && !isWritable(stream)) {
-    throw new ERR_INVALID_ARG_VALUE('stream', stream, 'must be writable')
-  }
-  const composedStream = staticCompose(this, stream)
-  if (options !== null && options !== undefined && options.signal) {
-    // Not validating as we already validated before
-    addAbortSignalNoValidate(options.signal, composedStream)
-  }
-  return composedStream
-}
-function map(fn, options) {
-  if (typeof fn !== 'function') {
-    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
-  }
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  let concurrency = 1
-  if ((options === null || options === undefined ? undefined : options.concurrency) != null) {
-    concurrency = MathFloor(options.concurrency)
-  }
-  let highWaterMark = concurrency - 1
-  if ((options === null || options === undefined ? undefined : options.highWaterMark) != null) {
-    highWaterMark = MathFloor(options.highWaterMark)
-  }
-  validateInteger(concurrency, 'options.concurrency', 1)
-  validateInteger(highWaterMark, 'options.highWaterMark', 0)
-  highWaterMark += concurrency
-  return async function* map() {
-    const signal = (__webpack_require__(67277).AbortSignalAny)(
-      [options === null || options === undefined ? undefined : options.signal].filter(Boolean)
-    )
-    const stream = this
-    const queue = []
-    const signalOpt = {
-      signal
-    }
-    let next
-    let resume
-    let done = false
-    let cnt = 0
-    function onCatch() {
-      done = true
-      afterItemProcessed()
-    }
-    function afterItemProcessed() {
-      cnt -= 1
-      maybeResume()
-    }
-    function maybeResume() {
-      if (resume && !done && cnt < concurrency && queue.length < highWaterMark) {
-        resume()
-        resume = null
-      }
-    }
-    async function pump() {
-      try {
-        for await (let val of stream) {
-          if (done) {
-            return
-          }
-          if (signal.aborted) {
-            throw new AbortError()
-          }
-          try {
-            val = fn(val, signalOpt)
-            if (val === kEmpty) {
-              continue
-            }
-            val = PromiseResolve(val)
-          } catch (err) {
-            val = PromiseReject(err)
-          }
-          cnt += 1
-          PromisePrototypeThen(val, afterItemProcessed, onCatch)
-          queue.push(val)
-          if (next) {
-            next()
-            next = null
-          }
-          if (!done && (queue.length >= highWaterMark || cnt >= concurrency)) {
-            await new Promise((resolve) => {
-              resume = resolve
-            })
-          }
-        }
-        queue.push(kEof)
-      } catch (err) {
-        const val = PromiseReject(err)
-        PromisePrototypeThen(val, afterItemProcessed, onCatch)
-        queue.push(val)
-      } finally {
-        done = true
-        if (next) {
-          next()
-          next = null
-        }
-      }
-    }
-    pump()
-    try {
-      while (true) {
-        while (queue.length > 0) {
-          const val = await queue[0]
-          if (val === kEof) {
-            return
-          }
-          if (signal.aborted) {
-            throw new AbortError()
-          }
-          if (val !== kEmpty) {
-            yield val
-          }
-          queue.shift()
-          maybeResume()
-        }
-        await new Promise((resolve) => {
-          next = resolve
-        })
-      }
-    } finally {
-      done = true
-      if (resume) {
-        resume()
-        resume = null
-      }
-    }
-  }.call(this)
-}
-function asIndexedPairs(options = undefined) {
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  return async function* asIndexedPairs() {
-    let index = 0
-    for await (const val of this) {
-      var _options$signal
-      if (
-        options !== null &&
-        options !== undefined &&
-        (_options$signal = options.signal) !== null &&
-        _options$signal !== undefined &&
-        _options$signal.aborted
-      ) {
-        throw new AbortError({
-          cause: options.signal.reason
-        })
-      }
-      yield [index++, val]
-    }
-  }.call(this)
-}
-async function some(fn, options = undefined) {
-  for await (const unused of filter.call(this, fn, options)) {
-    return true
-  }
-  return false
-}
-async function every(fn, options = undefined) {
-  if (typeof fn !== 'function') {
-    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
-  }
-  // https://en.wikipedia.org/wiki/De_Morgan%27s_laws
-  return !(await some.call(
-    this,
-    async (...args) => {
-      return !(await fn(...args))
-    },
-    options
-  ))
-}
-async function find(fn, options) {
-  for await (const result of filter.call(this, fn, options)) {
-    return result
-  }
-  return undefined
-}
-async function forEach(fn, options) {
-  if (typeof fn !== 'function') {
-    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
-  }
-  async function forEachFn(value, options) {
-    await fn(value, options)
-    return kEmpty
-  }
-  // eslint-disable-next-line no-unused-vars
-  for await (const unused of map.call(this, forEachFn, options));
-}
-function filter(fn, options) {
-  if (typeof fn !== 'function') {
-    throw new ERR_INVALID_ARG_TYPE('fn', ['Function', 'AsyncFunction'], fn)
-  }
-  async function filterFn(value, options) {
-    if (await fn(value, options)) {
-      return value
-    }
-    return kEmpty
-  }
-  return map.call(this, filterFn, options)
-}
-
-// Specific to provide better error to reduce since the argument is only
-// missing if the stream has no items in it - but the code is still appropriate
-class ReduceAwareErrMissingArgs extends ERR_MISSING_ARGS {
-  constructor() {
-    super('reduce')
-    this.message = 'Reduce of an empty stream requires an initial value'
-  }
-}
-async function reduce(reducer, initialValue, options) {
-  var _options$signal2
-  if (typeof reducer !== 'function') {
-    throw new ERR_INVALID_ARG_TYPE('reducer', ['Function', 'AsyncFunction'], reducer)
-  }
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  let hasInitialValue = arguments.length > 1
-  if (
-    options !== null &&
-    options !== undefined &&
-    (_options$signal2 = options.signal) !== null &&
-    _options$signal2 !== undefined &&
-    _options$signal2.aborted
-  ) {
-    const err = new AbortError(undefined, {
-      cause: options.signal.reason
-    })
-    this.once('error', () => {}) // The error is already propagated
-    await finished(this.destroy(err))
-    throw err
-  }
-  const ac = new AbortController()
-  const signal = ac.signal
-  if (options !== null && options !== undefined && options.signal) {
-    const opts = {
-      once: true,
-      [kWeakHandler]: this,
-      [kResistStopPropagation]: true
-    }
-    options.signal.addEventListener('abort', () => ac.abort(), opts)
-  }
-  let gotAnyItemFromStream = false
-  try {
-    for await (const value of this) {
-      var _options$signal3
-      gotAnyItemFromStream = true
-      if (
-        options !== null &&
-        options !== undefined &&
-        (_options$signal3 = options.signal) !== null &&
-        _options$signal3 !== undefined &&
-        _options$signal3.aborted
-      ) {
-        throw new AbortError()
-      }
-      if (!hasInitialValue) {
-        initialValue = value
-        hasInitialValue = true
-      } else {
-        initialValue = await reducer(initialValue, value, {
-          signal
-        })
-      }
-    }
-    if (!gotAnyItemFromStream && !hasInitialValue) {
-      throw new ReduceAwareErrMissingArgs()
-    }
-  } finally {
-    ac.abort()
-  }
-  return initialValue
-}
-async function toArray(options) {
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  const result = []
-  for await (const val of this) {
-    var _options$signal4
-    if (
-      options !== null &&
-      options !== undefined &&
-      (_options$signal4 = options.signal) !== null &&
-      _options$signal4 !== undefined &&
-      _options$signal4.aborted
-    ) {
-      throw new AbortError(undefined, {
-        cause: options.signal.reason
-      })
-    }
-    ArrayPrototypePush(result, val)
-  }
-  return result
-}
-function flatMap(fn, options) {
-  const values = map.call(this, fn, options)
-  return async function* flatMap() {
-    for await (const val of values) {
-      yield* val
-    }
-  }.call(this)
-}
-function toIntegerOrInfinity(number) {
-  // We coerce here to align with the spec
-  // https://github.com/tc39/proposal-iterator-helpers/issues/169
-  number = Number(number)
-  if (NumberIsNaN(number)) {
-    return 0
-  }
-  if (number < 0) {
-    throw new ERR_OUT_OF_RANGE('number', '>= 0', number)
-  }
-  return number
-}
-function drop(number, options = undefined) {
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  number = toIntegerOrInfinity(number)
-  return async function* drop() {
-    var _options$signal5
-    if (
-      options !== null &&
-      options !== undefined &&
-      (_options$signal5 = options.signal) !== null &&
-      _options$signal5 !== undefined &&
-      _options$signal5.aborted
-    ) {
-      throw new AbortError()
-    }
-    for await (const val of this) {
-      var _options$signal6
-      if (
-        options !== null &&
-        options !== undefined &&
-        (_options$signal6 = options.signal) !== null &&
-        _options$signal6 !== undefined &&
-        _options$signal6.aborted
-      ) {
-        throw new AbortError()
-      }
-      if (number-- <= 0) {
-        yield val
-      }
-    }
-  }.call(this)
-}
-function take(number, options = undefined) {
-  if (options != null) {
-    validateObject(options, 'options')
-  }
-  if ((options === null || options === undefined ? undefined : options.signal) != null) {
-    validateAbortSignal(options.signal, 'options.signal')
-  }
-  number = toIntegerOrInfinity(number)
-  return async function* take() {
-    var _options$signal7
-    if (
-      options !== null &&
-      options !== undefined &&
-      (_options$signal7 = options.signal) !== null &&
-      _options$signal7 !== undefined &&
-      _options$signal7.aborted
-    ) {
-      throw new AbortError()
-    }
-    for await (const val of this) {
-      var _options$signal8
-      if (
-        options !== null &&
-        options !== undefined &&
-        (_options$signal8 = options.signal) !== null &&
-        _options$signal8 !== undefined &&
-        _options$signal8.aborted
-      ) {
-        throw new AbortError()
-      }
-      if (number-- > 0) {
-        yield val
-      }
-
-      // Don't get another item from iterator in case we reached the end
-      if (number <= 0) {
-        return
-      }
-    }
-  }.call(this)
-}
-module.exports.streamReturningOperators = {
-  asIndexedPairs: deprecate(asIndexedPairs, 'readable.asIndexedPairs will be removed in a future version.'),
-  drop,
-  filter,
-  flatMap,
-  map,
-  take,
-  compose
-}
-module.exports.promiseReturningOperators = {
-  every,
-  forEach,
-  reduce,
-  toArray,
-  some,
-  find
 }
 
 
@@ -175947,208 +176354,6 @@ module.exports = {
         return '{}'
     }
   }
-}
-
-
-/***/ },
-
-/***/ 26725
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-
-/* replacement start */
-
-const { Buffer } = __webpack_require__(1048)
-
-/* replacement end */
-
-const { ObjectDefineProperty, ObjectKeys, ReflectApply } = __webpack_require__(17293)
-const {
-  promisify: { custom: customPromisify }
-} = __webpack_require__(67277)
-const { streamReturningOperators, promiseReturningOperators } = __webpack_require__(36184)
-const {
-  codes: { ERR_ILLEGAL_CONSTRUCTOR }
-} = __webpack_require__(27026)
-const compose = __webpack_require__(19469)
-const { setDefaultHighWaterMark, getDefaultHighWaterMark } = __webpack_require__(50924)
-const { pipeline } = __webpack_require__(5083)
-const { destroyer } = __webpack_require__(35107)
-const eos = __webpack_require__(22425)
-const internalBuffer = (/* unused pure expression or super */ null && ({}))
-const promises = __webpack_require__(23086)
-const utils = __webpack_require__(74372)
-const Stream = (module.exports = __webpack_require__(73762).Stream)
-Stream.isDestroyed = utils.isDestroyed
-Stream.isDisturbed = utils.isDisturbed
-Stream.isErrored = utils.isErrored
-Stream.isReadable = utils.isReadable
-Stream.isWritable = utils.isWritable
-Stream.Readable = __webpack_require__(83665)
-for (const key of ObjectKeys(streamReturningOperators)) {
-  const op = streamReturningOperators[key]
-  function fn(...args) {
-    if (new.target) {
-      throw ERR_ILLEGAL_CONSTRUCTOR()
-    }
-    return Stream.Readable.from(ReflectApply(op, this, args))
-  }
-  ObjectDefineProperty(fn, 'name', {
-    __proto__: null,
-    value: op.name
-  })
-  ObjectDefineProperty(fn, 'length', {
-    __proto__: null,
-    value: op.length
-  })
-  ObjectDefineProperty(Stream.Readable.prototype, key, {
-    __proto__: null,
-    value: fn,
-    enumerable: false,
-    configurable: true,
-    writable: true
-  })
-}
-for (const key of ObjectKeys(promiseReturningOperators)) {
-  const op = promiseReturningOperators[key]
-  function fn(...args) {
-    if (new.target) {
-      throw ERR_ILLEGAL_CONSTRUCTOR()
-    }
-    return ReflectApply(op, this, args)
-  }
-  ObjectDefineProperty(fn, 'name', {
-    __proto__: null,
-    value: op.name
-  })
-  ObjectDefineProperty(fn, 'length', {
-    __proto__: null,
-    value: op.length
-  })
-  ObjectDefineProperty(Stream.Readable.prototype, key, {
-    __proto__: null,
-    value: fn,
-    enumerable: false,
-    configurable: true,
-    writable: true
-  })
-}
-Stream.Writable = __webpack_require__(28593)
-Stream.Duplex = __webpack_require__(99427)
-Stream.Transform = __webpack_require__(4389)
-Stream.PassThrough = __webpack_require__(43983)
-Stream.pipeline = pipeline
-const { addAbortSignal } = __webpack_require__(92766)
-Stream.addAbortSignal = addAbortSignal
-Stream.finished = eos
-Stream.destroy = destroyer
-Stream.compose = compose
-Stream.setDefaultHighWaterMark = setDefaultHighWaterMark
-Stream.getDefaultHighWaterMark = getDefaultHighWaterMark
-ObjectDefineProperty(Stream, 'promises', {
-  __proto__: null,
-  configurable: true,
-  enumerable: true,
-  get() {
-    return promises
-  }
-})
-ObjectDefineProperty(pipeline, customPromisify, {
-  __proto__: null,
-  enumerable: true,
-  get() {
-    return promises.pipeline
-  }
-})
-ObjectDefineProperty(eos, customPromisify, {
-  __proto__: null,
-  enumerable: true,
-  get() {
-    return promises.finished
-  }
-})
-
-// Backwards-compat with node 0.4.x
-Stream.Stream = Stream
-Stream._isUint8Array = function isUint8Array(value) {
-  return value instanceof Uint8Array
-}
-Stream._uint8ArrayToBuffer = function _uint8ArrayToBuffer(chunk) {
-  return Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength)
-}
-
-
-/***/ },
-
-/***/ 23086
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-const { ArrayPrototypePop, Promise } = __webpack_require__(17293)
-const { isIterable, isNodeStream, isWebStream } = __webpack_require__(74372)
-const { pipelineImpl: pl } = __webpack_require__(5083)
-const { finished } = __webpack_require__(22425)
-__webpack_require__(26725)
-function pipeline(...streams) {
-  return new Promise((resolve, reject) => {
-    let signal
-    let end
-    const lastArg = streams[streams.length - 1]
-    if (
-      lastArg &&
-      typeof lastArg === 'object' &&
-      !isNodeStream(lastArg) &&
-      !isIterable(lastArg) &&
-      !isWebStream(lastArg)
-    ) {
-      const options = ArrayPrototypePop(streams)
-      signal = options.signal
-      end = options.end
-    }
-    pl(
-      streams,
-      (err, value) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(value)
-        }
-      },
-      {
-        signal,
-        end
-      }
-    )
-  })
-}
-module.exports = {
-  finished,
-  pipeline
 }
 
 
@@ -228931,7 +229136,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isIterator = exports.isIterable = exports.isSourceExpression = exports.isPromise = exports.isEventEmitter = exports.isFunction = exports.range = exports.union = exports.fromIterable = exports.fromIterator = exports.fromArray = exports.single = exports.empty = exports.wrap = exports.WrappingIterator = exports.ClonedIterator = exports.UnionIterator = exports.MultiTransformIterator = exports.SimpleTransformIterator = exports.TransformIterator = exports.BufferedIterator = exports.MappingIterator = exports.DESTINATION = exports.identity = exports.IntegerIterator = exports.ArrayIterator = exports.SingletonIterator = exports.EmptyIterator = exports.AsyncIterator = exports.DESTROYED = exports.ENDED = exports.CLOSED = exports.CLOSING = exports.OPEN = exports.INIT = exports.setTaskScheduler = exports.getTaskScheduler = exports.scheduleTask = exports.LinkedList = void 0;
 const events_1 = __webpack_require__(50046);
 const linkedlist_1 = __webpack_require__(14241);
-Object.defineProperty(exports, "LinkedList", ({ enumerable: true, get: function () { return linkedlist_1.LinkedList; } }));
+Object.defineProperty(exports, "LinkedList", { enumerable: true, get: function () { return linkedlist_1.LinkedList; } });
 const taskscheduler_1 = __webpack_require__(93240);
 let taskScheduler = taskscheduler_1.createTaskScheduler();
 /** Schedules the given task for asynchronous execution. */
