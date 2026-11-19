@@ -701,6 +701,10 @@ if (!TEST_browser) {
         expect($("#reduceAst .status").hasClass("threw")).to.equal(true);
       } finally {
         await shared.Caches.inputSchema.set(good, base);
+        // ...and out of the app's 100ms "see shape map errors above"
+        // window, which is about a reader pressing validate on the heels
+        // of a failure rather than about the next test
+        await new Promise(resolve => setTimeout(resolve, 120));
       }
     });
 
