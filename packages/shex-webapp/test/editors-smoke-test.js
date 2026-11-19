@@ -1549,6 +1549,11 @@ if (!TEST_browser) {
         shared.neighborhoods.forgetDocuments();
         shared.Caches.inputData.selection.val("");
         shared.Caches.inputSchema.selection.val("");
+        // the map too: a parameter's text goes after what its textarea
+        // already holds, so a map left standing comes back twice over,
+        // fails to parse, and the failure stands in the way of the next
+        // validate (the app's 100ms "see shape map errors above" window)
+        $("#queryMap").val("");
         const was = dom.window.location.href;
         dom.window.history.replaceState({}, "", "?" + search + "&manifest=");
         try {
@@ -1557,6 +1562,7 @@ if (!TEST_browser) {
           dom.window.history.replaceState({}, "", was);
         }
         expect(shared.neighborhoods.documents().map(d => d.text), "both documents are back").to.deep.equal(docs);
+        expect($("#queryMap").val(), "and so is the map, once").to.equal("<http://hl7.example/Obs1>@<ObservationShape>");
       });
 
       /* A graph is not a file: rdfjs holds as many Turtle documents as the
