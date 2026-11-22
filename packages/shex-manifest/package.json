@@ -26,11 +26,11 @@
     "node": ">=18"
   },
   "dependencies": {
-    "js-yaml": "^5.4.2"
+    "js-yaml": "^5.5.0"
   },
   "devDependencies": {
     "jsonld": "^9.0.0",
-    "n3": "^2.7.12"
+    "n3": "^2.13.12"
   },
   "scripts": {
     "test": "cd ../.. && npm run test",
